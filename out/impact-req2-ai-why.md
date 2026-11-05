@@ -152,149 +152,63 @@
 - RingEventQueueTest#testPeekDoesNotRemove()
 - RingEventQueueTest#testWrapAround()
 
-## 왜 영향받는가: ops.Watchdog#check
+## 왜 영향받는가: EventParserTest#testBasicLine
 
-- ops.Watchdog#check()의 ops.AuditLog.entries의 내용에 쓰는 값
-    바뀐 줄 queue.RingEventQueue#clear():72  count = 0;
-      ↓ 필드 queue.RingEventQueue.count에 저장했다가 읽음
-    → queue.RingEventQueue#size():58  return count;
-      ↓ queue.RingEventQueue#size()의 반환값으로
-    → ops.Watchdog#check():22  if (queue.size() * 4 >= queue.capacity() * 3) {
-      ↓ 위 줄의 조건에 따라 실행 여부가 달라짐
-    → ops.Watchdog#check():23  highWaterChecks++;
-      ↓ 필드 ops.Watchdog.highWaterChecks에 저장했다가 읽음
-    → ops.Watchdog#check():27  if (highWaterChecks >= threshold) {
-      ↓ 위 줄의 조건에 따라 실행 여부가 달라짐
-    → ops.Watchdog#check():28  audit.note("WATCHDOG", "stuck size=" + queue.size());
-    (다른 이유)
-    바뀐 줄 queue.RingEventQueue#snapshot():79  out.add(buf[idx]);
-    → queue.RingEventQueue#snapshot():83  return out;
-      ↓ queue.RingEventQueue#snapshot()의 반환값으로 → queue.RingEventQueue#offer(model.Event)의 1번째 인자로
-    → queue.RingEventQueue#offer(model.Event):33  if (e == null) return OfferResult.REJECTED;
-      ↓ 위 줄의 조건에 따라 실행 여부가 달라짐
-    → queue.RingEventQueue#offer(model.Event):34  if (count == buf.length) return OfferResult.FULL;
-      ↓ 위 줄의 조건에 따라 실행 여부가 달라짐
-    → queue.RingEventQueue#offer(model.Event):38  count++;
-      ↓ 필드 queue.RingEventQueue.count에 저장했다가 읽음
-    → queue.RingEventQueue#size():58  return count;
-      ↓ queue.RingEventQueue#size()의 반환값으로
-    → ops.Watchdog#check():22  if (queue.size() * 4 >= queue.capacity() * 3) {
-      ↓ 위 줄의 조건에 따라 실행 여부가 달라짐
-    → ops.Watchdog#check():23  highWaterChecks++;
-      ↓ 필드 ops.Watchdog.highWaterChecks에 저장했다가 읽음
-    → ops.Watchdog#check():27  if (highWaterChecks >= threshold) {
-      ↓ 위 줄의 조건에 따라 실행 여부가 달라짐
-    → ops.Watchdog#check():28  audit.note("WATCHDOG", "stuck size=" + queue.size());
-    (다른 이유)
+- EventParserTest#testBasicLine()의 예외
     바뀐 줄 queue.RingEventQueue#offer(model.Event):37  buf[idx] = e;
       ↓ queue.RingEventQueue.buf의 내용에 저장했다가 읽음
-    → queue.RingEventQueue#snapshot():79  out.add(buf[idx]);
-    → queue.RingEventQueue#snapshot():83  return out;
-      ↓ queue.RingEventQueue#snapshot()의 반환값으로 → queue.RingEventQueue#offer(model.Event)의 1번째 인자로
-    → queue.RingEventQueue#offer(model.Event):33  if (e == null) return OfferResult.REJECTED;
+    → queue.RingEventQueue#poll():44  Event e = buf[head];
+    → queue.RingEventQueue#poll():49  return e;
+      ↓ queue.RingEventQueue#poll()의 반환값으로
+    → dispatch.Dispatcher#dispatchOne():101  Event e = queue.poll();
+    → dispatch.Dispatcher#dispatchOne():102  if (e == null) return null;
       ↓ 위 줄의 조건에 따라 실행 여부가 달라짐
-    → queue.RingEventQueue#offer(model.Event):34  if (count == buf.length) return OfferResult.FULL;
+    → dispatch.Dispatcher#dispatchOne():106  if (listener != null) {
       ↓ 위 줄의 조건에 따라 실행 여부가 달라짐
-    → queue.RingEventQueue#offer(model.Event):38  count++;
-      ↓ 필드 queue.RingEventQueue.count에 저장했다가 읽음
-    → queue.RingEventQueue#size():58  return count;
-      ↓ queue.RingEventQueue#size()의 반환값으로
-    → ops.Watchdog#check():22  if (queue.size() * 4 >= queue.capacity() * 3) {
+    → dispatch.Dispatcher#dispatchOne():107  listener.afterDispatch(e);
+      ↓ 필드 model.Event.seq에 저장했다가 읽음
+    → model.Event#getSeq():31  return seq;
+      ↓ model.Event#getSeq()의 반환값으로 → testkit.Check#eq(long,long,String)의 2번째 인자로
+    → testkit.Check#eq(long,long,String):22  if (expected != actual) {
       ↓ 위 줄의 조건에 따라 실행 여부가 달라짐
-    → ops.Watchdog#check():23  highWaterChecks++;
-      ↓ 필드 ops.Watchdog.highWaterChecks에 저장했다가 읽음
-    → ops.Watchdog#check():27  if (highWaterChecks >= threshold) {
-      ↓ 위 줄의 조건에 따라 실행 여부가 달라짐
-    → ops.Watchdog#check():28  audit.note("WATCHDOG", "stuck size=" + queue.size());
-- ops.Watchdog#check()의 필드 ops.Watchdog.highWaterChecks에 쓰는 값
+    → testkit.Check#eq(long,long,String):23  throw new AssertionError(msg + ": expected <" + expected + "> but was <" + actual + ">");
+      ↓ testkit.Check#eq(long,long,String)에서 나온 예외로
+    (다른 이유)
     바뀐 줄 queue.RingEventQueue#clear():72  count = 0;
       ↓ 필드 queue.RingEventQueue.count에 저장했다가 읽음
-    → queue.RingEventQueue#size():58  return count;
-      ↓ queue.RingEventQueue#size()의 반환값으로
-    → ops.Watchdog#check():22  if (queue.size() * 4 >= queue.capacity() * 3) {
+    → queue.RingEventQueue#poll():43  if (count == 0) return null;
       ↓ 위 줄의 조건에 따라 실행 여부가 달라짐
-    → ops.Watchdog#check():23  highWaterChecks++;
+    → queue.RingEventQueue#poll():49  return e;
+      ↓ queue.RingEventQueue#poll()의 반환값으로
+    → dispatch.Dispatcher#dispatchOne():101  Event e = queue.poll();
+    → dispatch.Dispatcher#dispatchOne():102  if (e == null) return null;
+      ↓ 위 줄의 조건에 따라 실행 여부가 달라짐
+    → dispatch.Dispatcher#dispatchOne():106  if (listener != null) {
+      ↓ 위 줄의 조건에 따라 실행 여부가 달라짐
+    → dispatch.Dispatcher#dispatchOne():107  listener.afterDispatch(e);
+      ↓ 필드 model.Event.seq에 저장했다가 읽음
+    → model.Event#getSeq():31  return seq;
+      ↓ model.Event#getSeq()의 반환값으로 → testkit.Check#eq(long,long,String)의 2번째 인자로
+    → testkit.Check#eq(long,long,String):22  if (expected != actual) {
+      ↓ 위 줄의 조건에 따라 실행 여부가 달라짐
+    → testkit.Check#eq(long,long,String):23  throw new AssertionError(msg + ": expected <" + expected + "> but was <" + actual + ">");
+      ↓ testkit.Check#eq(long,long,String)에서 나온 예외로
     (다른 이유)
-    바뀐 줄 queue.RingEventQueue#snapshot():79  out.add(buf[idx]);
-    → queue.RingEventQueue#snapshot():83  return out;
-      ↓ queue.RingEventQueue#snapshot()의 반환값으로 → queue.RingEventQueue#offer(model.Event)의 1번째 인자로
-    → queue.RingEventQueue#offer(model.Event):33  if (e == null) return OfferResult.REJECTED;
+    바뀐 줄 queue.RingEventQueue#poll():46  head++;
+      ↓ 필드 queue.RingEventQueue.head에 저장했다가 읽음
+    → queue.RingEventQueue#poll():44  Event e = buf[head];
+    → queue.RingEventQueue#poll():49  return e;
+      ↓ queue.RingEventQueue#poll()의 반환값으로
+    → dispatch.Dispatcher#dispatchOne():101  Event e = queue.poll();
+    → dispatch.Dispatcher#dispatchOne():102  if (e == null) return null;
       ↓ 위 줄의 조건에 따라 실행 여부가 달라짐
-    → queue.RingEventQueue#offer(model.Event):34  if (count == buf.length) return OfferResult.FULL;
+    → dispatch.Dispatcher#dispatchOne():106  if (listener != null) {
       ↓ 위 줄의 조건에 따라 실행 여부가 달라짐
-    → queue.RingEventQueue#offer(model.Event):38  count++;
-      ↓ 필드 queue.RingEventQueue.count에 저장했다가 읽음
-    → queue.RingEventQueue#size():58  return count;
-      ↓ queue.RingEventQueue#size()의 반환값으로
-    → ops.Watchdog#check():22  if (queue.size() * 4 >= queue.capacity() * 3) {
+    → dispatch.Dispatcher#dispatchOne():107  listener.afterDispatch(e);
+      ↓ 필드 model.Event.seq에 저장했다가 읽음
+    → model.Event#getSeq():31  return seq;
+      ↓ model.Event#getSeq()의 반환값으로 → testkit.Check#eq(long,long,String)의 2번째 인자로
+    → testkit.Check#eq(long,long,String):22  if (expected != actual) {
       ↓ 위 줄의 조건에 따라 실행 여부가 달라짐
-    → ops.Watchdog#check():23  highWaterChecks++;
-    (다른 이유)
-    바뀐 줄 queue.RingEventQueue#offer(model.Event):37  buf[idx] = e;
-      ↓ queue.RingEventQueue.buf의 내용에 저장했다가 읽음
-    → queue.RingEventQueue#snapshot():79  out.add(buf[idx]);
-    → queue.RingEventQueue#snapshot():83  return out;
-      ↓ queue.RingEventQueue#snapshot()의 반환값으로 → queue.RingEventQueue#offer(model.Event)의 1번째 인자로
-    → queue.RingEventQueue#offer(model.Event):33  if (e == null) return OfferResult.REJECTED;
-      ↓ 위 줄의 조건에 따라 실행 여부가 달라짐
-    → queue.RingEventQueue#offer(model.Event):34  if (count == buf.length) return OfferResult.FULL;
-      ↓ 위 줄의 조건에 따라 실행 여부가 달라짐
-    → queue.RingEventQueue#offer(model.Event):38  count++;
-      ↓ 필드 queue.RingEventQueue.count에 저장했다가 읽음
-    → queue.RingEventQueue#size():58  return count;
-      ↓ queue.RingEventQueue#size()의 반환값으로
-    → ops.Watchdog#check():22  if (queue.size() * 4 >= queue.capacity() * 3) {
-      ↓ 위 줄의 조건에 따라 실행 여부가 달라짐
-    → ops.Watchdog#check():23  highWaterChecks++;
-- ops.Watchdog#check()의 반환값
-    바뀐 줄 queue.RingEventQueue#clear():72  count = 0;
-      ↓ 필드 queue.RingEventQueue.count에 저장했다가 읽음
-    → queue.RingEventQueue#size():58  return count;
-      ↓ queue.RingEventQueue#size()의 반환값으로
-    → ops.Watchdog#check():22  if (queue.size() * 4 >= queue.capacity() * 3) {
-      ↓ 위 줄의 조건에 따라 실행 여부가 달라짐
-    → ops.Watchdog#check():23  highWaterChecks++;
-      ↓ 필드 ops.Watchdog.highWaterChecks에 저장했다가 읽음
-    → ops.Watchdog#check():27  if (highWaterChecks >= threshold) {
-      ↓ 위 줄의 조건에 따라 실행 여부가 달라짐
-    → ops.Watchdog#check():30  return true;
-    (다른 이유)
-    바뀐 줄 queue.RingEventQueue#snapshot():79  out.add(buf[idx]);
-    → queue.RingEventQueue#snapshot():83  return out;
-      ↓ queue.RingEventQueue#snapshot()의 반환값으로 → queue.RingEventQueue#offer(model.Event)의 1번째 인자로
-    → queue.RingEventQueue#offer(model.Event):33  if (e == null) return OfferResult.REJECTED;
-      ↓ 위 줄의 조건에 따라 실행 여부가 달라짐
-    → queue.RingEventQueue#offer(model.Event):34  if (count == buf.length) return OfferResult.FULL;
-      ↓ 위 줄의 조건에 따라 실행 여부가 달라짐
-    → queue.RingEventQueue#offer(model.Event):38  count++;
-      ↓ 필드 queue.RingEventQueue.count에 저장했다가 읽음
-    → queue.RingEventQueue#size():58  return count;
-      ↓ queue.RingEventQueue#size()의 반환값으로
-    → ops.Watchdog#check():22  if (queue.size() * 4 >= queue.capacity() * 3) {
-      ↓ 위 줄의 조건에 따라 실행 여부가 달라짐
-    → ops.Watchdog#check():23  highWaterChecks++;
-      ↓ 필드 ops.Watchdog.highWaterChecks에 저장했다가 읽음
-    → ops.Watchdog#check():27  if (highWaterChecks >= threshold) {
-      ↓ 위 줄의 조건에 따라 실행 여부가 달라짐
-    → ops.Watchdog#check():30  return true;
-    (다른 이유)
-    바뀐 줄 queue.RingEventQueue#offer(model.Event):37  buf[idx] = e;
-      ↓ queue.RingEventQueue.buf의 내용에 저장했다가 읽음
-    → queue.RingEventQueue#snapshot():79  out.add(buf[idx]);
-    → queue.RingEventQueue#snapshot():83  return out;
-      ↓ queue.RingEventQueue#snapshot()의 반환값으로 → queue.RingEventQueue#offer(model.Event)의 1번째 인자로
-    → queue.RingEventQueue#offer(model.Event):33  if (e == null) return OfferResult.REJECTED;
-      ↓ 위 줄의 조건에 따라 실행 여부가 달라짐
-    → queue.RingEventQueue#offer(model.Event):34  if (count == buf.length) return OfferResult.FULL;
-      ↓ 위 줄의 조건에 따라 실행 여부가 달라짐
-    → queue.RingEventQueue#offer(model.Event):38  count++;
-      ↓ 필드 queue.RingEventQueue.count에 저장했다가 읽음
-    → queue.RingEventQueue#size():58  return count;
-      ↓ queue.RingEventQueue#size()의 반환값으로
-    → ops.Watchdog#check():22  if (queue.size() * 4 >= queue.capacity() * 3) {
-      ↓ 위 줄의 조건에 따라 실행 여부가 달라짐
-    → ops.Watchdog#check():23  highWaterChecks++;
-      ↓ 필드 ops.Watchdog.highWaterChecks에 저장했다가 읽음
-    → ops.Watchdog#check():27  if (highWaterChecks >= threshold) {
-      ↓ 위 줄의 조건에 따라 실행 여부가 달라짐
-    → ops.Watchdog#check():30  return true;
+    → testkit.Check#eq(long,long,String):23  throw new AssertionError(msg + ": expected <" + expected + "> but was <" + actual + ">");
+      ↓ testkit.Check#eq(long,long,String)에서 나온 예외로

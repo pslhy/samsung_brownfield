@@ -227,11 +227,6 @@
       "kind": "method",
       "note": "null input is outside the model"
     },
-    "com.dxlab.homehub.queue.RingEventQueue#clear()": {
-      "dafny": "RingQueueModel.RingQueue.Clear",
-      "kind": "method",
-      "note": ""
-    },
     "com.dxlab.homehub.queue.RingEventQueue#snapshot()": {
       "dafny": "RingQueueModel.RingQueue.Snapshot",
       "kind": "method",
@@ -239,6 +234,11 @@
     },
     "com.dxlab.homehub.queue.RingEventQueue#poll()": {
       "dafny": "RingQueueModel.RingQueue.Poll",
+      "kind": "method",
+      "note": ""
+    },
+    "com.dxlab.homehub.queue.RingEventQueue#clear()": {
+      "dafny": "RingQueueModel.RingQueue.Clear",
       "kind": "method",
       "note": ""
     }

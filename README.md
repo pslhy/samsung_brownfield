@@ -56,7 +56,7 @@ make report        # 지금까지 만든 결과 보고서 목록 열기
 | `difftest/` | 차분 테스트: `DiffTest`(Java vs 모델), `QueueModel`(모델 연결 인터페이스), `HubDiff`(빌드 vs 빌드) |
 | `scenarios/req1` | 변경 요청 1: 대기열 늘리기 (AI 패치 A·B, 모델) |
 | `scenarios/req2` | 변경 요청 2: 대기열 연산 빠르게 (`%` 제거) |
-| `scenarios/a3-sort` | 실습 A-2 ③: 영향 분석이 못 찾는 변경 (정렬 기준) |
+| `scenarios/a3-sort` | 실습 A-2 ②: 영향 분석이 못 찾는 변경 (정렬 기준) |
 | `scenarios/b1-ai-sample` | 실습 B-1의 AI 결과 예시(Dafny 모델 + 연결 코드) |
 | `scenarios/rw` | 정리 규칙 세 개를 코드 전체에 적용한 결과(실습 E) |
 | `rewrite/` | 정리 규칙의 조건 증명(`RewriteRules.dfy`) |

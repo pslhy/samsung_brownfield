@@ -81,7 +81,7 @@
   "title": "내 Dafny 모델 확인",
   "status": "ok",
   "summary": "모두 예상대로",
-  "time": "2026-11-04 09:21"
+  "time": "2026-11-05 15:59"
  },
  "reverify-req2": {
   "title": "재검증 범위: req2",
@@ -141,7 +141,7 @@
   "title": "바뀐 코드: scenarios/req2/ai",
   "status": "ok",
   "summary": "",
-  "time": "2026-11-04 08:59"
+  "time": "2026-11-05 14:39"
  },
  "show-a3-sort": {
   "title": "바뀐 코드: scenarios/a3-sort",
@@ -165,13 +165,13 @@
   "title": "변경 영향의 이유: scenarios/req2/ai",
   "status": "info",
   "summary": "물어본 1개 중 영향받음 1",
-  "time": "2026-11-04 08:59"
+  "time": "2026-11-05 14:44"
  },
  "impact-req1-ai-A-why": {
   "title": "변경 영향의 이유: scenarios/req1/ai-A",
   "status": "info",
   "summary": "물어본 1개 중 영향받음 1",
-  "time": "2026-11-04 08:59"
+  "time": "2026-11-05 14:48"
  },
  "impact-req2-ai-scope": {
   "title": "변경 영향: scenarios/req2/ai (RingEventQueue.java만)",

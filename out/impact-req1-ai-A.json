@@ -249,15 +249,15 @@
     ]
   ],
   "dafny": {
-    "com.dxlab.homehub.queue.RingEventQueue#offer(com.dxlab.homehub.model.Event)": {
-      "dafny": "RingQueueModel.RingQueue.Offer",
-      "kind": "method",
-      "note": "null input is outside the model"
-    },
     "com.dxlab.homehub.queue.RingEventQueue#<init>(int)": {
       "dafny": "RingQueueModel.RingQueue._ctor",
       "kind": "constructor",
       "note": ""
+    },
+    "com.dxlab.homehub.queue.RingEventQueue#offer(com.dxlab.homehub.model.Event)": {
+      "dafny": "RingQueueModel.RingQueue.Offer",
+      "kind": "method",
+      "note": "null input is outside the model"
     }
   }
 }
