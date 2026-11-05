@@ -1,0 +1,4 @@
+includes = ["Types.dfy", "RingQueue.dfy", "Dispatcher.dfy", "PowerBudget.dfy"]
+
+[options]
+verification-time-limit = 60

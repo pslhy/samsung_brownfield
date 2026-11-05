@@ -1,0 +1,5 @@
+1|fridge-2|PWR_ON|0|0
+2|fridge-2|TEMP|12|60000|unit=C
+3|fridge-2|TEMP|13|120000|unit=C
+!drain
+4|fridge-2|TEMP|14|180000|unit=C

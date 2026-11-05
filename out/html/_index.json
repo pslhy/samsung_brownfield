@@ -1,0 +1,182 @@
+{
+ "rewrite-check-IsEmpty": {
+  "title": "정리 규칙 적용 확인: IsEmpty",
+  "status": "ok",
+  "summary": "테스트 38/38 통과; 기록 3개 모두 같음; 무작위 입력 200개 모두 같음",
+  "time": "2026-10-31 15:56"
+ },
+ "rewrite-check-ForEach": {
+  "title": "정리 규칙 적용 확인: ForEach",
+  "status": "ok",
+  "summary": "테스트 38/38 통과; 기록 3개 모두 같음; 무작위 입력 200개 모두 같음",
+  "time": "2026-10-31 15:56"
+ },
+ "path": {
+  "title": "메시지 하나의 처리 경로",
+  "status": "info",
+  "summary": "호출 그래프 58개, 실행 36개",
+  "time": "2026-11-02 16:48"
+ },
+ "state": {
+  "title": "공유 상태 지도",
+  "status": "info",
+  "summary": "공유 상태 13개, 상태로만 이어진 곳 7곳",
+  "time": "2026-10-30 15:31"
+ },
+ "config-temp.highCelsius": {
+  "title": "설정값 따라가기: temp.highCelsius",
+  "status": "info",
+  "summary": "키 2곳, 닿는 메서드 80개, 조건 83곳",
+  "time": "2026-10-30 15:31"
+ },
+ "config-rules.doorOpenAlertMillis": {
+  "title": "설정값 따라가기: rules.doorOpenAlertMillis",
+  "status": "info",
+  "summary": "키 2곳, 닿는 메서드 12개, 조건 8곳",
+  "time": "2026-10-30 15:31"
+ },
+ "impact-req2-ai": {
+  "title": "변경 영향: scenarios/req2/ai",
+  "status": "info",
+  "summary": "메서드 79, 데이터 24, 테스트 33/38",
+  "time": "2026-11-04 08:59"
+ },
+ "impact-req1-ai-A": {
+  "title": "변경 영향: scenarios/req1/ai-A",
+  "status": "info",
+  "summary": "메서드 86, 데이터 26, 테스트 35/40",
+  "time": "2026-11-04 01:37"
+ },
+ "impact-a3-sort": {
+  "title": "변경 영향: scenarios/a3-sort",
+  "status": "info",
+  "summary": "메서드 2, 데이터 0, 테스트 0/38",
+  "time": "2026-11-04 09:00"
+ },
+ "verify": {
+  "title": "Dafny 기준 모델 검증",
+  "status": "ok",
+  "summary": "모두 예상대로",
+  "time": "2026-10-31 15:20"
+ },
+ "difftest": {
+  "title": "차분 테스트: Java와 Dafny 모델",
+  "status": "ok",
+  "summary": "queue 일치, dispatcher 일치, power 일치",
+  "time": "2026-10-31 15:58"
+ },
+ "req1": {
+  "title": "변경 요청 1: 대기열 늘리기",
+  "status": "ok",
+  "summary": "모두 예상대로",
+  "time": "2026-10-31 15:21"
+ },
+ "test-req1-ai-A-oldtests": {
+  "title": "테스트: scenarios/req1/ai-A-oldtests",
+  "status": "bad",
+  "summary": "테스트 33/38 통과",
+  "time": "2026-10-31 15:22"
+ },
+ "difftest-mine": {
+  "title": "내 Dafny 모델 확인",
+  "status": "ok",
+  "summary": "모두 예상대로",
+  "time": "2026-11-04 09:21"
+ },
+ "reverify-req2": {
+  "title": "재검증 범위: req2",
+  "status": "ok",
+  "summary": "4/49개 다시 증명",
+  "time": "2026-10-31 15:22"
+ },
+ "impact-req1-ai-B": {
+  "title": "변경 영향: scenarios/req1/ai-B",
+  "status": "info",
+  "summary": "메서드 124, 데이터 52, 테스트 37/42",
+  "time": "2026-10-31 15:22"
+ },
+ "reverify-req1": {
+  "title": "재검증 범위: req1",
+  "status": "ok",
+  "summary": "19/51개 다시 증명",
+  "time": "2026-10-31 15:22"
+ },
+ "rewrite-check-InlineVariable": {
+  "title": "정리 규칙 적용 확인: InlineVariable",
+  "status": "bad",
+  "summary": "테스트 38/38 통과; 기록 3개 중 1개 다름; 무작위 비교 불일치(9줄 입력)",
+  "time": "2026-10-31 15:56"
+ },
+ "rewrite-check-All": {
+  "title": "정리 규칙 적용 확인: All",
+  "status": "bad",
+  "summary": "테스트 38/38 통과; 기록 3개 중 1개 다름; 무작위 비교 불일치(9줄 입력)",
+  "time": "2026-10-31 15:56"
+ },
+ "rules": {
+  "title": "정리 규칙의 조건 증명",
+  "status": "ok",
+  "summary": "모두 예상대로",
+  "time": "2026-10-31 15:56"
+ },
+ "test": {
+  "title": "기존 테스트",
+  "status": "ok",
+  "summary": "모두 예상대로",
+  "time": "2026-11-03 04:36"
+ },
+ "verify-all": {
+  "title": "Dafny 증명 전체 점검",
+  "status": "ok",
+  "summary": "모두 예상대로",
+  "time": "2026-11-02 16:51"
+ },
+ "trace": {
+  "title": "동작 기록 비교",
+  "status": "ok",
+  "summary": "기록 3개 모두 같음",
+  "time": "2026-11-04 01:29"
+ },
+ "show-req2-ai": {
+  "title": "바뀐 코드: scenarios/req2/ai",
+  "status": "ok",
+  "summary": "",
+  "time": "2026-11-04 08:59"
+ },
+ "show-a3-sort": {
+  "title": "바뀐 코드: scenarios/a3-sort",
+  "status": "ok",
+  "summary": "",
+  "time": "2026-11-04 08:59"
+ },
+ "test-a3-sort": {
+  "title": "테스트: scenarios/a3-sort",
+  "status": "ok",
+  "summary": "테스트 38/38 통과",
+  "time": "2026-11-04 09:00"
+ },
+ "trace-a3-sort": {
+  "title": "동작 기록 비교",
+  "status": "bad",
+  "summary": "기록 3개 중 3개 다름",
+  "time": "2026-11-04 09:00"
+ },
+ "impact-req2-ai-why": {
+  "title": "변경 영향의 이유: scenarios/req2/ai",
+  "status": "info",
+  "summary": "물어본 1개 중 영향받음 1",
+  "time": "2026-11-04 08:59"
+ },
+ "impact-req1-ai-A-why": {
+  "title": "변경 영향의 이유: scenarios/req1/ai-A",
+  "status": "info",
+  "summary": "물어본 1개 중 영향받음 1",
+  "time": "2026-11-04 08:59"
+ },
+ "impact-req2-ai-scope": {
+  "title": "변경 영향: scenarios/req2/ai (RingEventQueue.java만)",
+  "status": "info",
+  "summary": "RingEventQueue.java만: 메서드 7, 데이터 3",
+  "time": "2026-11-04 08:46"
+ }
+}

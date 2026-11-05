@@ -1,0 +1,14 @@
+{
+  "changed": [
+    "com.dxlab.homehub.device.DeviceRegistry$1#compare(com.dxlab.homehub.model.Device,com.dxlab.homehub.model.Device)"
+  ],
+  "added": [],
+  "removed": [],
+  "impacted": [
+    "com.dxlab.homehub.device.DeviceRegistry$1#compare(com.dxlab.homehub.model.Device,com.dxlab.homehub.model.Device)",
+    "com.dxlab.homehub.device.DeviceRegistry$1#compare(java.lang.Object,java.lang.Object)"
+  ],
+  "tests": [],
+  "data": [],
+  "dafny": {}
+}

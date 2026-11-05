@@ -1,0 +1,1 @@
+{"files": ["scenarios/b1-ai-sample/RingEventQueue.dfy"], "verified": 19, "errors_count": 0, "errors": [], "summary": "finished with 19 verified, 0 errors", "output": "\nDafny program verifier finished with 19 verified, 0 errors\n"}

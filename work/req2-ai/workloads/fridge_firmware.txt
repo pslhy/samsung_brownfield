@@ -1,0 +1,22 @@
+# Two fridges.
+#  fridge-1: reports Celsius (unit=C). Door left open -> temperature climbs and stays at 12C.
+#  fridge-2: reports Fahrenheit (unit=F), normal temperature (38F = 3C).
+1|fridge-1|PWR_ON|0|0|fw=2.1
+2|fridge-2|PWR_ON|0|0|fw=1.4
+!drain
+3|fridge-1|DOOR_O|0|1000
+4|fridge-1|TEMP|9|60000|unit=C
+5|fridge-2|TEMP|38|60000|unit=F
+!drain
+6|fridge-1|TEMP|12|120000|unit=C
+7|fridge-2|TEMP|38|120000|unit=F
+!drain
+8|fridge-1|TEMP|12|180000|unit=C
+9|fridge-2|TEMP|39|180000|unit=F
+!drain
+10|fridge-1|TEMP|12|240000|unit=C
+11|fridge-2|TEMP|38|240000|unit=F
+!drain
+12|fridge-1|TEMP|12|300000|unit=C
+13|fridge-2|TEMP|38|300000|unit=F
+!drain

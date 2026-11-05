@@ -1,0 +1,22 @@
+# Java method (canonical)	Dafny symbol	Dafny kind	note
+com.dxlab.homehub.queue.RingEventQueue#<init>(int)	RingQueueModel.RingQueue._ctor	constructor
+com.dxlab.homehub.queue.RingEventQueue#offer(com.dxlab.homehub.model.Event)	RingQueueModel.RingQueue.Offer	method	null input is outside the model
+com.dxlab.homehub.queue.RingEventQueue#poll()	RingQueueModel.RingQueue.Poll	method
+com.dxlab.homehub.queue.RingEventQueue#peek()	RingQueueModel.RingQueue.Peek	method
+com.dxlab.homehub.queue.RingEventQueue#size()	RingQueueModel.RingQueue.Size	method
+com.dxlab.homehub.queue.RingEventQueue#capacity()	RingQueueModel.RingQueue.GetCapacity	method	spec function Capacity() has no Java counterpart
+com.dxlab.homehub.queue.RingEventQueue#isEmpty()	RingQueueModel.RingQueue.IsEmpty	method
+com.dxlab.homehub.queue.RingEventQueue#clear()	RingQueueModel.RingQueue.Clear	method
+com.dxlab.homehub.queue.RingEventQueue#snapshot()	RingQueueModel.RingQueue.Snapshot	method
+com.dxlab.homehub.dispatch.Dispatcher#submit(com.dxlab.homehub.model.Event)	DispatcherModel.Dispatcher.Submit	method	metrics/audit side effects are outside the model
+com.dxlab.homehub.dispatch.Dispatcher#evictOldestNonCritical()	DispatcherModel.Dispatcher.EvictOldestNonCritical	method
+com.dxlab.homehub.dispatch.Dispatcher#dispatchOne()	DispatcherModel.Dispatcher.DispatchOne	method	handlers and listener are outside the model
+com.dxlab.homehub.dispatch.Dispatcher#drain()	DispatcherModel.Dispatcher.Drain	method
+com.dxlab.homehub.power.PowerBudget#<init>(int)	PowerBudgetModel.PowerBudget._ctor	constructor	model requires cap < 2^30 (Java does not check)
+com.dxlab.homehub.power.PowerBudget#tryStart(java.lang.String,int)	PowerBudgetModel.PowerBudget.TryStart	method	device ids abstracted to integers
+com.dxlab.homehub.power.PowerBudget#stop(java.lang.String)	PowerBudgetModel.PowerBudget.Stop	method
+com.dxlab.homehub.power.PowerBudget#totalLoad()	PowerBudgetModel.PowerBudget.TotalLoad	method	computes spec function Load()
+com.dxlab.homehub.power.PowerBudget#headroom()	PowerBudgetModel.PowerBudget.Headroom	method
+com.dxlab.homehub.power.PowerBudget#isRunning(java.lang.String)	PowerBudgetModel.PowerBudget.IsRunning	method
+com.dxlab.homehub.power.PowerBudget#isIdle()	PowerBudgetModel.PowerBudget.IsIdle	method
+com.dxlab.homehub.power.PowerBudget#stopAll()	PowerBudgetModel.PowerBudget.StopAll	method

@@ -1,0 +1,6 @@
+FAIL RingEventQueueTest.testFullAtCapacity: java.lang.AssertionError: 3: expected <FULL> but was <OK>
+FAIL DispatcherTest.testAutoDrain: java.lang.AssertionError: drained: expected <ACCEPTED_DRAINED> but was <ACCEPTED>
+FAIL DispatcherTest.testCriticalDrainsWhenAllCritical: java.lang.AssertionError: drained: expected <ACCEPTED_DRAINED> but was <ACCEPTED>
+FAIL DispatcherTest.testCriticalEvictsOldestNonCritical: java.lang.AssertionError: evicted: expected <ACCEPTED_EVICTED> but was <ACCEPTED>
+FAIL DispatcherTest.testRejectNonCriticalWhenFull: java.lang.AssertionError: rejected: expected <REJECTED_FULL> but was <ACCEPTED>
+tests: 38, passed: 33, failed: 5

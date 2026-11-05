@@ -1,0 +1,23 @@
+# Evening peak: many devices report at once while the dispatcher is busy.
+1|tv-1|HB|0|1000
+2|aircon-1|PWR_ON|0|1001
+3|washer-1|PWR_ON|0|1002
+4|fridge-1|TEMP|4|1003|unit=C
+5|dryer-1|PWR_ON|0|1004
+6|oven-1|PWR_ON|0|1005
+7|tv-1|HB|0|1006
+8|aircon-1|HB|0|1007
+9|washer-1|CYC_S|0|1008
+10|fridge-1|TEMP|5|1009|unit=C
+11|leak-1|LEAK|1|1010
+12|tv-1|HB|0|1011
+!tick
+!tick
+13|oven-1|CYC_S|0|1012
+!tick
+!step
+!step
+14|fridge-1|TEMP|5|1013|unit=C
+15|leak-1|LEAK|1|1014
+!drain
+!tick

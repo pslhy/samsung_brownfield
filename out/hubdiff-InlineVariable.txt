@@ -1,0 +1,9 @@
+7|oven-1|TEMP|12|420000|unit=C
+8|aircon-1|DOOR_O|0|480000
+9|washer-1|PWR_ON|0|540000
+10|dryer-1|TEMP|38|600000|unit=F
+11|aircon-1|LEAK|0|660000
+12|fridge-2|DOOR_C|1|720000
+14|leak-1|PWR_OFF|1|840000
+15|leak-1|CYC_E|0|900000
+16|aircon-1|LEAK|0|960000

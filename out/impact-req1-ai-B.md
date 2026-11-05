@@ -1,0 +1,267 @@
+# 변경 영향 보고서 (def-use 기반, 시스템 의존 그래프)
+
+## 1. 바뀐 줄
+
+- [변경] DispatcherTest#<init>()  (변경 전 DispatcherTest.java:14; 변경 후 DispatcherTest.java:14)
+- [추가] DispatcherTest#testLogicalLimitAboveInitialCapacity()  (변경 후 DispatcherTest.java:77,78,79,80,82,83,84)
+- [추가] HomeHubTest#testBurstOf32IsAccepted()  (변경 후 HomeHubTest.java:54,55,56,58,59)
+- [변경] HomeHubTest#testWatchdogRecoversStuckQueue()  (변경 전 HomeHubTest.java:41; 변경 후 HomeHubTest.java:41)
+- [변경] RingEventQueueTest#testClearAndSnapshot()  (변경 후 RingEventQueueTest.java:78,79,80,81,82,83,84,85)
+- [변경] RingEventQueueTest#testFullAtCapacity()  (변경 전 RingEventQueueTest.java:27,31,32; 변경 후 RingEventQueueTest.java:27,32)
+- [추가] RingEventQueueTest#testFullAtMaxCapacity()  (변경 후 RingEventQueueTest.java:45,46,47,49)
+- [추가] RingEventQueueTest#testGrowsBeyondInitialCapacity()  (변경 후 RingEventQueueTest.java:35,36,37,39,40,42)
+- [변경] RingEventQueueTest#testNullRejected()  (변경 후 RingEventQueueTest.java:53,54,55,56)
+- [변경] RingEventQueueTest#testPeekDoesNotRemove()  (변경 후 RingEventQueueTest.java:71,72,73,74,75)
+- [변경] RingEventQueueTest#testWrapAround()  (변경 후 RingEventQueueTest.java:59,60,61,62,63,64,65,66,67,68)
+- [변경] app.HomeHub#<init>(app.HubConfig)  (변경 전 HomeHub.java:44; 변경 후 HomeHub.java:44,45)
+- [변경] app.HomeHub#<init>(app.HubConfig,queue.EventQueue)  (변경 전 HomeHub.java:75,79; 변경 후 HomeHub.java:76,77,81)
+- [변경] app.HubConfig#<init>()  (변경 전 HubConfig.java:18,19; 변경 후 HubConfig.java:19)
+- [추가] app.HubConfig#maxPending()  (변경 후 HubConfig.java:63)
+- [변경] app.HubConfig#powerCapWatts()  (변경 후 HubConfig.java:71)
+- [변경] app.HubConfig#queueCapacity()  (변경 후 HubConfig.java:59)
+- [변경] dispatch.Dispatcher#<init>(queue.EventQueue,dispatch.HandlerRegistry,ops.Metrics,ops.AuditLog,boolean)  (변경 전 Dispatcher.java:29,30; 변경 후 Dispatcher.java:35,36)
+- [추가] dispatch.Dispatcher#<init>(queue.EventQueue,dispatch.HandlerRegistry,ops.Metrics,ops.AuditLog,boolean,int)  (변경 후 Dispatcher.java:39,40,41,43)
+- [변경] dispatch.Dispatcher#dispatchOne()  (변경 후 Dispatcher.java:118,119,120,121,122,123,124,126)
+- [변경] dispatch.Dispatcher#drain()  (변경 후 Dispatcher.java:130,131,132,134)
+- [변경] dispatch.Dispatcher#evictOldestNonCritical()  (변경 후 Dispatcher.java:103,104,105,106,107,108,109,111,113)
+- [추가] dispatch.Dispatcher#getMaxPending()  (변경 후 Dispatcher.java:138)
+- [변경] dispatch.Dispatcher#submit(model.Event)  (변경 전 Dispatcher.java:46,47,48,49,51,52,53; 변경 후 Dispatcher.java:60,61,62,63,64,66,67,68)
+- [삭제] ops.Watchdog#<init>(queue.EventQueue,ops.AuditLog,int)  (변경 전 Watchdog.java:15)
+- [추가] ops.Watchdog#<init>(queue.EventQueue,ops.AuditLog,int,int)  (변경 후 Watchdog.java:18,19)
+- [변경] ops.Watchdog#check()  (변경 전 Watchdog.java:22; 변경 후 Watchdog.java:26)
+- [변경] queue.RingEventQueue#<init>(int)  (변경 전 RingEventQueue.java:24,25,27; 변경 후 RingEventQueue.java:26,27)
+- [추가] queue.RingEventQueue#<init>(int,int)  (변경 후 RingEventQueue.java:29,30,31,33,34)
+- [추가] queue.RingEventQueue#grow()  (변경 후 RingEventQueue.java:49,50,51,52,54,55)
+- [추가] queue.RingEventQueue#maxCapacity()  (변경 후 RingEventQueue.java:81)
+- [변경] queue.RingEventQueue#offer(model.Event)  (변경 전 RingEventQueue.java:32,35; 변경 후 RingEventQueue.java:39,40,41)
+
+## 2. 값이 달라질 수 있는 데이터 (52)
+
+- app.HomeHub.dispatcher의 내용  <- app.HomeHub#<init>(app.HubConfig,queue.EventQueue)
+- app.HomeHub.watchdog의 내용  <- app.HomeHub#<init>(app.HubConfig,queue.EventQueue)
+- app.HubConfig.props의 내용  <- app.HubConfig#<init>()
+- device.DeviceRegistry.devices의 내용  <- app.HomeHub#<init>(app.HubConfig,queue.EventQueue)
+- dispatch.HandlerRegistry.byType의 내용  <- dispatch.HandlerRegistry#register(model.EventType,dispatch.EventHandler)
+- ops.AuditLog.entries의 내용  <- app.HomeHub#drain()
+- ops.Metrics.counters의 내용  <- app.HomeHub#drain()
+- power.PowerBudget.running의 내용  <- app.HomeHub#drain()
+- queue.RingEventQueue.buf의 내용  <- app.HomeHub#drain()
+- rules.RuleEngine.outbox의 내용  <- app.HomeHub#drain()
+- rules.RuleEngine.overheatLatched의 내용  <- app.HomeHub#drain()
+- 필드 app.HomeHub.config  <- app.HomeHub#<init>(app.HubConfig,queue.EventQueue)
+- 필드 app.HomeHub.dispatcher  <- app.HomeHub#<init>(app.HubConfig,queue.EventQueue)
+- 필드 app.HomeHub.watchdog  <- app.HomeHub#<init>(app.HubConfig,queue.EventQueue)
+- 필드 dispatch.Dispatcher.audit  <- dispatch.Dispatcher#<init>(queue.EventQueue,dispatch.HandlerRegistry,ops.Metrics,ops.AuditLog,boolean)
+- 필드 dispatch.Dispatcher.autoDrainOnFull  <- dispatch.Dispatcher#<init>(queue.EventQueue,dispatch.HandlerRegistry,ops.Metrics,ops.AuditLog,boolean)
+- 필드 dispatch.Dispatcher.dispatchedCount  <- app.HomeHub#drain()
+- 필드 dispatch.Dispatcher.handlers  <- dispatch.Dispatcher#<init>(queue.EventQueue,dispatch.HandlerRegistry,ops.Metrics,ops.AuditLog,boolean)
+- 필드 dispatch.Dispatcher.listener  <- dispatch.Dispatcher#setListener(dispatch.DispatchListener)
+- 필드 dispatch.Dispatcher.maxPending  <- dispatch.Dispatcher#<init>(queue.EventQueue,dispatch.HandlerRegistry,ops.Metrics,ops.AuditLog,boolean,int)
+- 필드 dispatch.Dispatcher.metrics  <- dispatch.Dispatcher#<init>(queue.EventQueue,dispatch.HandlerRegistry,ops.Metrics,ops.AuditLog,boolean)
+- 필드 dispatch.Dispatcher.queue  <- dispatch.Dispatcher#<init>(queue.EventQueue,dispatch.HandlerRegistry,ops.Metrics,ops.AuditLog,boolean)
+- 필드 dispatch.HandlerRegistry.fallback  <- dispatch.HandlerRegistry#setFallback(dispatch.EventHandler)
+- 필드 handlers.TemperatureHandler.highThresholdCelsius  <- handlers.TemperatureHandler#<init>(device.DeviceRegistry,ops.Metrics,ops.AuditLog,int)
+- 필드 model.Device.consecutiveHighTemp  <- app.HomeHub#drain()
+- 필드 model.Device.doorOpen  <- app.HomeHub#drain()
+- 필드 model.Device.doorOpenedAt  <- app.HomeHub#<init>(app.HubConfig,queue.EventQueue)
+- 필드 model.Device.firmware  <- app.HomeHub#<init>(app.HubConfig,queue.EventQueue)
+- 필드 model.Device.id  <- app.HomeHub#<init>(app.HubConfig,queue.EventQueue)
+- 필드 model.Device.kind  <- app.HomeHub#<init>(app.HubConfig,queue.EventQueue)
+- 필드 model.Device.lastSeen  <- app.HomeHub#<init>(app.HubConfig,queue.EventQueue)
+- 필드 model.Device.lastTemp  <- app.HomeHub#drain()
+- 필드 model.Device.status  <- app.HomeHub#<init>(app.HubConfig,queue.EventQueue)
+- 필드 model.Event.attrs  <- app.HomeHub#drain()
+- 필드 model.Event.deviceId  <- app.HomeHub#drain()
+- 필드 model.Event.seq  <- app.HomeHub#drain()
+- 필드 model.Event.timestamp  <- app.HomeHub#drain()
+- 필드 model.Event.type  <- app.HomeHub#drain()
+- 필드 model.Event.value  <- app.HomeHub#drain()
+- 필드 ops.Watchdog.audit  <- ops.Watchdog#<init>(queue.EventQueue,ops.AuditLog,int)
+- 필드 ops.Watchdog.highWaterChecks  <- ops.Watchdog#check()
+- 필드 ops.Watchdog.limit  <- ops.Watchdog#<init>(queue.EventQueue,ops.AuditLog,int,int)
+- 필드 ops.Watchdog.queue  <- ops.Watchdog#<init>(queue.EventQueue,ops.AuditLog,int)
+- 필드 ops.Watchdog.threshold  <- ops.Watchdog#<init>(queue.EventQueue,ops.AuditLog,int)
+- 필드 power.PowerBudget.capWatts  <- power.PowerBudget#<init>(int)
+- 필드 queue.RingEventQueue.buf  <- app.HomeHub#drain()
+- 필드 queue.RingEventQueue.count  <- app.HomeHub#drain()
+- 필드 queue.RingEventQueue.head  <- app.HomeHub#drain()
+- 필드 queue.RingEventQueue.maxCapacity  <- queue.RingEventQueue#<init>(int,int)
+- 필드 rules.RuleEngine.doorOpenAlertMillis  <- rules.RuleEngine#<init>(device.DeviceRegistry,ops.AuditLog,int,long)
+- 필드 rules.RuleEngine.nextSeq  <- app.HomeHub#drain()
+- 필드 rules.RuleEngine.overheatAfterReports  <- rules.RuleEngine#<init>(device.DeviceRegistry,ops.AuditLog,int,long)
+
+## 3. 출력이 달라질 수 있는 메서드 (124)
+
+- app.HomeHub#<init>(app.HubConfig): 예외
+- app.HomeHub#<init>(app.HubConfig,queue.EventQueue): app.HomeHub.dispatcher의 내용에 쓰는 값, app.HomeHub.watchdog의 내용에 쓰는 값, device.DeviceRegistry.devices의 내용에 쓰는 값, 예외, 필드 app.HomeHub.config에 쓰는 값, 필드 app.HomeHub.dispa
+- app.HomeHub#drain(): ops.AuditLog.entries의 내용에 쓰는 값, ops.Metrics.counters의 내용에 쓰는 값, power.PowerBudget.running의 내용에 쓰는 값, queue.RingEventQueue.buf의 내용에 쓰는 값, rules.RuleEngine.outbox
+- app.HomeHub#flushDerived(): ops.AuditLog.entries의 내용에 쓰는 값, ops.Metrics.counters의 내용에 쓰는 값, power.PowerBudget.running의 내용에 쓰는 값, queue.RingEventQueue.buf의 내용에 쓰는 값, rules.RuleEngine.outbox
+- app.HomeHub#getConfig(): 반환값
+- app.HomeHub#getDispatcher(): 반환값
+- app.HomeHub#ingest(String): 반환값
+- app.HomeHub#observable(): 반환값
+- app.HomeHub#step(): 반환값
+- app.HomeHub#submit(model.Event): 반환값
+- app.HomeHub#tick(): ops.AuditLog.entries의 내용에 쓰는 값, ops.Metrics.counters의 내용에 쓰는 값, queue.RingEventQueue.buf의 내용에 쓰는 값, 필드 queue.RingEventQueue.buf에 쓰는 값, 필드 queue.RingEventQueue.c
+- app.HubConfig#<init>(): app.HubConfig.props의 내용에 쓰는 값
+- app.HubConfig#autoDrainOnFull(): 반환값
+- app.HubConfig#devices(): app.HubConfig.props의 내용에 쓰는 값, 반환값
+- app.HubConfig#getBoolean(String): app.HubConfig.props의 내용에 쓰는 값, 반환값
+- app.HubConfig#getInt(String): app.HubConfig.props의 내용에 쓰는 값, 반환값
+- app.HubConfig#getLong(String): app.HubConfig.props의 내용에 쓰는 값, 반환값
+- app.HubConfig#load(String): app.HubConfig.props의 내용에 쓰는 값
+- app.HubConfig#maxPending(): 반환값
+- app.HubConfig#powerCapWatts(): 반환값
+- app.HubConfig#queueCapacity(): 반환값
+- app.HubConfig#set(String,String): app.HubConfig.props의 내용에 쓰는 값
+- app.HubMain#main(String[]): 예외
+- app.HubMain#run(app.HomeHub,String,java.io.PrintStream): 예외
+- device.DeviceRegistry#all(): 반환값
+- device.DeviceRegistry#byKind(model.DeviceKind): 반환값
+- device.DeviceRegistry#get(String): 반환값
+- device.DeviceRegistry#isKnown(String): 반환값
+- device.DeviceRegistry#register(String,model.DeviceKind): device.DeviceRegistry.devices의 내용에 쓰는 값, 반환값, 필드 model.Device.id에 쓰는 값, 필드 model.Device.kind에 쓰는 값
+- device.DeviceRegistry#size(): 반환값
+- device.DeviceRegistry$1#compare(model.Device,model.Device): 반환값
+- device.DeviceRegistry$1#compare(Object,Object): 반환값
+- device.DeviceStateMachine#next(model.DeviceStatus,model.EventType): 반환값
+- dispatch.Dispatcher#<init>(queue.EventQueue,dispatch.HandlerRegistry,ops.Metrics,ops.AuditLog,boolean): 예외, 필드 dispatch.Dispatcher.audit에 쓰는 값, 필드 dispatch.Dispatcher.autoDrainOnFull에 쓰는 값, 필드 dispatch.Dispatcher.handlers에 쓰는 값, 필드 dispatch.Dispatcher.metrics에 쓰는 
+- dispatch.Dispatcher#<init>(queue.EventQueue,dispatch.HandlerRegistry,ops.Metrics,ops.AuditLog,boolean,int): 예외, 필드 dispatch.Dispatcher.audit에 쓰는 값, 필드 dispatch.Dispatcher.autoDrainOnFull에 쓰는 값, 필드 dispatch.Dispatcher.handlers에 쓰는 값, 필드 dispatch.Dispatcher.maxPending에 
+- dispatch.Dispatcher#dispatchOne(): ops.AuditLog.entries의 내용에 쓰는 값, ops.Metrics.counters의 내용에 쓰는 값, power.PowerBudget.running의 내용에 쓰는 값, rules.RuleEngine.outbox의 내용에 쓰는 값, rules.RuleEngine.overhea
+- dispatch.Dispatcher#drain(): ops.AuditLog.entries의 내용에 쓰는 값, ops.Metrics.counters의 내용에 쓰는 값, power.PowerBudget.running의 내용에 쓰는 값, queue.RingEventQueue.buf의 내용에 쓰는 값, rules.RuleEngine.outbox
+- dispatch.Dispatcher#evictOldestNonCritical(): queue.RingEventQueue.buf의 내용에 쓰는 값, 반환값, 필드 queue.RingEventQueue.buf에 쓰는 값, 필드 queue.RingEventQueue.count에 쓰는 값, 필드 queue.RingEventQueue.head에 쓰는 값
+- dispatch.Dispatcher#getDispatchedCount(): 반환값
+- dispatch.Dispatcher#getMaxPending(): 반환값
+- dispatch.Dispatcher#setListener(dispatch.DispatchListener): 필드 dispatch.Dispatcher.listener에 쓰는 값
+- dispatch.Dispatcher#submit(model.Event): ops.AuditLog.entries의 내용에 쓰는 값, ops.Metrics.counters의 내용에 쓰는 값, power.PowerBudget.running의 내용에 쓰는 값, queue.RingEventQueue.buf의 내용에 쓰는 값, rules.RuleEngine.outbox
+- dispatch.HandlerRegistry#dispatch(model.Event): ops.AuditLog.entries의 내용에 쓰는 값, ops.Metrics.counters의 내용에 쓰는 값, power.PowerBudget.running의 내용에 쓰는 값, 반환값, 필드 model.Device.consecutiveHighTemp에 쓰는 값, 필드 model.De
+- dispatch.HandlerRegistry#handlerCount(model.EventType): 반환값
+- dispatch.HandlerRegistry#register(model.EventType,dispatch.EventHandler): dispatch.HandlerRegistry.byType의 내용에 쓰는 값
+- dispatch.HandlerRegistry#setFallback(dispatch.EventHandler): 필드 dispatch.HandlerRegistry.fallback에 쓰는 값
+- handlers.DeviceStatusHandler#handle(model.Event): ops.AuditLog.entries의 내용에 쓰는 값, ops.Metrics.counters의 내용에 쓰는 값, power.PowerBudget.running의 내용에 쓰는 값, 필드 model.Device.doorOpenedAt에 쓰는 값, 필드 model.Device.doorOpe
+- handlers.SafetyHandler#handle(model.Event): ops.AuditLog.entries의 내용에 쓰는 값, ops.Metrics.counters의 내용에 쓰는 값, power.PowerBudget.running의 내용에 쓰는 값, 필드 model.Device.status에 쓰는 값
+- handlers.TemperatureHandler#<init>(device.DeviceRegistry,ops.Metrics,ops.AuditLog,int): 필드 handlers.TemperatureHandler.highThresholdCelsius에 쓰는 값
+- handlers.TemperatureHandler#handle(model.Event): ops.AuditLog.entries의 내용에 쓰는 값, ops.Metrics.counters의 내용에 쓰는 값, 필드 model.Device.consecutiveHighTemp에 쓰는 값, 필드 model.Device.lastSeen에 쓰는 값, 필드 model.Device.lastT
+- io.EventParser#getStats(): 반환값
+- model.Device#<init>(String,model.DeviceKind): 필드 model.Device.id에 쓰는 값, 필드 model.Device.kind에 쓰는 값
+- model.Device#getConsecutiveHighTemp(): 반환값
+- model.Device#getDoorOpenedAt(): 반환값
+- model.Device#getFirmware(): 반환값
+- model.Device#getId(): 반환값
+- model.Device#getKind(): 반환값
+- model.Device#getLastSeen(): 반환값
+- model.Device#getLastTemp(): 반환값
+- model.Device#getStatus(): 반환값
+- model.Device#isDoorOpen(): 반환값
+- model.Device#setConsecutiveHighTemp(int): 필드 model.Device.consecutiveHighTemp에 쓰는 값
+- model.Device#setDoorOpen(boolean,long): 필드 model.Device.doorOpenedAt에 쓰는 값, 필드 model.Device.doorOpen에 쓰는 값
+- model.Device#setFirmware(String): 필드 model.Device.firmware에 쓰는 값
+- model.Device#setLastSeen(long): 필드 model.Device.lastSeen에 쓰는 값
+- model.Device#setLastTemp(Integer): 필드 model.Device.lastTemp에 쓰는 값
+- model.Device#setStatus(model.DeviceStatus): 필드 model.Device.status에 쓰는 값
+- model.Device#toString(): 반환값
+- model.DeviceKind#valueOf(String): 반환값
+- model.Event#<init>(long,String,model.EventType,int,long,java.util.Map): 필드 model.Event.deviceId에 쓰는 값, 필드 model.Event.seq에 쓰는 값, 필드 model.Event.timestamp에 쓰는 값, 필드 model.Event.type에 쓰는 값, 필드 model.Event.value에 쓰는 값
+- model.Event#attr(String): 반환값
+- model.Event#equals(Object): 반환값
+- model.Event#getAttrs(): 반환값
+- model.Event#getDeviceId(): 반환값
+- model.Event#getSeq(): 반환값
+- model.Event#getTimestamp(): 반환값
+- model.Event#getType(): 반환값
+- model.Event#getValue(): 반환값
+- model.Event#hashCode(): 반환값
+- model.Event#toString(): 반환값
+- ops.AuditLog#contains(String): 반환값
+- ops.AuditLog#count(String): 반환값
+- ops.AuditLog#dump(): 반환값
+- ops.AuditLog#note(String,String): ops.AuditLog.entries의 내용에 쓰는 값
+- ops.AuditLog#record(String,model.Event): ops.AuditLog.entries의 내용에 쓰는 값
+- ops.AuditLog#size(): 반환값
+- ops.AuditLog#tail(int): 반환값
+- ops.Metrics#get(String): 반환값
+- ops.Metrics#increment(String): ops.Metrics.counters의 내용에 쓰는 값
+- ops.Metrics#isEmpty(): 반환값
+- ops.Metrics#reset(): ops.Metrics.counters의 내용에 쓰는 값
+- ops.Metrics#snapshot(): 반환값
+- ops.RecoveryManager#recover(): ops.AuditLog.entries의 내용에 쓰는 값, queue.RingEventQueue.buf의 내용에 쓰는 값, 반환값, 필드 queue.RingEventQueue.buf에 쓰는 값, 필드 queue.RingEventQueue.count에 쓰는 값, 필드 queue.RingEv
+- ops.Watchdog#<init>(queue.EventQueue,ops.AuditLog,int): 필드 ops.Watchdog.audit에 쓰는 값, 필드 ops.Watchdog.queue에 쓰는 값, 필드 ops.Watchdog.threshold에 쓰는 값
+- ops.Watchdog#<init>(queue.EventQueue,ops.AuditLog,int,int): 필드 ops.Watchdog.audit에 쓰는 값, 필드 ops.Watchdog.limit에 쓰는 값, 필드 ops.Watchdog.queue에 쓰는 값, 필드 ops.Watchdog.threshold에 쓰는 값
+- ops.Watchdog#check(): ops.AuditLog.entries의 내용에 쓰는 값, 반환값, 필드 ops.Watchdog.highWaterChecks에 쓰는 값
+- ops.Watchdog#getHighWaterChecks(): 반환값
+- power.PowerBudget#<init>(int): 예외, 필드 power.PowerBudget.capWatts에 쓰는 값
+- power.PowerBudget#getCapWatts(): 반환값
+- power.PowerBudget#headroom(): 반환값
+- power.PowerBudget#isIdle(): 반환값
+- power.PowerBudget#isRunning(String): 반환값
+- power.PowerBudget#runningDevices(): 반환값
+- power.PowerBudget#stop(String): power.PowerBudget.running의 내용에 쓰는 값
+- power.PowerBudget#stopAll(): power.PowerBudget.running의 내용에 쓰는 값
+- power.PowerBudget#totalLoad(): 반환값
+- power.PowerBudget#tryStart(String,int): power.PowerBudget.running의 내용에 쓰는 값, 반환값
+- queue.RingEventQueue#<init>(): 예외
+- queue.RingEventQueue#<init>(int): queue.RingEventQueue.buf의 내용에 쓰는 값, 예외, 필드 queue.RingEventQueue.buf에 쓰는 값
+- queue.RingEventQueue#<init>(int,int): queue.RingEventQueue.buf의 내용에 쓰는 값, 예외, 필드 queue.RingEventQueue.buf에 쓰는 값, 필드 queue.RingEventQueue.maxCapacity에 쓰는 값
+- queue.RingEventQueue#capacity(): 반환값
+- queue.RingEventQueue#clear(): queue.RingEventQueue.buf의 내용에 쓰는 값, 필드 queue.RingEventQueue.count에 쓰는 값, 필드 queue.RingEventQueue.head에 쓰는 값
+- queue.RingEventQueue#grow(): queue.RingEventQueue.buf의 내용에 쓰는 값, 필드 queue.RingEventQueue.buf에 쓰는 값, 필드 queue.RingEventQueue.head에 쓰는 값
+- queue.RingEventQueue#isEmpty(): 반환값
+- queue.RingEventQueue#maxCapacity(): 반환값
+- queue.RingEventQueue#offer(model.Event): queue.RingEventQueue.buf의 내용에 쓰는 값, 반환값, 필드 queue.RingEventQueue.buf에 쓰는 값, 필드 queue.RingEventQueue.count에 쓰는 값, 필드 queue.RingEventQueue.head에 쓰는 값
+- queue.RingEventQueue#peek(): 반환값
+- queue.RingEventQueue#poll(): queue.RingEventQueue.buf의 내용에 쓰는 값, 반환값, 필드 queue.RingEventQueue.count에 쓰는 값, 필드 queue.RingEventQueue.head에 쓰는 값
+- queue.RingEventQueue#size(): 반환값
+- queue.RingEventQueue#snapshot(): 반환값
+- rules.RuleEngine#<init>(device.DeviceRegistry,ops.AuditLog,int,long): 필드 rules.RuleEngine.doorOpenAlertMillis에 쓰는 값, 필드 rules.RuleEngine.overheatAfterReports에 쓰는 값
+- rules.RuleEngine#afterDispatch(model.Event): ops.AuditLog.entries의 내용에 쓰는 값, rules.RuleEngine.outbox의 내용에 쓰는 값, rules.RuleEngine.overheatLatched의 내용에 쓰는 값, 필드 model.Event.deviceId에 쓰는 값, 필드 model.Event.seq
+- rules.RuleEngine#isLatched(String): 반환값
+- rules.RuleEngine#takeOutbox(): rules.RuleEngine.outbox의 내용에 쓰는 값, 반환값
+
+## 4. 다시 돌릴 테스트 (37 / 42)
+
+- DispatcherTest#testAcceptWhenSpace()
+- DispatcherTest#testAutoDrain()
+- DispatcherTest#testCriticalDrainsWhenAllCritical()
+- DispatcherTest#testCriticalEvictsOldestNonCritical()
+- DispatcherTest#testDrainDispatchesAll()
+- DispatcherTest#testLogicalLimitAboveInitialCapacity()
+- DispatcherTest#testNullIsInvalid()
+- DispatcherTest#testRejectNonCriticalWhenFull()
+- EventParserTest#testAttributes()
+- EventParserTest#testBasicLine()
+- EventParserTest#testCelsiusTemperature()
+- EventParserTest#testFahrenheitIsNormalized()
+- EventParserTest#testUnknownCode()
+- HandlersTest#testCycleEndReleasesPower()
+- HandlersTest#testHeavyLoadNeedsPower()
+- HandlersTest#testHighTemperatureIsCounted()
+- HandlersTest#testLeakStopsRunningWasher()
+- HandlersTest#testUnknownDevice()
+- HomeHubTest#testBurstOf32IsAccepted()
+- HomeHubTest#testFridgeOverheatRaisesAlarm()
+- HomeHubTest#testInvalidLineIsDropped()
+- HomeHubTest#testLeakDuringWashCycle()
+- HomeHubTest#testWasherCycleEndToEnd()
+- HomeHubTest#testWatchdogRecoversStuckQueue()
+- PowerBudgetTest#testDenyOverCap()
+- PowerBudgetTest#testGrantWithinCap()
+- PowerBudgetTest#testIdempotentStart()
+- PowerBudgetTest#testRejectInvalidWatts()
+- PowerBudgetTest#testStopReleases()
+- RingEventQueueTest#testClearAndSnapshot()
+- RingEventQueueTest#testFifoOrder()
+- RingEventQueueTest#testFullAtCapacity()
+- RingEventQueueTest#testFullAtMaxCapacity()
+- RingEventQueueTest#testGrowsBeyondInitialCapacity()
+- RingEventQueueTest#testNullRejected()
+- RingEventQueueTest#testPeekDoesNotRemove()
+- RingEventQueueTest#testWrapAround()
+
+## 5. Dafny 모델
+
+- dispatch.Dispatcher#dispatchOne() -> DispatcherModel.Dispatcher.DispatchOne handlers and listener are outside the model
+- dispatch.Dispatcher#drain() -> DispatcherModel.Dispatcher.Drain 
+- dispatch.Dispatcher#evictOldestNonCritical() -> DispatcherModel.Dispatcher.EvictOldestNonCritical 
+- dispatch.Dispatcher#submit(model.Event) -> DispatcherModel.Dispatcher.Submit metrics/audit side effects are outside the model
+- queue.RingEventQueue#<init>(int) -> RingQueueModel.RingQueue._ctor 
+- queue.RingEventQueue#offer(model.Event) -> RingQueueModel.RingQueue.Offer null input is outside the model
