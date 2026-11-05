@@ -49,13 +49,16 @@ help:
 	@echo "보고서  : make report (목록 열기) | make show V=<폴더> (바뀐 코드) | HH_OPEN=0 이면 자동으로 열지 않음"
 	@echo "강사    : make verify-all (통과해야 하는 Dafny 증명 전부) | make smoke (전체)"
 
+check-env: ENV_OS = $(shell uname -s)
+check-env: ENV_APT = $(shell command -v apt-get 2>/dev/null)
 check-env:
-	@echo "java : $$($(JAVA) -version 2>&1 | head -1)"
-	@echo "javac: $$($(JAVAC) -version 2>&1)"
-	@echo "py   : $$($(PY) --version 2>&1)"
-	@echo "dafny: $$($(DAFNY) --version 2>&1 | head -1)"
-	@echo "jupyter: $$(jupyter --version 2>/dev/null | grep -m1 -i 'jupyterlab\|notebook' || echo '없음 (pip install jupyterlab, 또는 VS Code의 Jupyter 확장)')"
-	@echo "codex: $$(codex --version 2>/dev/null || echo '없음 (선택: npm install -g @openai/codex 후 codex login)') $$(codex login status 2>&1 | head -1 | sed 's/^/· /' 2>/dev/null)"
+	@echo "java : $$($(JAVA) -version 2>&1 | head -1)"; $(JAVA) -version >/dev/null 2>&1 || echo '  $(if $(filter Darwin,$(ENV_OS)),brew install --cask temurin@21,$(if $(ENV_APT),sudo apt install openjdk-21-jdk,배포판의 패키지 관리자로 JDK 11 이상 설치))'
+	@echo "javac: $$($(JAVAC) -version 2>&1)"; $(JAVAC) -version >/dev/null 2>&1 || echo '  $(if $(filter Darwin,$(ENV_OS)),brew install --cask temurin@21,$(if $(ENV_APT),sudo apt install openjdk-21-jdk,배포판의 패키지 관리자로 JDK 11 이상 설치))'
+	@echo "py   : $$($(PY) --version 2>&1)"; $(PY) --version >/dev/null 2>&1 || echo '  $(if $(filter Darwin,$(ENV_OS)),brew install python3,$(if $(ENV_APT),sudo apt install python3 python3-pip python3-venv,배포판의 패키지 관리자로 Python 3·pip·venv 설치))'
+	@echo "dafny: $$($(DAFNY) --version 2>&1 | head -1)"; $(DAFNY) --version >/dev/null 2>&1 || echo '  https://github.com/dafny-lang/dafny/releases/tag/v4.11.0 에서 $(if $(filter Darwin,$(ENV_OS)),Mac용 ZIP 설치 후 해당 폴더에서 ./allow_on_mac.sh 실행,Linux용 ZIP 설치)'
+	@$(DAFNY) --version >/dev/null 2>&1 || { echo '  압축을 푼 뒤 dafny 실행 파일이 있는 디렉터리로 이동해서 실행하세요:'; echo '    export PATH="$$PWD:$$PATH"'; echo '  새 터미널에서도 유지하려면 현재 디렉터리의 절대경로(pwd 출력)를 $(if $(filter Darwin,$(ENV_OS)),~/.zshrc,Bash는 ~/.bashrc · Zsh는 ~/.zshrc)에 export PATH="절대경로:$$PATH" 형태로 추가하세요.'; echo '  확인: dafny --version'; }
+	@echo "jupyter: $$(jupyter --version 2>/dev/null | grep -m1 -i 'jupyterlab\|notebook' || echo '없음 (python3 -m venv .venv 후 source .venv/bin/activate 후 python -m pip install jupyterlab ipykernel, 또는 VS Code의 Python·Jupyter 확장)')"
+	@echo "codex: $$(codex --version 2>/dev/null || echo '없음 (선택: $(if $(filter Darwin,$(ENV_OS)),brew install --cask codex,Node.js·npm 설치 후 npm install -g @openai/codex), 이후 codex login)') $$(command -v codex >/dev/null && codex login status 2>&1 | head -1 | sed 's/^/· /' 2>/dev/null)"
 
 # ---------------------------------------------------------------- build / test
 
