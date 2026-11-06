@@ -1,0 +1,129 @@
+<!doctype html><html lang='ko'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>재검증 범위: req2</title><style>
+:root{
+  --paper:#FBFCFD; --sheet:#FFFFFF; --ink:#18212B; --muted:#5B6773; --rule:#D9DFE6; --rule2:#EEF1F4;
+  --accent:#1F5F8B; --accent-tint:#E9F1F7;
+  --same:#2D7A4C; --same-tint:#E7F3EB;
+  --diff:#B83227; --diff-tint:#FCEBE9;
+  --chg:#9A6512; --chg-tint:#FFF3D9;
+  --code:#F4F6F8;
+  --sans:"Pretendard","Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
+  --mono:"D2Coding","JetBrains Mono","SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#11161C; --sheet:#171E26; --ink:#E4E9EE; --muted:#9AA6B2; --rule:#2C3743; --rule2:#212A34;
+    --accent:#7DB4DD; --accent-tint:#1B2B39;
+    --same:#6CC08F; --same-tint:#17291F;
+    --diff:#F08A7E; --diff-tint:#36191A;
+    --chg:#E2B259; --chg-tint:#33270F;
+    --code:#1C242D;
+  }
+}
+*{box-sizing:border-box}
+html{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6;
+  -webkit-text-size-adjust:100%}
+body{margin:0}
+a{color:var(--accent)}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 24px 80px}
+.top{display:flex;justify-content:space-between;gap:16px;align-items:baseline;border-bottom:2px solid var(--ink);
+  padding-bottom:10px;margin-bottom:22px;font-size:13px;color:var(--muted)}
+.top a{color:var(--muted);text-decoration:none}
+.top a:hover{color:var(--accent)}
+h1{font-size:28px;line-height:1.3;margin:0 0 6px;font-weight:700;letter-spacing:-.01em}
+.lead{max-width:72ch;color:var(--muted);margin:0 0 20px}
+.verdict{border-left:6px solid var(--accent);background:var(--sheet);padding:16px 20px;margin:0 0 18px;
+  font-size:21px;line-height:1.45;font-weight:600;max-width:900px}
+.verdict.ok{border-color:var(--same)} .verdict.bad{border-color:var(--diff)} .verdict.warn{border-color:var(--chg)}
+.verdict .num{font-variant-numeric:tabular-nums}
+.facts{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:0;margin:0 0 26px;
+  border-top:1px solid var(--rule);border-left:1px solid var(--rule)}
+.facts div{border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:10px 14px;background:var(--sheet)}
+.facts b{display:block;font-size:22px;font-variant-numeric:tabular-nums;line-height:1.2}
+.facts span{font-size:13px;color:var(--muted)}
+.cmd{font-family:var(--mono);font-size:13px;background:var(--code);border:1px solid var(--rule);padding:6px 10px;
+  display:inline-block;border-radius:3px;margin:0 0 20px;color:var(--muted)}
+nav.toc{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14px;margin:0 0 28px;padding:10px 0;
+  border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+nav.toc a{text-decoration:none}
+section{margin:0 0 40px}
+h2{font-size:20px;margin:0 0 4px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+h3{font-size:16px;margin:22px 0 6px}
+.sub{color:var(--muted);margin:0 0 14px;max-width:80ch;font-size:14px}
+.badge{display:inline-block;font-size:12.5px;font-weight:600;padding:1px 8px;border-radius:999px;border:1px solid;
+  white-space:nowrap}
+.b-ok{color:var(--same);border-color:var(--same);background:var(--same-tint)}
+.b-bad{color:var(--diff);border-color:var(--diff);background:var(--diff-tint)}
+.b-warn{color:var(--chg);border-color:var(--chg);background:var(--chg-tint)}
+.b-info{color:var(--accent);border-color:var(--accent);background:var(--accent-tint)}
+.b-mute{color:var(--muted);border-color:var(--rule);background:transparent}
+table{border-collapse:collapse;width:100%;font-size:14px;background:var(--sheet)}
+th,td{text-align:left;vertical-align:top;padding:6px 10px;border-bottom:1px solid var(--rule2)}
+th{font-size:13px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--rule)}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+tr.bad td{background:var(--diff-tint)}
+table.state td{border-bottom:0;padding:3px 10px}
+tr.chg td{background:var(--chg-tint)}
+code,.mono{font-family:var(--mono);font-size:13px}
+.box{background:var(--sheet);border:1px solid var(--rule);padding:14px 16px}
+.scroll{overflow-x:auto}
+/* source / diff */
+.src{font-family:var(--mono);font-size:12.8px;line-height:1.55;border:1px solid var(--rule);background:var(--sheet);
+  overflow-x:auto;margin:0 0 14px}
+.src .split table{min-width:100%}
+.src .fh{font-family:var(--sans);font-size:13px;color:var(--muted);padding:6px 10px;border-bottom:1px solid var(--rule);
+  background:var(--code);display:flex;justify-content:space-between;gap:10px}
+.src table{background:transparent;font-size:inherit}
+.src td{padding:0 10px;border:0;white-space:pre}
+.src td.ln{color:var(--muted);text-align:right;user-select:none;width:1%;padding-right:8px;opacity:.75}
+.src tr.del td{background:var(--diff-tint)} .src tr.add td{background:var(--same-tint)}
+.src tr.mark td{background:var(--chg-tint)}
+.src tr.gap td{color:var(--muted);text-align:center;font-family:var(--sans);font-size:12px;background:var(--code)}
+.src .split{display:grid;grid-template-columns:1fr 1fr}
+.src .split>div{min-width:0;overflow-x:auto}
+.src .split>div+div{border-left:1px solid var(--rule)}
+.src .side{font-family:var(--sans);font-size:12px;color:var(--muted);padding:3px 10px;border-bottom:1px solid var(--rule2)}
+ins.w{background:var(--same-tint);color:var(--same);text-decoration:none;font-weight:600}
+del.w{background:var(--diff-tint);color:var(--diff);text-decoration:none;font-weight:600}
+/* chains */
+.chain{list-style:none;margin:6px 0 10px;padding:0 0 0 2px}
+.chain li{position:relative;padding:3px 0 3px 22px;font-size:14px}
+.chain li::before{content:"";position:absolute;left:6px;top:0;bottom:0;border-left:2px solid var(--rule)}
+.chain li::after{content:"";position:absolute;left:2px;top:12px;width:10px;height:10px;border-radius:50%;
+  background:var(--sheet);border:2px solid var(--accent)}
+.chain li.src-line::after{background:var(--chg);border-color:var(--chg)}
+.chain li:first-child::before{top:12px} .chain li:last-child::before{bottom:calc(100% - 12px)}
+.chain li:last-child::after{background:var(--accent)}
+.chain{background:var(--sheet);border:1px solid var(--rule2);padding:8px 12px 8px 10px;max-width:900px}
+.chain .via{color:var(--muted);font-size:13px}
+details{border-bottom:1px solid var(--rule2)}
+details>summary{cursor:pointer;padding:6px 4px;list-style:none;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+details>summary::-webkit-details-marker{display:none}
+details>summary::before{content:"+";font-family:var(--mono);color:var(--muted);width:12px}
+details[open]>summary::before{content:"−"}
+details>div{padding:4px 4px 12px 26px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-family:var(--mono);font-size:12.5px;padding:2px 8px;border:1px solid var(--rule);border-radius:3px;background:var(--sheet)}
+.chip.on{border-color:var(--accent);background:var(--accent-tint)}
+.chip.off{color:var(--muted);opacity:.7}
+.bar{height:8px;background:var(--rule2);border-radius:4px;overflow:hidden;min-width:80px}
+.bar>i{display:block;height:100%;background:var(--accent)}
+.bar.alt>i{background:var(--chg)}
+.filter{font:inherit;font-size:14px;padding:6px 10px;border:1px solid var(--rule);background:var(--sheet);color:var(--ink);
+  width:min(360px,100%);margin:0 0 10px;border-radius:3px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid3 .chip{font-size:11.5px}
+@media (max-width:980px){.grid3{grid-template-columns:1fr}}
+@media (max-width:760px){.grid2,.src .split{grid-template-columns:1fr}.verdict{font-size:18px}h1{font-size:23px}}
+.steps td.op{font-family:var(--mono);white-space:nowrap}
+.note{font-size:13px;color:var(--muted)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style></head><body><div class='wrap'><h1>재검증 범위: req2</h1><p class='lead'>Dafny 모델이 바뀌었을 때 전체를 다시 증명하지 않고, 바뀐 것의 종류에 따라 필요한 것만 다시 증명합니다.</p><div class="verdict info">전체 <span class='num'>49</span>개 중 <span class='num'>4</span>개만 다시 증명하면 됩니다.</div><div class="facts"><div><b>4 / 49</b><span>다시 증명할 기호</span></div><div><b>4</b><span>바뀐 기호</span></div><div><b>23%</b><span>증명기 작업량</span></div><div><b>7.1초 → 3.3초</b><span>실제 시간</span></div></div><div class="cmd">$ make reverify REQ=req2</div><nav class="toc"><a href="#code">바뀐 모델</a><a href="#changed">바뀐 기호</a><a href="#sel">다시 증명할 기호</a><a href="#java">Java와 비교</a><a href="#cost">비용</a></nav><section id='code'><h2>바뀐 Dafny 모델</h2><p class='sub'>Java 변경에 맞춰 고친 Dafny 모델입니다.</p><div class="src"><div class="fh"><span>formal/RingQueue.dfy → scenarios/req2/model/RingQueue.dfy</span></div><div class="split"><div><div class="side">변경 전 모델</div><table><tr><td class="ln">&nbsp;</td><td>&nbsp;</td></tr><tr><td class="ln">&nbsp;</td><td>&nbsp;</td></tr><tr><td class="ln">&nbsp;</td><td>&nbsp;</td></tr><tr><td class="ln">&nbsp;</td><td>&nbsp;</td></tr><tr><td class="ln">1</td><td>// Shadow model of com.dxlab.homehub.queue.RingEventQueue.</td></tr><tr><td class="ln">2</td><td>//</td></tr><tr><td class="ln">3</td><td>// The executable part mirrors the Java fields (buf, head, count) so that the model can be</td></tr><tr class="gap"><td></td><td>⋯</td></tr><tr><td class="ln">78</td><td>      if count as int == buf.Length {</td></tr><tr><td class="ln">79</td><td>        return FULL;</td></tr><tr><td class="ln">80</td><td>      }</td></tr><tr class="del"><td class="ln">81</td><td>      buf[Wrap(head as int + count as int)] := e;     // Java: buf[(head + count) % buf.length] = e</td></tr><tr><td class="ln">&nbsp;</td><td>&nbsp;</td></tr><tr><td class="ln">&nbsp;</td><td>&nbsp;</td></tr><tr><td class="ln">&nbsp;</td><td>&nbsp;</td></tr><tr><td class="ln">&nbsp;</td><td>&nbsp;</td></tr><tr><td class="ln">&nbsp;</td><td>&nbsp;</td></tr><tr><td class="ln">82</td><td>      count := count + 1;</td></tr><tr><td class="ln">83</td><td>      Contents := Contents + [e];</td></tr><tr><td class="ln">84</td><td>      return OK;</td></tr><tr class="gap"><td></td><td>⋯</td></tr><tr><td class="ln">97</td><td>      }</td></tr><tr><td class="ln">98</td><td>      e := buf[head];</td></tr><tr><td class="ln">99</td><td>      buf[head] := Ev(0, false);   // Java: buf[head] = null</td></tr><tr class="del"><td class="ln">100</td><td>      head := Wrap(head as int + 1) as i32;            // Java: head = (head + 1) % buf.length</td></tr><tr><td class="ln">&nbsp;</td><td>&nbsp;</td></tr><tr><td class="ln">&nbsp;</td><td>&nbsp;</td></tr><tr><td class="ln">&nbsp;</td><td>&nbsp;</td></tr><tr><td class="ln">&nbsp;</td><td>&nbsp;</td></tr><tr><td class="ln">101</td><td>      count := count - 1;</td></tr><tr><td class="ln">102</td><td>      Contents := Contents[1..];</td></tr><tr><td class="ln">103</td><td>      ok := true;</td></tr><tr class="gap"><td></td><td>⋯</td></tr><tr><td class="ln">140</td><td>      return count == 0;</td></tr><tr><td class="ln">141</td><td>    }</td></tr><tr><td class="ln">142</td><td></td></tr><tr class="del"><td class="ln">143</td><td>    // Java: while (poll() != null) {}</td></tr><tr><td class="ln">144</td><td>    method Clear()</td></tr><tr><td class="ln">145</td><td>      requires Valid()</td></tr><tr><td class="ln">146</td><td>      modifies this, buf</td></tr><tr class="gap"><td></td><td>⋯</td></tr><tr><td class="ln">148</td><td>      ensures Contents == []</td></tr><tr><td class="ln">149</td><td>    {</td></tr><tr><td class="ln">150</td><td>      reveal Inv();</td></tr><tr class="del"><td class="ln">151</td><td>      var ok := true;</td></tr><tr class="del"><td class="ln">152</td><td>      while ok</td></tr><tr class="del"><td class="ln">153</td><td>        invariant Valid() &amp;&amp; buf == old(buf)</td></tr><tr class="del"><td class="ln">154</td><td>        invariant !ok ==&gt; Contents == []</td></tr><tr class="del"><td class="ln">155</td><td>        decreases |Contents| + (if ok then 1 else 0)</td></tr><tr><td class="ln">156</td><td>      {</td></tr><tr class="del"><td class="ln">157</td><td>        var e;</td></tr><tr class="del"><td class="ln">158</td><td>        ok, e := Poll();</td></tr><tr><td class="ln">159</td><td>      }</td></tr><tr><td class="ln">&nbsp;</td><td>&nbsp;</td></tr><tr><td class="ln">&nbsp;</td><td>&nbsp;</td></tr><tr><td class="ln">&nbsp;</td><td>&nbsp;</td></tr><tr><td class="ln">160</td><td>    }</td></tr><tr><td class="ln">161</td><td></td></tr><tr><td class="ln">&nbsp;</td><td>&nbsp;</td></tr><tr><td class="ln">162</td><td>    method Snapshot() returns (s: seq&lt;Ev&gt;)</td></tr><tr><td class="ln">163</td><td>      requires Valid()</td></tr><tr><td class="ln">164</td><td>      ensures s == Contents</td></tr><tr><td class="ln">165</td><td>    {</td></tr><tr><td class="ln">166</td><td>      reveal Inv();</td></tr><tr><td class="ln">167</td><td>      s := [];</td></tr><tr><td class="ln">&nbsp;</td><td>&nbsp;</td></tr><tr><td class="ln">168</td><td>      var i: i32 := 0;</td></tr><tr><td class="ln">169</td><td>      while i &lt; count</td></tr><tr><td class="ln">170</td><td>        invariant 0 &lt;= i &lt;= count</td></tr><tr><td class="ln">&nbsp;</td><td>&nbsp;</td></tr><tr><td class="ln">&nbsp;</td><td>&nbsp;</td></tr><tr><td class="ln">171</td><td>        invariant s == Contents[..i]</td></tr><tr><td class="ln">172</td><td>      {</td></tr><tr class="del"><td class="ln">173</td><td>        s := s + [buf[Wrap(head as int + i as int)]];   // Java: buf[(head + i) % buf.length]</td></tr><tr><td class="ln">&nbsp;</td><td>&nbsp;</td></tr><tr><td class="ln">&nbsp;</td><td>&nbsp;</td></tr><tr><td class="ln">&nbsp;</td><td>&nbsp;</td></tr><tr><td class="ln">&nbsp;</td><td>&nbsp;</td></tr><tr><td class="ln">174</td><td>        i := i + 1;</td></tr><tr><td class="ln">175</td><td>      }</td></tr><tr><td class="ln">176</td><td>    }</td></tr></table></div><div><div class="side">변경 후 모델</div><table><tr class="add"><td class="ln">1</td><td>// REQ-2 version of formal/RingQueue.dfy.</td></tr><tr class="add"><td class="ln">2</td><td>// Rule: when a Java method changes, its Dafny method is rewritten from the new Java code.</td></tr><tr class="add"><td class="ln">3</td><td>// The Java patch changed offer, poll, clear and snapshot, so exactly these four method BODIES</td></tr><tr class="add"><td class="ln">4</td><td>// are rewritten below (marked &quot;REQ-2&quot;). Contracts (requires/ensures) are not touched.</td></tr><tr><td class="ln">5</td><td>// Shadow model of com.dxlab.homehub.queue.RingEventQueue.</td></tr><tr><td class="ln">6</td><td>//</td></tr><tr><td class="ln">7</td><td>// The executable part mirrors the Java fields (buf, head, count) so that the model can be</td></tr><tr class="gap"><td></td><td>⋯</td></tr><tr><td class="ln">82</td><td>      if count as int == buf.Length {</td></tr><tr><td class="ln">83</td><td>        return FULL;</td></tr><tr><td class="ln">84</td><td>      }</td></tr><tr class="add"><td class="ln">85</td><td>      // REQ-2. Java: int idx = head + count; if (idx &gt;= buf.length) idx -= buf.length;</td></tr><tr class="add"><td class="ln">86</td><td>      var idx := head + count;</td></tr><tr class="add"><td class="ln">87</td><td>      if idx as int &gt;= buf.Length {</td></tr><tr class="add"><td class="ln">88</td><td>        idx := idx - buf.Length as i32;</td></tr><tr class="add"><td class="ln">89</td><td>      }</td></tr><tr class="add"><td class="ln">90</td><td>      buf[idx] := e;</td></tr><tr><td class="ln">91</td><td>      count := count + 1;</td></tr><tr><td class="ln">92</td><td>      Contents := Contents + [e];</td></tr><tr><td class="ln">93</td><td>      return OK;</td></tr><tr class="gap"><td></td><td>⋯</td></tr><tr><td class="ln">106</td><td>      }</td></tr><tr><td class="ln">107</td><td>      e := buf[head];</td></tr><tr><td class="ln">108</td><td>      buf[head] := Ev(0, false);   // Java: buf[head] = null</td></tr><tr class="add"><td class="ln">109</td><td>      // REQ-2. Java: head++; if (head == buf.length) head = 0;</td></tr><tr class="add"><td class="ln">110</td><td>      head := head + 1;</td></tr><tr class="add"><td class="ln">111</td><td>      if head as int == buf.Length {</td></tr><tr class="add"><td class="ln">112</td><td>        head := 0;</td></tr><tr class="add"><td class="ln">113</td><td>      }</td></tr><tr><td class="ln">114</td><td>      count := count - 1;</td></tr><tr><td class="ln">115</td><td>      Contents := Contents[1..];</td></tr><tr><td class="ln">116</td><td>      ok := true;</td></tr><tr class="gap"><td></td><td>⋯</td></tr><tr><td class="ln">153</td><td>      return count == 0;</td></tr><tr><td class="ln">154</td><td>    }</td></tr><tr><td class="ln">155</td><td></td></tr><tr class="add"><td class="ln">156</td><td>    // REQ-2. Java: Arrays.fill(buf, null); head = 0; count = 0;</td></tr><tr><td class="ln">157</td><td>    method Clear()</td></tr><tr><td class="ln">158</td><td>      requires Valid()</td></tr><tr><td class="ln">159</td><td>      modifies this, buf</td></tr><tr class="gap"><td></td><td>⋯</td></tr><tr><td class="ln">161</td><td>      ensures Contents == []</td></tr><tr><td class="ln">162</td><td>    {</td></tr><tr><td class="ln">163</td><td>      reveal Inv();</td></tr><tr class="add"><td class="ln">164</td><td>      var i := 0;</td></tr><tr class="add"><td class="ln">165</td><td>      while i &lt; buf.Length</td></tr><tr class="add"><td class="ln">166</td><td>        invariant 0 &lt;= i &lt;= buf.Length</td></tr><tr class="add"><td class="ln">167</td><td>        modifies buf</td></tr><tr><td class="ln">&nbsp;</td><td>&nbsp;</td></tr><tr><td class="ln">168</td><td>      {</td></tr><tr class="add"><td class="ln">169</td><td>        buf[i] := Ev(0, false);</td></tr><tr class="add"><td class="ln">170</td><td>        i := i + 1;</td></tr><tr><td class="ln">171</td><td>      }</td></tr><tr class="add"><td class="ln">172</td><td>      head := 0;</td></tr><tr class="add"><td class="ln">173</td><td>      count := 0;</td></tr><tr class="add"><td class="ln">174</td><td>      Contents := [];</td></tr><tr><td class="ln">175</td><td>    }</td></tr><tr><td class="ln">176</td><td></td></tr><tr class="add"><td class="ln">177</td><td>    // REQ-2. Java: int idx = head; ... idx++; if (idx == buf.length) idx = 0;</td></tr><tr><td class="ln">178</td><td>    method Snapshot() returns (s: seq&lt;Ev&gt;)</td></tr><tr><td class="ln">179</td><td>      requires Valid()</td></tr><tr><td class="ln">180</td><td>      ensures s == Contents</td></tr><tr><td class="ln">181</td><td>    {</td></tr><tr><td class="ln">182</td><td>      reveal Inv();</td></tr><tr><td class="ln">183</td><td>      s := [];</td></tr><tr class="add"><td class="ln">184</td><td>      var idx := head;</td></tr><tr><td class="ln">185</td><td>      var i: i32 := 0;</td></tr><tr><td class="ln">186</td><td>      while i &lt; count</td></tr><tr><td class="ln">187</td><td>        invariant 0 &lt;= i &lt;= count</td></tr><tr class="add"><td class="ln">188</td><td>        invariant 0 &lt;= idx as int &lt; buf.Length</td></tr><tr class="add"><td class="ln">189</td><td>        invariant idx as int == Wrap(head as int + i as int)</td></tr><tr><td class="ln">190</td><td>        invariant s == Contents[..i]</td></tr><tr><td class="ln">191</td><td>      {</td></tr><tr class="add"><td class="ln">192</td><td>        s := s + [buf[idx]];</td></tr><tr class="add"><td class="ln">193</td><td>        idx := idx + 1;</td></tr><tr class="add"><td class="ln">194</td><td>        if idx as int == buf.Length {</td></tr><tr class="add"><td class="ln">195</td><td>          idx := 0;</td></tr><tr class="add"><td class="ln">196</td><td>        }</td></tr><tr><td class="ln">197</td><td>        i := i + 1;</td></tr><tr><td class="ln">198</td><td>      }</td></tr><tr><td class="ln">199</td><td>    }</td></tr></table></div></div></div></section><section id='changed'><h2>바뀐 기호 (4)</h2><p class='sub'>무엇이 바뀌었는지에 따라 다시 증명할 범위가 정해집니다. 본문만 바뀌면 그 기호 하나, 계약이 바뀌면 부르는 쪽까지, 계약에 쓰인 함수의 정의가 바뀌면 그 함수를 언급하는 모든 것.</p><div class="scroll"><table class=""><tr><th class="">기호</th><th class="">바뀐 것</th></tr><tr class=""><td class=""><code>RingQueueModel.RingQueue.Clear</code></td><td class=""><span class="badge b-info">본문</span></td></tr><tr class=""><td class=""><code>RingQueueModel.RingQueue.Offer</code></td><td class=""><span class="badge b-info">본문</span></td></tr><tr class=""><td class=""><code>RingQueueModel.RingQueue.Poll</code></td><td class=""><span class="badge b-info">본문</span></td></tr><tr class=""><td class=""><code>RingQueueModel.RingQueue.Snapshot</code></td><td class=""><span class="badge b-info">본문</span></td></tr></table></div></section><section id='sel'><h2>다시 증명할 기호 (4 / 49)</h2><div class="scroll"><table class=""><tr><th class="">기호</th><th class="">이유</th></tr><tr class=""><td class=""><code>RingQueueModel.RingQueue.Clear</code></td><td class="">본문이 바뀜</td></tr><tr class=""><td class=""><code>RingQueueModel.RingQueue.Offer</code></td><td class="">본문이 바뀜</td></tr><tr class=""><td class=""><code>RingQueueModel.RingQueue.Poll</code></td><td class="">본문이 바뀜</td></tr><tr class=""><td class=""><code>RingQueueModel.RingQueue.Snapshot</code></td><td class="">본문이 바뀜</td></tr></table></div></section><section id='java'><h2>Java 영향 분석과 비교</h2><p class='sub'>Java 영향 분석은 코드에서 값이 흐르는 길을 따라가고, Dafny 재증명은 계약이 무엇을 언급하는가를 따라갑니다. 그래서 둘이 다릅니다.</p><div class='grid3'><div class='box'><h3 style='margin-top:0'>둘 다 해당 (4)</h3><div class='chips'><span class='chip on'>RingQueueModel.RingQueue.Clear</span><span class='chip on'>RingQueueModel.RingQueue.Offer</span><span class='chip on'>RingQueueModel.RingQueue.Poll</span><span class='chip on'>RingQueueModel.RingQueue.Snapshot</span></div></div><div class='box'><h3 style='margin-top:0'>Java에서는 값이 달라질 수 있지만 다시 증명할 필요 없음 (14)</h3><p class='note'>이 기호들의 증명은 바뀐 코드가 아니라 그 코드의 계약만 보고 이뤄졌고, 계약은 그대로입니다.</p><div class='chips'><span class='chip off'>DispatcherModel.Dispatcher.DispatchOne</span><span class='chip off'>DispatcherModel.Dispatcher.Drain</span><span class='chip off'>DispatcherModel.Dispatcher.EvictOldestNonCritical</span><span class='chip off'>DispatcherModel.Dispatcher.Submit</span><span class='chip off'>PowerBudgetModel.PowerBudget.Headroom</span><span class='chip off'>PowerBudgetModel.PowerBudget.IsIdle</span><span class='chip off'>PowerBudgetModel.PowerBudget.IsRunning</span><span class='chip off'>PowerBudgetModel.PowerBudget.Stop</span><span class='chip off'>PowerBudgetModel.PowerBudget.StopAll</span><span class='chip off'>PowerBudgetModel.PowerBudget.TotalLoad</span><span class='chip off'>PowerBudgetModel.PowerBudget.TryStart</span><span class='chip off'>RingQueueModel.RingQueue.IsEmpty</span><span class='chip off'>RingQueueModel.RingQueue.Peek</span><span class='chip off'>RingQueueModel.RingQueue.Size</span></div></div><div class='box'><h3 style='margin-top:0'>Java 영향 분석에는 없지만 다시 증명해야 함 (0)</h3><p class='note'>계약에만 쓰이는 함수와 보조정리, 또는 바뀐 함수를 계약에서 언급하는 기호입니다.</p><div class='chips'><span class='note'>없음</span></div></div></div></section><section id='cost'><h2>비용 비교 <span class="badge b-ok">검증 통과</span></h2><p class='sub'>Dafny는 실행할 때마다 시작 시간이 1.5~2초 듭니다. 모델이 작으면 작업량이 줄어도 실제 시간은 덜 줄어듭니다. 또 한 번에 기호 하나만 고를 수 있어서, 한 모듈에서 여러 개를 고르면 그 모듈 전체를 한 번에 검증합니다.</p><div class="scroll"><table class=""><tr><th class=""></th><th class=""></th><th class=""></th><th class=""></th></tr><tr class=""><td class="">전체 검증</td><td class="">7.1초</td><td class=""><div class="bar"><i style="width:100%"></i></div></td><td class="">Dafny 1회</td></tr><tr class=""><td class="">골라서 검증</td><td class="">3.3초</td><td class=""><div class="bar alt"><i style="width:46%"></i></div></td><td class="">Dafny 1회, 같이 검증된 기호 9개 더</td></tr><tr class=""><td class="">증명기 작업량 (전체 대비)</td><td class="">23%</td><td class=""><div class="bar alt"><i style="width:23%"></i></div></td><td class="">시작 시간 제외</td></tr></table></div></section></div><script>
+document.querySelectorAll('input.filter').forEach(function(inp){
+  inp.addEventListener('input',function(){
+    var q=inp.value.toLowerCase(), box=document.getElementById(inp.dataset.target);
+    box.querySelectorAll('[data-k]').forEach(function(el){
+      el.style.display = el.dataset.k.toLowerCase().indexOf(q)>=0 ? '' : 'none';});
+  });
+});
+</script></body></html>

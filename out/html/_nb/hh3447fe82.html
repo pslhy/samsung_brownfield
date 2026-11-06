@@ -1,0 +1,121 @@
+<!doctype html><html lang='ko'><head><meta charset='utf-8'><style>
+:root{
+  --paper:#FBFCFD; --sheet:#FFFFFF; --ink:#18212B; --muted:#5B6773; --rule:#D9DFE6; --rule2:#EEF1F4;
+  --accent:#1F5F8B; --accent-tint:#E9F1F7;
+  --same:#2D7A4C; --same-tint:#E7F3EB;
+  --diff:#B83227; --diff-tint:#FCEBE9;
+  --chg:#9A6512; --chg-tint:#FFF3D9;
+  --code:#F4F6F8;
+  --sans:"Pretendard","Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
+  --mono:"D2Coding","JetBrains Mono","SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#11161C; --sheet:#171E26; --ink:#E4E9EE; --muted:#9AA6B2; --rule:#2C3743; --rule2:#212A34;
+    --accent:#7DB4DD; --accent-tint:#1B2B39;
+    --same:#6CC08F; --same-tint:#17291F;
+    --diff:#F08A7E; --diff-tint:#36191A;
+    --chg:#E2B259; --chg-tint:#33270F;
+    --code:#1C242D;
+  }
+}
+*{box-sizing:border-box}
+html{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6;
+  -webkit-text-size-adjust:100%}
+body{margin:0}
+a{color:var(--accent)}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 24px 80px}
+.top{display:flex;justify-content:space-between;gap:16px;align-items:baseline;border-bottom:2px solid var(--ink);
+  padding-bottom:10px;margin-bottom:22px;font-size:13px;color:var(--muted)}
+.top a{color:var(--muted);text-decoration:none}
+.top a:hover{color:var(--accent)}
+h1{font-size:28px;line-height:1.3;margin:0 0 6px;font-weight:700;letter-spacing:-.01em}
+.lead{max-width:72ch;color:var(--muted);margin:0 0 20px}
+.verdict{border-left:6px solid var(--accent);background:var(--sheet);padding:16px 20px;margin:0 0 18px;
+  font-size:21px;line-height:1.45;font-weight:600;max-width:900px}
+.verdict.ok{border-color:var(--same)} .verdict.bad{border-color:var(--diff)} .verdict.warn{border-color:var(--chg)}
+.verdict .num{font-variant-numeric:tabular-nums}
+.facts{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:0;margin:0 0 26px;
+  border-top:1px solid var(--rule);border-left:1px solid var(--rule)}
+.facts div{border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:10px 14px;background:var(--sheet)}
+.facts b{display:block;font-size:22px;font-variant-numeric:tabular-nums;line-height:1.2}
+.facts span{font-size:13px;color:var(--muted)}
+.cmd{font-family:var(--mono);font-size:13px;background:var(--code);border:1px solid var(--rule);padding:6px 10px;
+  display:inline-block;border-radius:3px;margin:0 0 20px;color:var(--muted)}
+nav.toc{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14px;margin:0 0 28px;padding:10px 0;
+  border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+nav.toc a{text-decoration:none}
+section{margin:0 0 40px}
+h2{font-size:20px;margin:0 0 4px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+h3{font-size:16px;margin:22px 0 6px}
+.sub{color:var(--muted);margin:0 0 14px;max-width:80ch;font-size:14px}
+.badge{display:inline-block;font-size:12.5px;font-weight:600;padding:1px 8px;border-radius:999px;border:1px solid;
+  white-space:nowrap}
+.b-ok{color:var(--same);border-color:var(--same);background:var(--same-tint)}
+.b-bad{color:var(--diff);border-color:var(--diff);background:var(--diff-tint)}
+.b-warn{color:var(--chg);border-color:var(--chg);background:var(--chg-tint)}
+.b-info{color:var(--accent);border-color:var(--accent);background:var(--accent-tint)}
+.b-mute{color:var(--muted);border-color:var(--rule);background:transparent}
+table{border-collapse:collapse;width:100%;font-size:14px;background:var(--sheet)}
+th,td{text-align:left;vertical-align:top;padding:6px 10px;border-bottom:1px solid var(--rule2)}
+th{font-size:13px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--rule)}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+tr.bad td{background:var(--diff-tint)}
+table.state td{border-bottom:0;padding:3px 10px}
+tr.chg td{background:var(--chg-tint)}
+code,.mono{font-family:var(--mono);font-size:13px}
+.box{background:var(--sheet);border:1px solid var(--rule);padding:14px 16px}
+.scroll{overflow-x:auto}
+/* source / diff */
+.src{font-family:var(--mono);font-size:12.8px;line-height:1.55;border:1px solid var(--rule);background:var(--sheet);
+  overflow-x:auto;margin:0 0 14px}
+.src .split table{min-width:100%}
+.src .fh{font-family:var(--sans);font-size:13px;color:var(--muted);padding:6px 10px;border-bottom:1px solid var(--rule);
+  background:var(--code);display:flex;justify-content:space-between;gap:10px}
+.src table{background:transparent;font-size:inherit}
+.src td{padding:0 10px;border:0;white-space:pre}
+.src td.ln{color:var(--muted);text-align:right;user-select:none;width:1%;padding-right:8px;opacity:.75}
+.src tr.del td{background:var(--diff-tint)} .src tr.add td{background:var(--same-tint)}
+.src tr.mark td{background:var(--chg-tint)}
+.src tr.gap td{color:var(--muted);text-align:center;font-family:var(--sans);font-size:12px;background:var(--code)}
+.src .split{display:grid;grid-template-columns:1fr 1fr}
+.src .split>div{min-width:0;overflow-x:auto}
+.src .split>div+div{border-left:1px solid var(--rule)}
+.src .side{font-family:var(--sans);font-size:12px;color:var(--muted);padding:3px 10px;border-bottom:1px solid var(--rule2)}
+ins.w{background:var(--same-tint);color:var(--same);text-decoration:none;font-weight:600}
+del.w{background:var(--diff-tint);color:var(--diff);text-decoration:none;font-weight:600}
+/* chains */
+.chain{list-style:none;margin:6px 0 10px;padding:0 0 0 2px}
+.chain li{position:relative;padding:3px 0 3px 22px;font-size:14px}
+.chain li::before{content:"";position:absolute;left:6px;top:0;bottom:0;border-left:2px solid var(--rule)}
+.chain li::after{content:"";position:absolute;left:2px;top:12px;width:10px;height:10px;border-radius:50%;
+  background:var(--sheet);border:2px solid var(--accent)}
+.chain li.src-line::after{background:var(--chg);border-color:var(--chg)}
+.chain li:first-child::before{top:12px} .chain li:last-child::before{bottom:calc(100% - 12px)}
+.chain li:last-child::after{background:var(--accent)}
+.chain{background:var(--sheet);border:1px solid var(--rule2);padding:8px 12px 8px 10px;max-width:900px}
+.chain .via{color:var(--muted);font-size:13px}
+details{border-bottom:1px solid var(--rule2)}
+details>summary{cursor:pointer;padding:6px 4px;list-style:none;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+details>summary::-webkit-details-marker{display:none}
+details>summary::before{content:"+";font-family:var(--mono);color:var(--muted);width:12px}
+details[open]>summary::before{content:"−"}
+details>div{padding:4px 4px 12px 26px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-family:var(--mono);font-size:12.5px;padding:2px 8px;border:1px solid var(--rule);border-radius:3px;background:var(--sheet)}
+.chip.on{border-color:var(--accent);background:var(--accent-tint)}
+.chip.off{color:var(--muted);opacity:.7}
+.bar{height:8px;background:var(--rule2);border-radius:4px;overflow:hidden;min-width:80px}
+.bar>i{display:block;height:100%;background:var(--accent)}
+.bar.alt>i{background:var(--chg)}
+.filter{font:inherit;font-size:14px;padding:6px 10px;border:1px solid var(--rule);background:var(--sheet);color:var(--ink);
+  width:min(360px,100%);margin:0 0 10px;border-radius:3px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid3 .chip{font-size:11.5px}
+@media (max-width:980px){.grid3{grid-template-columns:1fr}}
+@media (max-width:760px){.grid2,.src .split{grid-template-columns:1fr}.verdict{font-size:18px}h1{font-size:23px}}
+.steps td.op{font-family:var(--mono);white-space:nowrap}
+.note{font-size:13px;color:var(--muted)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+ body .wrap{padding:6px}</style></head><body><div class='wrap'><style>.ann{border-collapse:collapse;width:100%;font-size:12.8px}.ann td{border:0;padding:0 8px;vertical-align:top}.ann td.code{font-family:var(--mono);white-space:pre;line-height:1.6}.ann td.ln{color:var(--muted);text-align:right;width:1%;font-family:var(--mono);line-height:1.6}.ann td.note{font-family:var(--sans);font-size:13px;line-height:1.5;width:42%;padding:3px 10px;background:#fbfcfd}.ann .tag{font-weight:700;font-size:12px;margin-right:4px}</style><div class="fh" style="font-size:13px;color:var(--muted);padding:4px 0">RewriteRules.dfy: 규칙 ③</div><div class="scroll"><table class="ann"><tr><td class="ln">66</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">// ---------------------------------------------------------------------------------------------</td><td class="note" rowspan="7" style="border-left:4px solid #9aa5b1;"><span class="tag" style="color:#9aa5b1">본문</span> 규칙 ③. 상태는 무엇이든 됨(타입 <code>S</code>). 식 <code>e</code>는 상태의 함수 <code>size</code>, 반복 몸체는 "상태 → 몸체가 끝난 뒤의 상태" 함수 <code>body</code>로 나타냄. 두 반복이 <b>끝난 뒤의 상태</b>를 비교</td></tr><tr><td class="ln">67</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">// Rule 3 (InlineVariable):</td></tr><tr><td class="ln">68</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">//   int n = e;  for (int i = 0; i &lt; n; i++) { body }   ~&gt;   for (int i = 0; i &lt; e; i++) { body }</td></tr><tr><td class="ln">69</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">// Condition: the body does not change the value of e.</td></tr><tr><td class="ln">70</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">//</td></tr><tr><td class="ln">71</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">// The state can be anything (type S). The expression e is a function `size` of the state, and the</td></tr><tr><td class="ln">72</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">// loop body a function from state to state. We compare the states the two loops end in.</td></tr><tr><td class="ln">73</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">module InlineVariableRule {</td><td class="note" rowspan="1" style="border-left:4px solid #9aa5b1;"><span class="tag" style="color:#9aa5b1">본문</span> </td></tr><tr><td class="ln">74</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  // with the variable: n is computed once, before the loop</td><td class="note" rowspan="6" style="border-left:4px solid #9aa5b1;"><span class="tag" style="color:#9aa5b1">함수</span> <b>바꾸기 전</b>: <code>n</code>을 반복 전에 <b>한 번</b> 계산해 두고 <code>n</code>번 돎(<code>int n = e;</code>)</td></tr><tr><td class="ln">75</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  function Fixed&lt;S&gt;(s: S, body: S -&gt; S, i: nat, n: nat): S</td></tr><tr><td class="ln">76</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">    decreases n - i</td></tr><tr><td class="ln">77</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  {</td></tr><tr><td class="ln">78</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">    if i &gt;= n then s else Fixed(body(s), body, i + 1, n)</td></tr><tr><td class="ln">79</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  }</td></tr><tr><td class="ln">80</td><td class="code" style="background:transparent;border-left:4px solid transparent;">&nbsp;</td><td class="note"></td></tr><tr><td class="ln">81</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  // inlined: e (here size(s)) is computed again before every round, on the current state</td><td class="note" rowspan="6" style="border-left:4px solid #9aa5b1;"><span class="tag" style="color:#9aa5b1">함수</span> <b>바꾼 뒤</b>: 매번 <b>지금 상태</b>에서 <code>size</code>를 다시 계산해 비교(<code>i &lt; e</code>). <code>fuel</code>은 반복이 끝난다는 근거</td></tr><tr><td class="ln">82</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  function Inlined&lt;S&gt;(s: S, size: S -&gt; nat, body: S -&gt; S, i: nat, fuel: nat): S</td></tr><tr><td class="ln">83</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">    decreases fuel</td></tr><tr><td class="ln">84</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  {</td></tr><tr><td class="ln">85</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">    if fuel == 0 || i &gt;= size(s) then s else Inlined(body(s), size, body, i + 1, fuel - 1)</td></tr><tr><td class="ln">86</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  }</td></tr><tr><td class="ln">87</td><td class="code" style="background:transparent;border-left:4px solid transparent;">&nbsp;</td><td class="note"></td></tr><tr><td class="ln">88</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">  lemma Loops&lt;S&gt;(s: S, size: S -&gt; nat, body: S -&gt; S, i: nat, n: nat, fuel: nat)</td><td class="note" rowspan="10" style="border-left:4px solid #d5dae0;opacity:.45;"><span class="tag" style="color:#d5dae0">증명 도우미</span> 증명 도우미: 몸체가 <code>size</code>를 바꾸지 않으면 두 반복이 한 단계씩 같게 진행됨을 하나씩 늘려 가며 증명</td></tr><tr><td class="ln">89</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">    requires forall t :: size(body(t)) == size(t)</td></tr><tr><td class="ln">90</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">    requires size(s) == n &amp;&amp; i &lt;= n &amp;&amp; fuel &gt;= n - i</td></tr><tr><td class="ln">91</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">    ensures Fixed(s, body, i, n) == Inlined(s, size, body, i, fuel)</td></tr><tr><td class="ln">92</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">    decreases n - i</td></tr><tr><td class="ln">93</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">  {</td></tr><tr><td class="ln">94</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">    if i &lt; n {</td></tr><tr><td class="ln">95</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">      Loops(body(s), size, body, i + 1, n, fuel - 1);</td></tr><tr><td class="ln">96</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">    }</td></tr><tr><td class="ln">97</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">  }</td></tr><tr><td class="ln">98</td><td class="code" style="background:transparent;border-left:4px solid transparent;">&nbsp;</td><td class="note"></td></tr><tr><td class="ln">99</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  lemma InlineVariable_Same&lt;S&gt;(s: S, size: S -&gt; nat, body: S -&gt; S)</td><td class="note" rowspan="1" style="border-left:4px solid #9aa5b1;"><span class="tag" style="color:#9aa5b1">본문</span> <b>같음 보조정리</b></td></tr><tr><td class="ln">100</td><td class="code" style="background:#fdf0e1;border-left:4px solid #c07a1c;">    requires forall t :: size(body(t)) == size(t)        // condition: the body does not change e</td><td class="note" rowspan="1" style="border-left:4px solid #c07a1c;"><span class="tag" style="color:#c07a1c">사전조건</span> <b>조건</b>: 몸체가 식의 값을 바꾸지 않음. 어떤 상태 <code>t</code>에서도 몸체를 한 번 돈 뒤의 <code>size</code>가 그대로</td></tr><tr><td class="ln">101</td><td class="code" style="background:#e2f3f3;border-left:4px solid #1f8585;">    ensures Fixed(s, body, 0, size(s)) == Inlined(s, size, body, 0, size(s))</td><td class="note" rowspan="1" style="border-left:4px solid #1f8585;"><span class="tag" style="color:#1f8585">사후조건</span> <b>증명할 것</b>: 처음 <code>size(s)</code>번 도는 반복과, 매번 <code>size</code>와 비교하는 반복이 끝난 뒤의 상태가 같음</td></tr><tr><td class="ln">102</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">  {</td><td class="note" rowspan="3" style="border-left:4px solid #d5dae0;opacity:.45;"><span class="tag" style="color:#d5dae0">증명 도우미</span> 위 도우미(<code>Loops</code>)를 불러 증명</td></tr><tr><td class="ln">103</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">    Loops(s, size, body, 0, size(s), size(s));</td></tr><tr><td class="ln">104</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">  }</td></tr><tr><td class="ln">105</td><td class="code" style="background:transparent;border-left:4px solid transparent;">&nbsp;</td><td class="note"></td></tr><tr><td class="ln">106</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  // Without the condition: the state is a list, e is its length, and the body takes out the first</td><td class="note" rowspan="4" style="border-left:4px solid #9aa5b1;"><span class="tag" style="color:#9aa5b1">본문</span> <b>반례 보조정리</b>: 조건이 없으면 실제로 다르다는 구체적인 예. 이것이 있어야 "조건이 꼭 필요하다"고 말할 수 있음</td></tr><tr><td class="ln">107</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  // element. [1, 2, 3]: with the variable the loop runs 3 times and ends at []; inlined, it stops</td></tr><tr><td class="ln">108</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  // after 2 rounds at [3] (the loop ends one round early, as in lab E-2).</td></tr><tr><td class="ln">109</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  lemma InlineVariable_Counterexample()</td></tr><tr><td class="ln">110</td><td class="code" style="background:#e2f3f3;border-left:4px solid #1f8585;">    ensures var size := (l: seq&lt;int&gt;) =&gt; |l|;</td><td class="note" rowspan="4" style="border-left:4px solid #1f8585;"><span class="tag" style="color:#1f8585">사후조건</span> 상태는 목록, 식은 목록 길이, 몸체는 맨 앞을 하나 뺌. [1, 2, 3]에서 변수를 쓰면 3번 돌아 <code>[]</code>, 인라인하면 [2, 3] → [3]에서 <code>2 &lt; 1</code>이 거짓이라 멈춰 <code>[3]</code>. E-2에서 반복이 한 번 일찍 끝난 것과 같은 일</td></tr><tr><td class="ln">111</td><td class="code" style="background:#e2f3f3;border-left:4px solid #1f8585;">            var removeFirst := (l: seq&lt;int&gt;) =&gt; if |l| &gt; 0 then l[1..] else l;</td></tr><tr><td class="ln">112</td><td class="code" style="background:#e2f3f3;border-left:4px solid #1f8585;">            Fixed([1, 2, 3], removeFirst, 0, 3) == [] &amp;&amp;</td></tr><tr><td class="ln">113</td><td class="code" style="background:#e2f3f3;border-left:4px solid #1f8585;">            Inlined([1, 2, 3], size, removeFirst, 0, 3) == [3]</td></tr><tr><td class="ln">114</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  {</td><td class="note" rowspan="3" style="border-left:4px solid #9aa5b1;"><span class="tag" style="color:#9aa5b1">본문</span> </td></tr><tr><td class="ln">115</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  }</td></tr><tr><td class="ln">116</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">}</td></tr></table></div></div></body></html>

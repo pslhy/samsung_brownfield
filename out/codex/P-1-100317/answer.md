@@ -1,0 +1,149 @@
+```dafny
+module RingEventQueueModule {
+  datatype Event = Event(id: int)
+
+  datatype OfferResult =
+    | OK
+    | FULL
+    | REJECTED
+
+  class RingEventQueue {
+    const DEFAULT_CAPACITY: int := 8
+
+    var buf: array<Event?>
+    var head: int
+    var count: int
+
+    constructor(capacity: int)
+      requires capacity > 0
+      ensures buf.Length == capacity
+      ensures head == 0
+      ensures count == 0
+    {
+      buf := new Event?[capacity];
+      head := 0;
+      count := 0;
+    }
+
+    constructor()
+      ensures buf.Length == DEFAULT_CAPACITY
+      ensures head == 0
+      ensures count == 0
+    {
+      buf := new Event?[DEFAULT_CAPACITY];
+      head := 0;
+      count := 0;
+    }
+
+    function Capacity(): int
+      reads this
+    {
+      buf.Length
+    }
+
+    function Size(): int
+      reads this
+    {
+      count
+    }
+
+    function IsEmpty(): bool
+      reads this
+    {
+      count == 0
+    }
+
+    method Offer(e: Event?) returns (result: OfferResult)
+      modifies this
+      ensures e == null ==> result == REJECTED
+      ensures e != null && old(count) == old(buf.Length) ==> result == FULL
+      ensures e != null && old(count) < old(buf.Length) ==> result == OK
+      ensures e == null ==> count == old(count)
+      ensures e != null && old(count) == old(buf.Length) ==> count == old(count)
+      ensures e != null && old(count) < old(buf.Length) ==> count == old(count) + 1
+    {
+      if e == null {
+        result := REJECTED;
+        return;
+      }
+
+      if count == buf.Length {
+        result := FULL;
+        return;
+      }
+
+      var index := (head + count) % buf.Length;
+      buf[index] := e;
+      count := count + 1;
+      result := OK;
+    }
+
+    method Poll() returns (e: Event?)
+      modifies this
+      ensures old(count) == 0 ==> e == null
+      ensures old(count) == 0 ==> count == 0
+      ensures old(count) > 0 ==> e != null
+      ensures old(count) > 0 ==> count == old(count) - 1
+      ensures 0 <= head < buf.Length
+    {
+      if count == 0 {
+        e := null;
+        return;
+      }
+
+      e := buf[head];
+      buf[head] := null;
+      head := (head + 1) % buf.Length;
+      count := count - 1;
+    }
+
+    method Peek() returns (e: Event?)
+      reads this
+      ensures count == 0 ==> e == null
+      ensures count > 0 ==> e != null
+    {
+      if count == 0 {
+        e := null;
+      } else {
+        e := buf[head];
+      }
+    }
+
+    method Clear()
+      modifies this
+      ensures count == 0
+      ensures head == 0
+    {
+      while count != 0
+        invariant 0 <= count <= buf.Length
+        invariant 0 <= head < buf.Length
+        decreases count
+      {
+        var ignored := Poll();
+      }
+
+      head := 0;
+    }
+
+    function Snapshot(): seq<Event>
+      reads this
+      requires 0 <= count <= buf.Length
+      ensures |Snapshot()| == count
+    {
+      SnapshotFrom(0)
+    }
+
+    function SnapshotFrom(i: int): seq<Event>
+      reads this
+      requires 0 <= i <= count
+      ensures |SnapshotFrom(i)| == count - i
+    {
+      if i == count then
+        []
+      else
+        var index := (head + i) % buf.Length;
+        [buf[index].value] + SnapshotFrom(i + 1)
+    }
+  }
+}
+```
