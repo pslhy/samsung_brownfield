@@ -70,6 +70,13 @@ $(LEGACY_CP)/.stamp: $(shell find $(LEGACY)/src -name '*.java')
 	@touch $@
 	@echo "built $(LEGACY)"
 
+# A-1 compares bytecode, so a direct req2/ai impact run builds both sides with the same javac.
+REBUILD_LEGACY ?= $(if $(and $(filter impact,$(MAKECMDGOALS)),$(filter scenarios/req2/ai,$(V))),1,0)
+ifeq ($(REBUILD_LEGACY),1)
+.PHONY: force-legacy-build
+$(LEGACY_CP)/.stamp: force-legacy-build
+endif
+
 build: $(LEGACY_CP)/.stamp
 
 RAW    := $(OUT)/raw
@@ -279,7 +286,7 @@ JAVAV_req2 := scenarios/req2/ai
 JAVAV_req1 := scenarios/req1/ai-B
 
 reverify: build
-	@HH_OPEN=0 $(MAKE) -s impact V=$(JAVAV_$(REQ)) > /dev/null
+	@HH_OPEN=0 $(MAKE) -s impact V=$(JAVAV_$(REQ)) REBUILD_LEGACY=0 > /dev/null
 	@$(PY) tools/reverify.py --old $(FORMAL) --new $(NEWFORMAL_$(REQ)) \
 	   --java-impact $(OUT)/impact-$(subst /,-,$(patsubst scenarios/%,%,$(JAVAV_$(REQ)))).json \
 	   --mapping formal/mapping.tsv --run --html reverify-$(REQ) --label "$(REQ)" > $(OUT)/reverify-$(REQ).md
