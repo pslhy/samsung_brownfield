@@ -32,6 +32,7 @@ AI의 결과는 사람이 계약을 읽고, 도구(Dafny 검증, 차분 테스�
 - 참고: Dafny의 int는 Java에서 java.math.BigInteger, 여러 값을 돌려주는 메서드는 dafny.Tuple2,
   datatype은 정적 메서드 create(...)로 만들고 dtor_필드이름()으로 읽는다.
   Dafny 생성자는 new 클래스() 다음에 __ctor(...)를 부른다.
+  컴파일된 Java 클래스의 패키지: Dafny 코드를 module 없이 썼으면 _System, module M 안에 썼으면 M이다.
 
 인터페이스:
 {difftest/src/difftest/QueueModel.java}

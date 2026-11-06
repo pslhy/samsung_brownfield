@@ -12,17 +12,17 @@ public final class RingQueueAdapter implements QueueModel {
     }
 
     public String offer(int id, boolean critical) {
-        return q.Offer(Types.Ev.create(id, critical)).is_OK() ? "OK" : "FULL";
+        return q.Offer(Types.Event.create(id, critical)).is_OK() ? "OK" : "FULL";
     }
 
     public Integer poll() {
         dafny.Tuple2<?, ?> t = q.Poll();
-        return (Boolean) t.dtor__0() ? ((Types.Ev) t.dtor__1()).dtor_id() : null;
+        return (Boolean) t.dtor__0() ? ((Types.Event) t.dtor__1()).dtor_id() : null;
     }
 
     public Integer peek() {
         dafny.Tuple2<?, ?> t = q.Peek();
-        return (Boolean) t.dtor__0() ? ((Types.Ev) t.dtor__1()).dtor_id() : null;
+        return (Boolean) t.dtor__0() ? ((Types.Event) t.dtor__1()).dtor_id() : null;
     }
 
     public int size() {
@@ -42,7 +42,7 @@ public final class RingQueueAdapter implements QueueModel {
     }
 
     public List<Integer> snapshot() {
-        dafny.DafnySequence<? extends Types.Ev> s = q.Snapshot();
+        dafny.DafnySequence<? extends Types.Event> s = q.Snapshot();
         List<Integer> out = new ArrayList<Integer>();
         for (int i = 0; i < s.length(); i++) {
             out.add(s.select(i).dtor_id());

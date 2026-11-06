@@ -5,12 +5,12 @@
 module Types {
   newtype i32 = x: int | -0x8000_0000 <= x < 0x8000_0000
 
-  datatype Ev = Ev(id: i32, critical: bool)
+  datatype Event = Event(id: i32, critical: bool)
 
   datatype OfferResult = OK | FULL
 
   // Index of the oldest non-critical event, or |s| if every event is critical.
-  function IndexOfNonCritical(s: seq<Ev>): (k: nat)
+  function IndexOfNonCritical(s: seq<Event>): (k: nat)
     ensures k <= |s|
     ensures forall j :: 0 <= j < k ==> s[j].critical
     ensures k < |s| ==> !s[k].critical
@@ -20,7 +20,7 @@ module Types {
     else 1 + IndexOfNonCritical(s[1..])
   }
 
-  predicate AllCritical(s: seq<Ev>) {
+  predicate AllCritical(s: seq<Event>) {
     forall x <- s :: x.critical
   }
 

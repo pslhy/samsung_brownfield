@@ -28,7 +28,7 @@ VDIR    = $(WORK)/$(VNAME)
 
 .PHONY: help check-env build test trace golden clean verify-all \
         variant variant-test impact ingest path state config \
-        verify model difftest difftest-mine difftest-sample \
+        verify model difftest difftest-mine difftest-sample dispatcher-sample \
         req1 req1-tests req1-verify req1-difftest \
         reverify req1-tests-run req1-verify-run req1-difftest-run show report \
         rewrite-check rules smoke notebook
@@ -42,6 +42,7 @@ help:
 	@echo "실습 B  : make verify | model | difftest"
 	@echo "          make difftest-mine DFY=mine/RingEventQueue.dfy ADAPTER=mine/MyQueueAdapter.java"
 	@echo "          make difftest-sample   (AI 결과 예시로 같은 과정)"
+	@echo "          make dispatcher-sample (예시 대기열 위의 Dispatcher 모델 검증)"
 	@echo "실습 C  : make req1   (= req1-tests, req1-verify, req1-difftest)"
 	@echo "실습 D  : make reverify REQ=req2|req1"
 	@echo "실습 E  : make rewrite-check R=IsEmpty|ForEach|InlineVariable|All | make rules"
@@ -188,7 +189,7 @@ difftest-mine: $(BUILD)/difftest/.stamp
 	  if grep -q "여기에 붙여 넣기" $$f; then echo "아직 AI 결과를 붙여 넣지 않았습니다: $$f"; exit 2; fi; done
 	@rm -rf $(BUILD)/mine $(RAW)/mine-* && mkdir -p $(BUILD)/mine/classes $(RAW)
 	@$(DRUN) --json $(RAW)/mine-verify.json $(DFY); \
-	if $(DAFNY) build -t java --no-verify $(DFY) -o $(BUILD)/mine/mymodel > $(RAW)/mine-build.txt 2>&1 && \
+	if $(DAFNY) build -t java --no-verify --allow-warnings $(DFY) -o $(BUILD)/mine/mymodel > $(RAW)/mine-build.txt 2>&1 && \
 	   $(JAVAC) $(JFLAGS) --release 11 -cp $(BUILD)/mine/mymodel.jar:$(BUILD)/difftest -d $(BUILD)/mine/classes $(ADAPTER) >> $(RAW)/mine-build.txt 2>&1; then \
 	  echo "연결 코드 컴파일: 성공"; \
 	  $(JAVA) -Dqueue.adapter=difftest.MyQueueAdapter -cp $(BUILD)/mine/mymodel.jar:$(BUILD)/mine/classes:$(LEGACY_CP):$(BUILD)/difftest difftest.DiffTest queue --json $(RAW)/mine-difftest.json $(DT_ARGS); \
@@ -203,6 +204,12 @@ difftest-mine: $(BUILD)/difftest/.stamp
 # the same with the example AI output in scenarios/b1-ai-sample/
 difftest-sample:
 	@$(MAKE) -s --no-print-directory difftest-mine DFY=scenarios/b1-ai-sample/RingEventQueue.dfy ADAPTER=scenarios/b1-ai-sample/MyQueueAdapter.java
+
+# B-2: the Dispatcher model written on top of the example queue model (same names: elems, Event, buf.Length)
+dispatcher-sample:
+	@mkdir -p $(RAW); $(DRUN) --json $(RAW)/dispatcher-sample.json scenarios/b1-ai-sample/RingEventQueue.dfy scenarios/b1-ai-sample/Dispatcher.dfy; st=$$?; \
+	$(REPORT) --out dispatcher-sample --title "Dispatcher 모델 검증" --lead "예시 대기열 모델(RingEventQueue.dfy)을 가져다 쓰는 Dispatcher 모델(Dispatcher.dfy)을 함께 검증합니다." \
+	  --command "make dispatcher-sample" --sec dafny "scenarios/b1-ai-sample/" $(RAW)/dispatcher-sample.json pass; exit $$st
 
 # ---------------------------------------------------------------- session 4: REQ-1 verified evolution
 

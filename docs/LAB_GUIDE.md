@@ -55,6 +55,8 @@ HomeHub는 이 실습을 위해 만든 **가상의 가전 허브 프로그램**�
 | R3 | 대기열에 남는 이벤트의 순서는 바뀌지 않는다. 자리를 만들어야 하면 가장 오래된 비중요 이벤트를 밀어낸다. |
 | R4 | 비중요 이벤트는 대기열이 가득 차 있고 autoDrain 설정이 꺼져 있을 때만 거부한다. |
 
+**autoDrain 설정**(`dispatch.autoDrainOnFull`, 기본값 꺼짐)은 대기열이 가득 찼을 때 비중요 이벤트를 어떻게 할지 정합니다. 켜져 있으면 Dispatcher가 대기열에서 가장 오래된 이벤트 하나를 **그 자리에서 바로 처리해**(처리기로 넘겨) 자리를 만들고 새 이벤트를 받습니다. 꺼져 있으면 새 이벤트를 거부합니다(`REJECTED_FULL`). 중요 이벤트는 이 설정과 상관없이 R2대로 늘 받습니다.
+
 ### 변경 요청 2건
 
 실습 A·C·D에서 쓰는 가상의 변경 요청입니다. 각 폴더의 `README.md`에 요청 내용이 있습니다.
@@ -166,7 +168,7 @@ make impact V=scenarios/req2/ai WHY=power.PowerBudget#tryStart
 make impact V=scenarios/req2/ai WHY=EventParserTest#testBasicLine    # 도구가 따라간 경로
 ```
 
-이런 테스트를 AI에게 걸러 달라고 합니다(`docs/PROMPTS.md`의 P-4). 도구가 고른 목록, diff, 테스트 코드를 주고, 테스트마다 바뀐 메서드가 실행 중에 한 번이라도 불리는지 묻습니다(노트북에서는 `lab.codex("P-4", diff=..., 테스트_목록=lab.impact_tests("scenarios/req2/ai"), 테스트_코드=lab.source_text("legacy/src/test"))`). 이 환경에서는 `EventParserTest`, `HandlersTest`, `PowerBudgetTest`와, 대기열에 닿기 전에 끝나는 테스트 2개, 모두 17개를 빼서 16개가 남았습니다.
+이런 테스트를 AI에게 걸러 달라고 합니다(`docs/PROMPTS.md`의 P-4). 도구가 고른 목록, diff, 테스트 코드를 주고, 테스트마다 바뀐 메서드가 실행 중에 한 번이라도 불리는지 묻습니다(노트북에서는 `lab.codex("P-4", diff=..., 테스트_목록=lab.impact_tests("scenarios/req2/ai"), 테스트_코드=lab.source_text("legacy/src/test"))`. 바로 위 셀에서 쓸 모델과 추론 수준을 고를 수 있습니다. 기본값은 `gpt-5.6-luna`, 추론 `none`). 이 환경에서는 `EventParserTest`, `HandlersTest`, `PowerBudgetTest`와, 대기열에 닿기 전에 끝나는 테스트 2개, 모두 17개를 빼서 16개가 남았습니다.
 
 **정리.** 영향 범위를 빠짐없이 찾는 일은 도구가 합니다(대신 넓게 잡음). 넓게 잡힌 것 중 괜히 들어간 것을 걸러 내는 일은 AI가 도울 수 있습니다. AI가 뺀 것이 정말 빼도 되는지는 사람이 테스트 코드를 보고 확인합니다.
 
@@ -258,6 +260,12 @@ make trace TRACE_CP=work/a3-sort/build/classes TRACE_NAME=trace-a3-sort
 
 **동작 기록 비교란.** `golden/` 폴더에는 레거시 HomeHub의 동작 기록이 있습니다. 가전이 보낸 메시지를 모은 입력 파일 3개(`legacy/workloads/*.txt`)를 레거시에 넣고, 메시지 한 줄을 처리할 때마다 허브 상태 한 줄(대기열, 기기 상태, 전력, 로그 끝 3줄, 개수)을 적어 둔 것입니다. 옳은 동작인지는 따지지 않고 "지금 이렇게 동작한다"는 사실만 남깁니다(특성화 테스트). `make trace`는 같은 입력을 바꾼 코드에 넣고, 나온 상태를 이 기록과 한 줄씩 비교해 다른 줄을 표로 보여 줍니다.
 
+| 기록 | 입력 파일 | 어떤 상황인가 |
+|---|---|---|
+| `normal_day` | `legacy/workloads/normal_day.txt` (30줄) | 평소 하루. 대기 이벤트가 몇 개 넘지 않음 |
+| `burst` | `legacy/workloads/burst.txt` (23줄) | 저녁 피크. 여러 기기가 한꺼번에 보고해 대기열이 가득 참(거부·밀어내기가 일어남) |
+| `fridge_firmware` | `legacy/workloads/fridge_firmware.txt` (22줄) | 냉장고 2대. 한 대는 문이 열려 온도가 오르고, 한 대는 화씨로 보고함 |
+
 **결과.**
 
 | 확인 | 결과 |
@@ -277,7 +285,7 @@ make trace TRACE_CP=work/a3-sort/build/classes TRACE_NAME=trace-a3-sort
 
 ---
 
-## 실습 B. AI로 Dafny 모델 만들기 (세션 3, 약 40분)
+## 실습 B. AI로 Dafny 모델 만들기 (세션 3, 약 35분)
 
 ### 먼저 알아 둘 것: 그림자 모델
 
@@ -290,21 +298,21 @@ Dafny 문법은 이것만 알면 읽을 수 있습니다.
 | `requires P` | 이 메서드를 부르기 전에 P가 참이어야 한다 (사전조건) |
 | `ensures Q` | 이 메서드가 끝나면 Q가 참이다 (사후조건) |
 | `old(x)` | 메서드가 시작될 때의 x 값 |
-| `ghost var Contents: seq<Ev>` | 증명에만 쓰는 변수. 실행되지 않습니다. 여기서는 "대기열에 들어 있는 이벤트 목록(오래된 것부터)". B-1 예시에서는 이름이 `elems` |
+| `ghost var elems: seq<Event>` | 증명에만 쓰는 변수. 실행되지 않습니다. 여기서는 "대기열에 들어 있는 이벤트 목록(오래된 것부터)" |
 | `modifies x` | 이 메서드가 바꿀 수 있는 것 |
 | `A ==> B` | A이면 B다 / `A <==> B`: A와 B는 같이 참이거나 같이 거짓 |
 
 예: `formal/RingQueue.dfy`의 Offer 계약
 
 ```dafny
-ensures |old(Contents)| < Capacity()  ==> r == OK   && Contents == old(Contents) + [e]   // 자리가 있으면: OK, 맨 뒤에 추가
-ensures |old(Contents)| == Capacity() ==> r == FULL && Contents == old(Contents)         // 가득 찼으면: FULL, 내용 그대로
+ensures |old(elems)| < Capacity()  ==> r == OK   && elems == old(elems) + [e]   // 자리가 있으면: OK, 맨 뒤에 추가
+ensures |old(elems)| == Capacity() ==> r == FULL && elems == old(elems)         // 가득 찼으면: FULL, 내용 그대로
 ```
 
 증명이 통과해도 확인되는 것은 "Dafny 모델이 계약을 지킨다"까지입니다. 그래서 두 가지를 사람과 도구가 따로 확인해야 합니다.
 
 1. **계약이 맞게 쓰였는가**: 사람이 읽어서 판단합니다. 계약이 약하면 틀린 코드도 증명을 통과합니다.
-2. **모델이 Java와 같게 동작하는가**: 차분 테스트(B-4)로 확인합니다.
+2. **모델이 Java와 같게 동작하는가**: 차분 테스트(B-1, B-3)로 확인합니다.
 
 ### B-1. AI가 만든 모델 읽기 (15분)
 
@@ -320,7 +328,7 @@ make difftest-sample
 
 **2단계: 계약 읽기.**
 
-**(선택) 직접 AI에게 시켜 보기.** 시간이 남으면 노트북 B-1 끝의 선택 셀로 직접 해 봅니다: `lab.codex("P-1", save="mine/RingEventQueue.dfy")`(모델), `lab.codex("P-1b", save="mine/MyQueueAdapter.java")`(연결 코드), `make difftest-mine DFY=mine/RingEventQueue.dfy ADAPTER=mine/MyQueueAdapter.java`(검증과 차분 테스트). 검증이 실패하면 오류를 P-2("계약 줄은 한 글자도 바꾸지 마라")에 넣어 고치게 하고, requires / ensures 줄이 바뀌지 않았는지 확인합니다. Codex를 쓸 수 없으면 `lab.prompt("P-1")`로 프롬프트를 출력해 사내 AI 도구에 주고, 답을 `mine/` 아래 같은 이름으로 저장합니다.
+**(선택) 직접 AI에게 시켜 보기.** 시간이 남으면 노트북 B-1 끝의 선택 셀로 직접 해 봅니다. 첫 셀에서 쓸 모델과 추론 수준을 고를 수 있습니다(`lab.codex_models()`가 이 컴퓨터의 Codex에서 쓸 수 있는 모델을 보여 주고, `모델 = ...`, `추론 = ...`을 바꾸면 아래 셀들이 그 값으로 Codex를 부름. 기본값은 `gpt-5.6-luna`, 추론 `none`). 그다음 셀은: `lab.codex("P-1", save="mine/RingEventQueue.dfy")`(모델), `lab.codex("P-1b", save="mine/MyQueueAdapter.java")`(연결 코드), `make difftest-mine DFY=mine/RingEventQueue.dfy ADAPTER=mine/MyQueueAdapter.java`(검증과 차분 테스트). 검증이 실패하면 오류를 P-2("계약 줄은 한 글자도 바꾸지 마라")에 넣어 고치게 하고, requires / ensures 줄이 바뀌지 않았는지 확인합니다. 검증 결과에 `Warning: Could not find a trigger for this quantifier`가 나와도 검증 실패는 아닙니다(오류 0개면 통과). `forall` 식의 트리거(언제 꺼내 쓸지 알려 주는 표식)를 못 찾았다는 뜻이라 지금은 증명되지만 Dafny 버전이 바뀌면 깨질 수 있으니 고치는 것이 좋습니다. `difftest-mine`은 이 경고가 있어도 Java 컴파일과 차분 테스트까지 진행합니다. Codex를 쓸 수 없으면 `lab.prompt("P-1")`로 프롬프트를 출력해 사내 AI 도구에 주고, 답을 `mine/` 아래 같은 이름으로 저장합니다.
 
 **AI가 만든 Dafny 모델 읽는 법.** 예시 결과 `scenarios/b1-ai-sample/RingEventQueue.dfy`를 처음부터 읽어 봅니다(노트북에서는 줄마다 색으로 묶고 오른쪽에 뜻을 붙여 보여 줍니다: `lab.annotate`). 줄은 다섯 종류로 나뉩니다.
 
@@ -357,7 +365,7 @@ Offer의 계약을 한 줄씩 읽으면 이렇습니다.
 | Java | Dafny 예시 | 어떻게 옮겼나 |
 |---|---|---|
 | 15~17 필드 | 14~17 | 그대로. Dafny에는 증명용 `elems`가 더 있음 |
-| 30~36 `offer` | 40~52 `Offer` | 가득 참이면 FULL, 아니면 `(head + count) % 칸 수`에 넣음: 같음. **Java 31줄 `null` → REJECTED는 모델에 없음** (모델의 `Event`는 null이 될 수 없는 타입) |
+| 30~36 `offer` | 40~52 `Offer` | 가득 참이면 FULL, 아니면 `(head + count) % 칸 수`에 넣음: 같음. **Java 31줄 `null` → REJECTED는 모델에 없음** (모델의 `Event`는 null이 될 수 없는 타입. Dafny는 null이 될 수 있는 타입과 없는 타입을 명시적으로 구분하며, `Event?`라고 써야 null이 될 수 있음. `?`는 클래스 타입에만 붙으므로 `datatype`인 `Event`는 클래스로 바꿔야 함) |
 | 38~45 `poll` | 62~78 `Poll` | 같음. **빈 칸 표시가 다름**: Java `null`, 모델 `Event(0, false)`. 비었을 때 결과도 Java `null`, 모델 `ok = false` |
 | 64~68 `clear` | 119~133 `Clear` | Poll을 빌 때까지 반복: 같음 |
 | 70~76 `snapshot` | 135~148 `Snapshot` | head부터 count개를 차례로: 같음 |
@@ -370,27 +378,9 @@ Offer의 계약을 한 줄씩 읽으면 이렇습니다.
 | 결과값뿐 아니라 **바뀐 뒤의 내용**까지 말하는가? (`elems == ...`) | FULL을 돌려주면서 내용을 망가뜨려도 통과합니다 | 44줄 `elems == old(elems) + [e]`, 67줄 `elems == old(elems)[1..]` |
 | 바뀌면 안 되는 것이 그대로라고 말하는가? (`elems == old(elems)`) | 위와 같음 | 45줄, 66줄. 43·65줄 `buf == old(buf)` |
 | `requires`가 너무 강하지 않은가? | Java에서는 가능한 호출을 모델이 다루지 않게 됩니다 | Offer는 `Valid()`만 요구(41줄). "가득 차 있지 않을 때만"을 요구했다면 45줄 경우를 다루지 않는 모델이 됩니다 |
-| 모델 밖으로 둔 동작이 적혀 있는가? (null 입력, 동시성 등) | 무엇을 확인하지 않았는지 모르게 됩니다 | **빠져 있음.** Java 31줄 `null` → REJECTED를 다루지 않는데 어디에도 적혀 있지 않습니다. AI에게 고치라고 하거나 주석으로 남겨야 합니다 |
+| 모델 밖으로 둔 동작이 적혀 있는가? (null 입력, 동시성 등) | 무엇을 확인하지 않았는지 모르게 됩니다 | **빠져 있음.** Java 31줄 `null` → REJECTED를 다루지 않는데 어디에도 적혀 있지 않습니다. AI에게 `Event`를 null이 될 수 있는 `Event?`로 고치고 그에 따라 다른 부분도 고치라고 하거나, 주석으로 null 값은 고려하지 않는다고 남겨야 합니다 |
 
-### B-2. 기준 모델 검증 (5분)
-
-```
-make verify      # formal/ 전체: 대기열, Dispatcher, 전력 → "71 verified, 0 errors"
-```
-
-이 실습의 나머지 부분은 `formal/`의 기준 모델로 진행합니다. 큐(`RingQueue.dfy`), Dispatcher(`Dispatcher.dfy`), 전력(`PowerBudget.dfy`) 세 개입니다. Java 메서드와 Dafny 메서드의 대응은 `formal/mapping.tsv`에 적혀 있습니다.
-
-기준 대기열 모델 `formal/RingQueue.dfy`는 B-1의 예시와 같은 구조이고 이름만 다릅니다.
-
-| | B-1 AI 결과 예시 | 기준 모델 |
-|---|---|---|
-| 파일 | `scenarios/b1-ai-sample/RingEventQueue.dfy` | `formal/RingQueue.dfy` |
-| 클래스 | `RingEventQueue` | `RingQueue` |
-| 증명용 변수(대기열 내용) | `elems` | `Contents` |
-| 칸 수 | `buf.Length` | `Capacity()` |
-| 모델 밖으로 둔 동작 | 적혀 있지 않음 | 파일 맨 위 8줄에 적혀 있음(`offer(null)`, 스레드 등) |
-
-### B-3. 계약 읽기 연습 (10분, 종이 연습)
+### B-2. 계약에서 규칙 찾기 (10분, 종이 연습)
 
 **왜 하나요.** HomeHub에는 대기열이 가득 찼을 때 바꾸면 안 되는 규칙 R1~R4가 있습니다.
 
@@ -401,69 +391,82 @@ make verify      # formal/ 전체: 대기열, Dispatcher, 전력 → "71 verifie
 | R3 | 대기열에 남는 이벤트의 순서는 바뀌지 않는다. 자리를 만들어야 하면 가장 오래된 비중요 이벤트를 밀어낸다 |
 | R4 | 비중요 이벤트는 대기열이 가득 차 있고 autoDrain 설정이 꺼져 있을 때만 거부한다 |
 
-Dafny로 "코드가 R1~R4를 지키는가"를 판단하려면, 이 규칙이 계약의 어느 줄에 적혀 있는지 읽을 수 있어야 합니다.
+autoDrain 설정(`dispatch.autoDrainOnFull`, 기본값 꺼짐): 켜져 있으면 대기열이 가득 찼을 때 가장 오래된 이벤트 하나를 바로 처리해 자리를 만들고 새 이벤트를 받습니다. 꺼져 있으면 비중요 이벤트를 거부합니다.
 
-두 계약을 봅니다. 둘 다 **기준 모델**(`formal/`)입니다.
+Dafny로 "코드가 R1~R4를 지키는가"를 판단하려면, 이 규칙이 계약의 어느 줄에 적혀 있는지 읽을 수 있어야 합니다. 이 규칙을 지키는 것은 대기열이 아니라, 이벤트를 받아 대기열에 넣는 **Dispatcher**(접수)입니다. Dispatcher는 대기열의 `Offer` 계약만 믿고 R1~R4를 지킵니다. 그래서 두 계약을 차례로 봅니다.
 
-**① 대기열 `formal/RingQueue.dfy`의 `Offer` 계약** (B-1 예시의 Offer 44·45줄과 같은 내용, 이름만 `Contents`·`Capacity()`)
+**① 대기열 `Offer`의 계약.** B-1에서 읽은 예시 모델 `scenarios/b1-ai-sample/RingEventQueue.dfy` 그대로입니다.
 
 ```dafny
-method Offer(e: Ev) returns (r: OfferResult)                                         // 70줄
+method Offer(e: Event) returns (r: OfferResult)                                   // 40줄
   requires Valid()
   modifies this, buf
   ensures Valid() && buf == old(buf)
-  ensures |old(Contents)| < Capacity() ==> r == OK && Contents == old(Contents) + [e]   // 74줄: 자리가 있으면 OK, 맨 뒤에 추가
-  ensures |old(Contents)| == Capacity() ==> r == FULL && Contents == old(Contents)      // 75줄: 가득 찼으면 FULL, 그대로
+  ensures old(count) < buf.Length ==> r == OK && elems == old(elems) + [e]     // 44줄: 자리가 있으면 OK, 맨 뒤에 추가
+  ensures old(count) == buf.Length ==> r == FULL && elems == old(elems)        // 45줄: 가득 찼으면 FULL, 그대로
 ```
 
-**② `formal/Dispatcher.dfy`의 `Submit` 계약.** Dispatcher는 대기열의 위 계약만 믿고 R1~R4를 지킨다고 증명합니다. `Limit`은 받기로 한 최대 개수입니다. 주석으로 R1, R2가 표시돼 있습니다.
+**② Java `Dispatcher.submit`.** 이벤트 하나를 받는 메서드입니다(`dispatch/Dispatcher.java` 41~79줄). 46줄에서 먼저 대기열에 넣어 보고, 가득 찼으면 경우를 나눕니다.
+
+| 줄 | 경우 | 하는 일 | 결과 | 규칙 |
+|---|---|---|---|---|
+| 46~50 | 자리가 있음 | 그냥 넣음 | `ACCEPTED` | R1 |
+| 57~63 | 가득 참, 중요 이벤트, 대기열에 비중요 이벤트가 있음 | 가장 오래된 비중요 이벤트를 빼고(`evictOldestNonCritical`) 넣음 | `ACCEPTED_EVICTED` | R2, R3 |
+| 65~68 | 가득 참, 중요 이벤트, 대기열이 모두 중요 이벤트 | 가장 오래된 이벤트 하나를 바로 처리하고(`dispatchOne`) 넣음 | `ACCEPTED_DRAINED` | R2 |
+| 70~74 | 가득 참, 비중요 이벤트, autoDrain 켜짐 | 가장 오래된 이벤트 하나를 바로 처리하고 넣음 | `ACCEPTED_DRAINED` | R4 |
+| 76~78 | 가득 참, 비중요 이벤트, autoDrain 꺼짐 | 거부 | `REJECTED_FULL` | R4 |
+
+42~45줄과 51~53줄(`null` 이벤트 거르기), `metrics`·`audit` 줄(기록)은 모델에서 다루지 않습니다.
+
+**③ Dafny 모델 `Dispatcher.Submit`의 계약** (`scenarios/b1-ai-sample/Dispatcher.dfy` 96~122줄). ①의 대기열 모델을 그대로 가져다 쓰므로 이름도 같습니다: 대기열 내용 `queue.elems`, 칸 수 `queue.buf.Length`, 이벤트 `Event`. `Dispatched`는 처리기로 넘긴 이벤트 목록입니다. `make dispatcher-sample`로 대기열 모델과 함께 검증합니다(37개, 오류 0개).
 
 ```dafny
-ensures |queue.Contents| <= Limit                       // R1: 상한을 넘지 않음
-ensures e.critical ==> r != REJECTED_FULL               // R2: 중요 이벤트는 거부 안 함
+ensures |queue.elems| <= queue.buf.Length                   // R1: 칸 수를 넘지 않음
+ensures e.critical ==> r != REJECTED_FULL                   // R2: 중요 이벤트는 거부 안 함
 // 어떤 결과가 나올지는 시작 상태로만 정해짐
-ensures r == ACCEPTED <==> |old(queue.Contents)| < Limit
-ensures r == REJECTED_FULL <==> |old(queue.Contents)| == Limit && !e.critical && !autoDrainOnFull
+ensures r == ACCEPTED <==> |old(queue.elems)| < queue.buf.Length
+ensures r == REJECTED_FULL <==> |old(queue.elems)| == queue.buf.Length && !e.critical && !autoDrainOnFull
 ...
 // 결과별로 바뀐 뒤의 대기열 내용
 ensures r == ACCEPTED_EVICTED ==>
-  queue.Contents == Remove(old(queue.Contents), IndexOfNonCritical(old(queue.Contents))) + [e]
+  queue.elems == Remove(old(queue.elems), IndexOfNonCritical(old(queue.elems))) + [e]
 ```
 
-**해 볼 것.**
+**계약 읽는 법.** ③의 사후조건(`Dispatcher.dfy`)은 두 종류입니다. 화살표 방향이 반대입니다.
 
-1. ②에서 R3과 R4가 각각 어느 줄인지 찾습니다. (`Remove(s, k)`: s에서 k번째를 뺀 것, `IndexOfNonCritical(s)`: s에서 처음 나오는 비중요 이벤트의 위치)
-2. ①의 사후조건 중 75줄(가득 찼을 때)을 지웠다고 합시다. 어떤 잘못된 구현이 검증을 통과하게 됩니까?
-3. ②에서 `r == ACCEPTED <==> ...`처럼 "어느 결과가 나오는지"를 정하는 줄이 없다면, 두 구현이 같은 입력에 같은 결과를 낸다고 말할 수 있습니까?
+| 줄 | 형태 | 뜻 |
+|---|---|---|
+| 105~112 | `r == X <==> (시작 상태 조건)` | 시작 상태(대기열이 찼는지, 중요 이벤트인지, autoDrain이 켜졌는지)를 보면 결과 `r`이 무엇이어야 하는지 정해짐 |
+| 113~122 | `r == X ==> (끝난 뒤의 상태)` | 결과가 X였다면, 끝난 뒤 대기열 내용(`queue.elems`)과 처리한 목록(`Dispatched`)이 어때야 하는지 |
 
-### B-4. 차분 테스트 (10분)
+예: 대기열에 자리가 있으면, 105줄에 따라 결과는 반드시 `ACCEPTED`이고, 113~114줄에 따라 대기열 내용은 맨 뒤에 `e`가 붙은 것, 처리한 목록은 그대로여야 합니다.
 
-**왜 하나요.** Dafny 증명은 모델에 대한 것입니다. 실제로 배포하는 것은 Java입니다. 모델이 Java와 다르게 동작하면 증명은 의미가 없습니다. 차분 테스트는 **같은 연산을 Java와 모델 양쪽에 넣고 결과를 비교**합니다.
+**해 볼 것.** (노트북에는 접어 둔 답이 있습니다.)
 
-```
-make model         # Dafny 모델을 Java 코드로 컴파일
-make difftest      # 레거시 Java vs 모델
-```
+1. ③에서 R3과 R4가 각각 어느 줄인지 찾습니다. (`Remove(s, k)`: s에서 k번째를 뺀 것, `IndexOfNonCritical(s)`: s에서 처음 나오는 비중요 이벤트의 위치)
+2. ①의 사후조건 중 45줄(가득 찼을 때)을 지웠다고 합시다. 어떤 잘못된 구현이 검증을 통과하게 됩니까?
+3. ③에서 어느 결과가 나올지 정하는 줄(`r == ACCEPTED <==> ...` 등 105~112줄)을 모두 지웠다고 합시다. 결과별로 바뀐 뒤의 상태를 말하는 줄은 남아 있습니다. 대기열에 자리가 있는데도 비중요 이벤트를 거부하고(`REJECTED_FULL`) 대기열을 그대로 두는 구현은 검증을 통과합니까?
 
-결과: queue, dispatcher, power 세 가지 모두 `300 runs, 18000 ops: Java and model agree`.
+### B-3. 차분 테스트 자세히 보기 (10분)
+
+**왜 하나요.** Dafny 증명은 모델에 대한 것입니다. 실제로 배포하는 것은 Java입니다. 모델이 Java와 다르게 동작하면 증명은 의미가 없습니다. B-1 1단계에서 돌린 차분 테스트(`make difftest-sample`)는 **같은 연산을 Java `RingEventQueue`와 예시 모델 양쪽에 넣고 결과를 비교**했습니다(결과: `300 runs, 18000 ops: Java and model agree`).
 
 **테스트 입력은 이렇게 만들어집니다** (`difftest/src/difftest/DiffTest.java`).
 
 | 항목 | 값 |
 |---|---|
 | 반복 | 연산열 300개, 각 60개 연산. 무작위 시드 42로 고정(매번 같은 입력) |
-| 대기열 연산 비율 | offer 55%, poll 35%, peek 6%, clear 4%. offer의 20%는 중요 이벤트 |
+| 연산 비율 | offer 55%, poll 35%, peek 6%, clear 4%. offer의 20%는 중요 이벤트 |
 | 대기열 크기 | 4칸 (작게 잡아야 가득 참·한 바퀴 돌기 같은 경계 상황이 자주 생깁니다) |
-| 전력 값 | -5, 0, 1, 120, …, 4000, 4001, `Integer.MAX_VALUE` 같은 경계 값에서 고름 |
-| 매 연산 후 비교 | 반환값, 대기열 내용 전체, 크기, 용량 (전력은 총부하·남은 용량 등) |
+| 매 연산 후 비교 | 반환값, 대기열 내용 전체, 크기, 용량 |
 | 불일치가 나면 | 연산을 하나씩 빼 보면서, 불일치가 유지되는 가장 짧은 연산열로 줄여서 보여 줍니다 |
 
-**약점.** 무작위로 고른 입력만 봅니다. 대기열 크기 4에서만 나는 문제는 잘 찾지만, 큰 크기에서만 나는 문제나 경계 값 목록에 없는 숫자는 놓칠 수 있습니다(`--cap`, `--runs`, `--len`, `--seed` 옵션으로 바꿀 수 있습니다). 그래서 차분 테스트가 통과했다는 것은 "시도한 입력에서 모델과 Java가 같았다"는 뜻이지, 증명이 아닙니다.
+**약점.** 무작위로 고른 입력만 봅니다. 대기열 크기 4에서 나는 문제는 잘 찾지만, 큰 크기에서만 나는 문제나 드물게 나오는 연산 순서는 놓칠 수 있습니다. 그래서 차분 테스트가 통과했다는 것은 "시도한 입력에서 모델과 Java가 같았다"는 뜻이지, 증명이 아닙니다.
 
 **해 볼 것: 일부러 버그를 넣고 차분 테스트가 잡는지 보기.**
 
 1. `legacy/src/main/java/com/dxlab/homehub/queue/RingEventQueue.java`의 poll에서 `head = (head + 1) % buf.length;` 줄을 지웁니다.
-2. `make difftest WHAT=queue`
+2. `make difftest-sample`
 3. 결과: 보고서에 불일치가 난 가장 짧은 연산열이 단계별 표로 나옵니다.
 
    | 단계 | 연산 | Java 결과 | 모델 결과 | Java 대기열 내용 | 모델 대기열 내용 |
@@ -473,74 +476,52 @@ make difftest      # 레거시 Java vs 모델
    | 3 | `poll` | 1 | 1 | **[null]** | **[2]** |
 
    이벤트 2개를 넣고 하나를 꺼내면, Java는 head를 옮기지 않아 빈 칸(null)을 가리키고 모델은 [2]가 남습니다. 이 3단계짜리 연산열을 그대로 회귀 테스트로 옮길 수 있습니다.
-4. 지운 줄을 되돌립니다(`make test`로 38개 통과 확인).
+4. 지운 줄을 되돌립니다(`make test`로 38개 통과 확인). 되돌리지 않으면 HomeHub 원본(`legacy/`)에 버그가 남습니다.
 
 ---
 
-## 실습 C. 변경 요청 1 "대기열 늘리기" 판단하기 (세션 4, 약 40분)
+## 실습 C. 테스트를 다 통과한 AI 패치 판단하기 (세션 4, 약 30분)
+
+> **이 실습에서 배울 것: 테스트를 전부 통과한 AI 패치에도 버그가 있을 수 있습니다.** 테스트는 사람이 만든 상황만 확인합니다. Dafny 검증은 **모든 상태**를, 차분 테스트는 **무작위로 만든 많은 상황**을 확인해서, 테스트가 만들지 못한 상황의 버그를 찾습니다.
 
 ### 상황
 
-상품기획팀 요청(`scenarios/req1/README.md`): 저녁 시간에 이벤트가 몰리면 허브가 이벤트를 거부합니다. 최대 32개까지 받게 해 주세요. 단 메모리가 작으니 평소에는 8칸만 쓰고 필요할 때만 늘려 주세요. 규칙 R1~R4 중 **R1의 상한 값(8 → 32)만** 바꾸는 것이 승인됐습니다.
+변경 요청 1(상품기획팀, `scenarios/req1/README.md`): "저녁에 이벤트가 몰리면 대기열(8칸)이 가득 차서 이벤트가 거부됩니다. 평소에는 8칸만 쓰고, 필요할 때만 최대 32칸까지 늘려 주세요."
 
-AI에게 이 요청을 줬더니 패치 두 개가 나왔습니다. **둘 다 테스트를 전부 통과합니다.** 무엇을 내보낼 수 있을까요?
+AI에게 이 요청을 줬더니 패치 두 개가 나왔습니다. **둘 다 테스트를 전부 통과합니다.** 어느 것을 내보내도 될까요?
 
-| | 하는 일 |
+| | 대기열이 가득 차면 |
 |---|---|
-| 패치 A (`scenarios/req1/ai-A`) | 대기열이 가득 차면 배열을 2배로 늘림(최대 32). `grow()`가 배열을 **통째로 복사**하고 `head`는 그대로 |
-| 패치 B (`scenarios/req1/ai-B`) | 늘릴 때 **오래된 것부터 순서대로** 복사하고 `head = 0`. 상한 32를 Dispatcher와 Watchdog이 설정값 `dispatch.maxPending`으로 직접 가짐 |
+| 패치 A (`scenarios/req1/ai-A`) | 배열을 2배로 늘림. 이벤트를 **배열에 있는 자리 그대로** 새 배열에 복사하고, 맨 앞 위치(`head`)는 그대로 둠 |
+| 패치 B (`scenarios/req1/ai-B`) | 배열을 2배로 늘림. 이벤트를 **오래된 것부터 순서대로** 새 배열 앞쪽에 옮기고, `head = 0` |
 
-### 무엇이 바뀌었나
-
-**생성자가 두 개가 됐습니다** (두 패치 같음). 인자 2개짜리 생성자 `(시작 칸 수, 최대 칸 수)`가 새로 생겼고, 원래 있던 인자 1개짜리는 "시작은 그 칸 수, 최대 32칸"이 됐습니다.
+두 패치는 배열을 늘리는 `grow()`만 다릅니다.
 
 ```java
-public static final int MAX_CAPACITY = 32;                              // 14줄
-public RingEventQueue(int capacity) {                                   // 원래 있던 것
-    this(capacity, Math.max(capacity, MAX_CAPACITY));                   // 26줄: 시작 capacity칸, 최대 32칸
+// 패치 A
+System.arraycopy(buf, 0, bigger, 0, buf.length);      // 있는 그대로 복사, head는 그대로
+buf = bigger;
+// 패치 B
+for (int i = 0; i < count; i++) {
+    bigger[i] = buf[(head + i) % buf.length];          // head부터 오래된 순서대로
 }
-public RingEventQueue(int initialCapacity, int maxCapacity) { ... }     // 29줄: 새로 생김
+buf = bigger;
+head = 0;
 ```
 
-| 생성자 | 레거시 | 패치 |
-|---|---|---|
-| `new RingEventQueue(8)` (인자 1개) | 8칸, 늘어나지 않음 | 8칸에서 시작, **32칸까지 늘어남** |
-| `new RingEventQueue(3, 3)` (인자 2개, 새로 생김) | 없음 | 3칸에서 시작, 최대 3칸 = 늘어나지 않음 |
+`make req1`을 실행하면 아래 C-1~C-3의 결과가 보고서 한 장에 모입니다.
 
-**테스트를 `(3)` → `(3, 3)`으로 고친 이유.** `DispatcherTest`는 빨리 가득 차게 하려고 3칸 대기열을 써서 "가득 차면 R2~R4대로 거부·밀어내기"를 확인합니다. 패치 후 `new RingEventQueue(3)`은 32칸까지 늘어나 가득 차지 않으므로, 고치지 않으면 이 테스트들이 실패합니다.
-
-```
-make variant-test V=scenarios/req1/ai-A-oldtests    # 패치 A의 제품 코드 + 레거시 테스트 그대로 → 38개 중 5개 실패
-```
-
-그래서 두 패치 모두 대기열을 `(3, 3)`, 즉 늘어나지 않는 3칸으로 바꿨습니다. 가득 찼을 때의 규칙 R2~R4는 바뀌지 않았으니 **이 수정 자체는 합리적입니다.**
-
-**차이는 새 스펙을 확인하는 테스트가 있느냐입니다.**
-
-| | 패치 A가 더한 테스트 | 패치 B가 더한 테스트 |
-|---|---|---|
-| 빈 대기열에서 32칸까지 늘리기, 최대에서 FULL | 있음 | 있음 |
-| 늘어나는 대기열에서 Dispatcher가 상한을 지킴 | 없음 | `testLogicalLimitAboveInitialCapacity` |
-| 허브 전체에 32개가 들어가고 33번째는 거부 | 없음 | `testBurstOf32IsAccepted` |
-| 한 바퀴 돈 상태(head ≠ 0)에서 늘리기 | 없음 | 없음 |
-
-실제 허브(`HomeHub` 44줄)는 인자 1개짜리 생성자로 늘어나는 대기열을 씁니다. 패치 A에서는 이 대기열을 Dispatcher·Watchdog과 함께 확인하는 테스트가 하나도 없습니다.
-
-`make req1`을 실행하면 아래 C-1~C-3의 결과가 보고서 한 장에 모입니다. 단계별로 따로 보려면 아래 명령을 하나씩 실행합니다.
-
-### C-1. 테스트만으로 판단하기 (5분)
+### C-1. 테스트로 판단하기 (5분)
 
 ```
 make req1-tests
 ```
 
-패치 A 40/40, 패치 B 42/42. 테스트만 보면 둘 다 내보낼 수 있습니다.
+패치 A 40/40, 패치 B 42/42. **테스트만 보면 둘 다 내보낼 수 있습니다.** 개수가 다른 것은 각 패치가 새로 더한 테스트 수가 달라서입니다. 레거시 테스트 38개에 패치 A는 2개(`RingEventQueueTest`의 늘리기 테스트 2개)를, 패치 B는 4개(같은 2개 + `DispatcherTest.testLogicalLimitAboveInitialCapacity`, `HomeHubTest.testBurstOf32IsAccepted`)를 더했습니다. 두 패치 모두 "대기열이 32칸까지 늘어나는지" 테스트를 더했지만, 모두 **빈 대기열**에 이벤트를 넣기만 하면서 늘립니다. 앞쪽 이벤트를 몇 개 꺼내서 대기열이 배열 끝을 넘어 한 바퀴 돈 상태(`head`가 0이 아님)에서 늘리는 테스트는 없습니다.
 
-**생각해 볼 것.** 테스트 코드의 변경을 리뷰할 때 확인할 것은 두 가지입니다. (1) 기존 테스트를 고친 것이 타당한가, (2) **바뀐 스펙을 확인하는 테스트가 있는가**. 패치 A와 B는 (2)에서 어떻게 다릅니까?
+### C-2. Dafny로 판단하기 (10분)
 
-### C-2. Dafny로 판단하기 (15분)
-
-각 패치를 그대로 옮긴 Dafny 모델을 검증합니다. 계약(R1~R4)은 요청서가 승인한 상한 변경만 반영했습니다.
+각 패치의 대기열을 그대로 옮긴 Dafny 모델(`scenarios/req1/model/`)을 검증합니다. 계약은 레거시 대기열 모델(`formal/RingQueue.dfy`)과 같고, 상한만 8 → 32입니다. 계약에는 "배열을 `head`부터 읽으면 대기열 내용과 같다"(`Valid`)가 들어 있습니다.
 
 ```
 make req1-verify
@@ -549,28 +530,34 @@ make req1-verify
 | 검증 | 결과 |
 |---|---|
 | 패치 A의 대기열 모델 (`scenarios/req1/model/RingQueue_A.dfy`) | **`Grow`에서 오류 1개** |
-| 패치 B의 대기열 + Dispatcher 모델 (`model/RingQueue.dfy`, `model/Dispatcher.dfy`) | 통과 (73개 검증, 오류 0개) |
+| 패치 B의 대기열 + Dispatcher 모델 | 통과 (73개 검증, 오류 0개) |
 
-**패치 A: `Grow`에서 오류.** Grow가 끝난 뒤 "배열을 head부터 읽으면 대기열 내용과 같다"(`Valid`)는 약속을 지키지 못합니다. 대기열이 한 바퀴 돈 상태에서 늘리면 순서가 깨집니다.
+**패치 A: `Grow`에서 오류.** 보고서는 이렇게 읽습니다. 빨간 줄 112줄은 `Grow`가 끝나는 곳, 노란 줄 111줄 `Valid()`는 지키지 못한 사후조건, 노란 줄 32줄 `Inv()`는 `Valid()` 안에서도 실패한 부분입니다. `Inv()`는 "배열과 대기열 내용(`elems`)이 서로 맞는다"는 약속이고, 그 핵심이 이 한 줄입니다.
+
+```dafny
+forall i :: 0 <= i < count as int ==> elems[i] == buf[Wrap(head as int + i)]   // 44줄: i번째 내용 = 배열의 (head + i)번째 칸 (Wrap(k): 이 모델 안에서 정의한 함수, Java 코드의 k % buf.length 계산)
+```
+
+대기열이 한 바퀴 돈 상태에서 패치 A처럼 늘리면 이것이 깨집니다.
 
 ```
 늘리기 전  (head=2, 내용 c,d,e,f)
   [ e | f | c | d ]                       c,d가 뒤쪽, e,f가 앞쪽에 있음
 
-패치 A    (통째로 복사, head=2 유지)
-  [ e | f | c | d | _ | _ | _ | _ ]       head=2부터 읽으면 c,d,_,_ ...
+패치 A    (있는 그대로 복사, head=2 유지)
+  [ e | f | c | d | _ | _ | _ | _ ]       head=2부터 읽으면 c,d,_,_ ...  ← e,f가 사라짐
 
-패치 B    (순서대로 복사, head=0)
-  [ c | d | e | f | _ | _ | _ | _ ]
+패치 B    (순서대로 옮김, head=0)
+  [ c | d | e | f | _ | _ | _ | _ ]       head=0부터 읽으면 c,d,e,f
 ```
 
-패치 A가 더한 테스트는 새 대기열(head=0)에서만 늘려 보기 때문에 이 상황을 만들지 않습니다.
-
-**패치 B: 통과.** Dispatcher 모델의 R1~R4 문구는 그대로이고, 상한을 대기열 크기가 아니라 승인된 값에서 가져오도록 바뀌었습니다(`diff formal/Dispatcher.dfy scenarios/req1/model/Dispatcher.dfy`).
+테스트는 빈 대기열에서만 늘려 봤기 때문에 이 상황을 만들지 않았습니다.
 
 ### C-3. 차분 테스트로 판단하기 (10분)
 
-Dafny는 Java를 **옮긴 모델**을 검증합니다. 그래서 같은 연산을 Java와 패치 B의 모델(C-2에서 검증된 것)에 넣어 실제 Java도 같은지 봅니다.
+> **이 단계의 포인트: Dafny가 검증한 것은 Java가 아니라 Java를 옮긴 모델입니다. 차분 테스트는 실제 Java가 검증된 모델과 같게 동작하는지 봅니다.**
+
+기준으로 쓰는 모델은 **패치 B의 모델**(`scenarios/req1/model/RingQueue.dfy`)입니다. C-2에서 검증을 통과한, 계약대로 동작한다고 증명된 모델이기 때문입니다. 패치 A의 모델은 검증에 실패했으므로 기준이 될 수 없습니다. 같은 무작위 연산을 각 Java와 이 모델에 넣고, 매 연산 뒤의 결과를 비교합니다. 같으면 그 Java도 모델처럼 믿을 수 있고, 다르면 그 Java가 모델과 다르게 동작하는 연산열이 나옵니다.
 
 ```
 make req1-difftest
@@ -578,22 +565,23 @@ make req1-difftest
 
 | 비교 | 결과 | 뜻 |
 |---|---|---|
-| 패치 A vs 모델 | 불일치 | 실제 Java에서도 C-2의 버그가 남 |
-| 패치 B vs 모델 | 일치 (대기열, Dispatcher, 전력 모두) | |
-| 레거시 vs 모델 | 불일치 | 승인된 동작 변화(상한 증가) |
+| 패치 A의 Java vs 패치 B의 모델 | 불일치 | C-2의 버그가 실제 Java에도 있음 |
+| 패치 B의 Java vs 패치 B의 모델 | 일치 | 패치 B의 Java는 검증된 모델대로 동작함 |
+| 레거시 Java vs 패치 B의 모델 | 불일치 | 요청대로 바뀐 동작 |
 
 ![패치 A의 차분 테스트 불일치](img/c3-difftest.png)
 
-- **패치 A**: 연산 11개 뒤 마지막 단계에서 이벤트 14가 사라지고 빈 칸(null)이 생겼습니다. 이 연산열을 `RingEventQueueTest`에 회귀 테스트로 옮기면 패치 A의 테스트가 실패합니다.
-- **레거시**: 5번째 `offer`에서 Java는 `FULL`, 모델은 `OK`(차분 테스트는 대기열을 4칸으로 만듭니다). 이것은 버그가 아니라 **이번 요청으로 승인된 변화**입니다. 차분 테스트는 "다르다"까지만 알려 줍니다. 그 차이가 승인된 것인지는 사람이 요청서와 맞춰 봐야 합니다.
+- **패치 A**: 연산 11개 뒤 마지막 단계에서 이벤트 14가 사라지고 빈 칸(null)이 생겼습니다. 테스트가 만들지 않은 "한 바퀴 돈 상태에서 늘리기"를 무작위 연산이 만들어 냈습니다.
+- **레거시**: 5번째 `offer`에서 Java는 `FULL`, 모델은 `OK`입니다. 차분 테스트는 대기열을 4칸으로 만드는데, 레거시는 4칸이 끝이고 모델은 늘어나기 때문입니다. 버그가 아니라 **이번 요청으로 바뀐 동작**입니다. 차분 테스트는 "다르다"까지만 알려 줍니다. 그 차이가 요청한 변화인지는 사람이 요청서와 맞춰 봐야 합니다.
 
 ### 정리
 
 | | 테스트 | Dafny | 차분 테스트 | 판단 |
 |---|---|---|---|---|
-| 패치 A | 40/40 통과 | 대기열 `Grow` 실패 | 불일치 (이벤트가 사라짐) | 버그. 내보낼 수 없음 |
-| 패치 B | 42/42 통과 | 통과 | 일치 | 내보낼 수 있음 |
+| 패치 A | 통과 | `Grow` 실패 | 불일치 (이벤트가 사라짐) | 버그. 내보낼 수 없음 |
+| 패치 B | 통과 | 통과 | 일치 | 내보낼 수 있음 |
 
+**테스트를 더 잘 쓰면 되지 않을까요?** 이 버그는 "한 바퀴 돈 상태"와 "늘리기"가 겹칠 때만 납니다. 이런 조합을 사람이 미리 다 떠올리기는 어렵습니다. Dafny의 계약은 **모든 상태**를 다루고, 차분 테스트는 조합을 **무작위로 많이** 만들어 냅니다.
 
 ---
 
@@ -638,11 +626,21 @@ make reverify REQ=req1
 
 ---
 
-## 실습 E. 정리 규칙을 코드 전체에 적용하기 (세션 5, 약 30분)
+## 실습 E. 정리 규칙을 코드 전체에 적용하기 (세션 5, 약 35분)
 
 > **조건부 규칙을 적용하는 곳에서 조건을 누락하면 잘못된 결과가 나온다.**
 
-코드 정리 규칙("같은 뜻의 더 나은 코드로 바꾸기")은 대부분 **어떤 조건에서만** 같은 뜻입니다. 규칙을 코드 전체에 일괄 적용하는 도구나 AI는 그 조건을 자리마다 확인하지 않을 수 있습니다.
+**왜 정리하나요.** 오래된 Java 코드에는 지금 보면 번거로운 옛 방식이 많습니다. 목록이 비었는지 `size() == 0`으로 묻고, 목록을 돌 때 인덱스 `i`를 쓰고, 한 번만 쓰는 임시 변수를 따로 둡니다. 이런 곳을 같은 뜻의 더 읽기 쉬운 코드로 바꾸는 것이 코드 정리(리팩터링)입니다. 같은 모양이 코드 곳곳에 있으므로 보통은 "이 규칙을 코드 전체에 적용해 줘"라고 도구나 AI에게 맡깁니다. "같은 뜻으로 바꾸기"라서 안전해 보이기 때문입니다.
+
+**하지만** 대부분의 정리 규칙은 **어떤 조건에서만** 같은 뜻입니다. 코드 전체에 일괄 적용하는 도구나 AI는 그 조건을 자리마다 확인하지 않을 수 있습니다.
+
+**이 실습의 규칙 세 개** (예는 HomeHub 코드에서 실제로 바뀌는 곳 하나씩)
+
+| 규칙 | 바꾸기 전 | 바꾼 뒤 |
+|---|---|---|
+| ① 비었는지 묻기 `size() == 0` → `isEmpty()` | `return running.size() == 0;` (`PowerBudget.isIdle`) | `return running.isEmpty();` |
+| ② 인덱스 반복 → for-each | `for (int i = 0; i < derived.size(); i++) { dispatcher.submit(derived.get(i)); }` (`HomeHub.flushDerived`) | `for (Event d : derived) { dispatcher.submit(d); }` |
+| ③ 변수 인라인 (한 번만 쓰는 지역 변수를 그 식으로) | `String line = tag + ...; entries.add(line);` (`AuditLog.record`) | `entries.add(tag + ...);` |
 
 ### E-1. 규칙마다 조건 적기 (10분, 종이 연습)
 
@@ -663,7 +661,7 @@ make rewrite-check R=InlineVariable
 make rewrite-check R=All            # 셋 다
 ```
 
-`rewrite-check`는 세 가지로 확인합니다: 기존 테스트 38개, 기록해 둔 동작(실습 A-2 ②) 3개, 무작위 입력 파일 200개로 레거시와 전체 동작 비교(다르면 같은 차이가 나는 가장 짧은 입력을 남김).
+`rewrite-check`는 세 가지로 확인합니다: 기존 테스트 38개, 기록해 둔 동작 3개(`normal_day` 평소 하루, `burst` 저녁 피크로 대기열이 가득 참, `fridge_firmware` 냉장고 2대의 온도 보고), 무작위 입력 파일 200개로 레거시와 전체 동작 비교(다르면 같은 차이가 나는 가장 짧은 입력을 남김).
 
 | 규칙 | 적용한 곳 | 테스트 | 기록 | 무작위 비교 |
 |---|---|---|---|---|
@@ -689,31 +687,46 @@ for (int i = 0; i < queue.size(); i++) {    // 돌 때마다 queue.size()를 다
 
 이 메서드는 대기열을 한 바퀴 돌리면서 가장 오래된 비중요 이벤트 하나를 뺍니다. 인라인하면 **하나를 빼는 순간 크기가 줄어 반복이 한 번 일찍 끝나고**, 마지막 이벤트가 제자리로 돌아오지 못해 앞으로 옵니다.
 
-```
-밀어내기 전 대기열      [1, 2, 3, 4, 5, 6, 7, 8]   (8개, 모두 비중요, 중요 이벤트 11이 들어오려 함)
-레거시 (n = 8)          → [2, 3, 4, 5, 6, 7, 8, 11]
-인라인 (size 다시 읽음) → [8, 2, 3, 4, 5, 6, 7, 11]   ← 순서 깨짐 (규칙 R3 위반)
-```
+대기열 크기는 반복 중에 바뀝니다. 밀어낼 이벤트를 꺼낼 때 한 번 줄고, 나머지는 꺼냈다 다시 넣으니 그대로입니다. 비중요 이벤트 1~8이 든 대기열에 중요 이벤트 11이 들어오는 경우:
+
+| `i` | 레거시: `i < n` (n = 8) | 인라인: `i < queue.size()` | 이번에 하는 일 | 인라인 쪽 대기열 |
+|---|---|---|---|---|
+| 시작 | | | | [1, 2, 3, 4, 5, 6, 7, 8] |
+| 0 | 0 < 8, 계속 | 0 < 8, 계속 | 1을 꺼내 밀어낼 이벤트로 둠(다시 넣지 않음) → 크기 7 | [2, 3, 4, 5, 6, 7, 8] |
+| 1 | 1 < 8, 계속 | **1 < 7**, 계속 | 2를 꺼내 뒤에 다시 넣음 | [3, 4, 5, 6, 7, 8, 2] |
+| 2~6 | 계속 | 계속 | 3, 4, 5, 6, 7을 차례로 꺼내 뒤에 넣음 | [8, 2, 3, 4, 5, 6, 7] |
+| 7 | 7 < 8, 계속: 8을 꺼내 뒤에 넣음 | **7 < 7 거짓: 멈춤** | 인라인 쪽은 8을 돌리지 못함 | [8, 2, 3, 4, 5, 6, 7] |
+
+마지막으로 11을 넣으면 레거시는 [2, 3, 4, 5, 6, 7, 8, 11], 인라인은 [8, 2, 3, 4, 5, 6, 7, 11]입니다. 8이 맨 앞으로 와서 순서가 바뀌었습니다(규칙 R3 위반).
 
 변수 인라인이 같은 뜻이 되는 조건은 "변수를 쓰는 동안 그 식의 값이 바뀌지 않는다"입니다. 다른 두 곳(`AuditLog.record`, `AuditLog.tail`)은 이 조건이 맞고, 이곳만 맞지 않습니다. 테스트(`testCriticalEvictsOldestNonCritical`)는 밀어낸 개수와 빠진 이벤트만 보고 남은 순서는 보지 않아서 통과했습니다.
 
 for-each 규칙에도 조건("반복 중에 목록을 바꾸지 않는다")이 있지만, 이 코드에서는 적용한 8곳 모두 조건이 맞아서 동작이 그대로입니다.
 
-**AI에게 직접 시켜 보기.** 노트북의 `lab.codex("P-5", 규칙=..., 코드=".../Dispatcher.java")`는 변수 인라인 규칙을 `Dispatcher.java`에 적용하라고 Codex에게 시킵니다(`docs/PROMPTS.md` P-5). AI가 조건을 확인했는지, `evictOldestNonCritical`의 `n`을 인라인했는지 봅니다.
+**AI에게 직접 시켜 보기.** 노트북의 `lab.codex("P-5", 규칙=..., 코드=".../Dispatcher.java")`는 변수 인라인 규칙을 `Dispatcher.java`에 적용하라고 Codex에게 시킵니다(`docs/PROMPTS.md` P-5). AI가 조건을 확인했는지, `evictOldestNonCritical`의 `n`을 인라인했는지 봅니다. 바로 위 셀에서 쓸 모델과 추론 수준을 고를 수 있습니다(기본값 `gpt-5.6-luna`, 추론 `none`).
 
-### E-3. 규칙의 조건을 Dafny로 적기 (5분)
+### E-3. 규칙이 같은 뜻이라는 것을 Dafny로 증명하기 (10분)
+
+정리 규칙이 "같은 뜻"이라는 것을 Dafny로 이렇게 적습니다(`rewrite/RewriteRules.dfy`).
+
+1. 바꾸기 **전**의 코드와 바꾼 **뒤**의 코드가 하는 일을 각각 Dafny 함수로 적습니다. 예: 규칙 ③은 `Fixed`(`n`을 반복 전에 한 번 계산)와 `Inlined`(매번 지금 상태에서 다시 계산해 비교).
+2. "두 결과가 같다"를 보조정리(`lemma`)의 `ensures`로 적고 증명합니다(`<규칙>_Same`).
+3. 같아지려면 필요한 **조건**은 그 보조정리의 `requires`로 적습니다. E-1에서 적은 "같은 뜻이 되는 조건"입니다.
+4. 조건부 규칙은 "조건이 없으면 두 쪽이 다르다"는 구체적인 예도 증명해 둡니다(`<규칙>_Counterexample`). 같음 보조정리는 "조건이 있으면 같다"만 말하므로, 반례가 있어야 "조건이 꼭 필요하다"고 말할 수 있습니다.
 
 ```
-make rules          # rewrite/RewriteRules.dfy → "19 verified, 0 errors"
+make rules          # rewrite/RewriteRules.dfy → "15 verified, 0 errors"
 ```
 
-규칙마다 `..._Same` 보조정리(lemma)가 있습니다. 두 쪽이 같다는 보조정리이고, 그 `requires`가 규칙의 조건입니다. 조건부 규칙에는 조건이 없을 때 두 쪽이 다른 예(`..._Counterexample`)도 증명해 둡니다.
+노트북에서는 세 규칙의 Dafny 코드를 줄마다 색과 설명을 붙여 보여 줍니다(주황 `requires` = 조건, 청록 `ensures` = 같다/다르다).
 
 | 규칙 | 같음 보조정리의 조건(`requires`) | 반례 |
 |---|---|---|
 | IsEmpty | 없음 | 없음 |
 | ForEach | 반복 본문이 목록을 바꾸지 않음 | 본문이 맨 앞을 지우면 `[1, 2, 3]`에서 2를 건너뜀 |
-| InlineVariable | 반복 중에 `queue.size()`가 바뀌지 않음(여기서는 뺄 비중요 이벤트가 없음) | 비중요 이벤트 `[1, 2, 3]`: 변수를 쓰면 `[2, 3]`, 인라인하면 `[3, 2]` |
+| InlineVariable | 반복 몸체가 식의 값을 바꾸지 않음(`forall t :: size(body(t)) == size(t)`) | 몸체가 맨 앞을 하나 빼고 식이 목록 길이일 때 `[1, 2, 3]`: 변수를 쓰면 3번 돌아 `[]`, 인라인하면 2번 돌고 멈춰 `[3]` |
+
+**해 볼 것: 조건을 지우면 증명이 되지 않는지 보기.** 규칙 ③의 같음 보조정리에서 100줄 `requires forall t :: size(body(t)) == size(t)`를 주석으로 바꾸고 `make rules`를 돌리면 "14 verified, 1 error"가 나옵니다. 103줄(증명 도우미 `Loops`를 부르는 곳)에서 `Loops`의 사전조건 "몸체가 `size`를 바꾸지 않음"(89줄)을 보일 수 없다는 오류입니다. 조건 없이는 "두 반복이 같다"를 증명할 수 없다는 뜻이고, 조건이 없을 때 실제로 다르다는 것은 반례 보조정리가 증명해 둡니다. 확인한 뒤 꼭 되돌립니다(되돌리지 않으면 규칙 파일에 지운 조건이 남습니다).
 
 ### 조건을 확인하면서 적용하는 도구
 

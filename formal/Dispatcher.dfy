@@ -28,13 +28,13 @@ module DispatcherModel {
   }
 
   // Events kept after rotating the first i events of s, dropping index k (if k < i).
-  ghost function KeptOf(s: seq<Ev>, i: nat, k: nat): seq<Ev>
+  ghost function KeptOf(s: seq<Event>, i: nat, k: nat): seq<Event>
     requires i <= |s|
   {
     if k < i then s[..k] + s[k + 1..i] else s[..i]
   }
 
-  lemma KeptStep(s: seq<Ev>, i: nat, k: nat)
+  lemma KeptStep(s: seq<Event>, i: nat, k: nat)
     requires i < |s| && i != k
     ensures KeptOf(s, i + 1, k) == KeptOf(s, i, k) + [s[i]]
   {
@@ -45,7 +45,7 @@ module DispatcherModel {
     }
   }
 
-  lemma KeptSkip(s: seq<Ev>, k: nat)
+  lemma KeptSkip(s: seq<Event>, k: nat)
     requires k < |s|
     ensures KeptOf(s, k + 1, k) == KeptOf(s, k, k)
   {
@@ -56,7 +56,7 @@ module DispatcherModel {
     const queue: RingQueue
     const autoDrainOnFull: bool
     ghost const Limit: int
-    ghost var Dispatched: seq<Ev>    // events handed to the handlers, in order
+    ghost var Dispatched: seq<Event>    // events handed to the handlers, in order
     var dispatchedCount: int         // Java: long dispatchedCount
 
     ghost predicate Valid()
@@ -77,34 +77,34 @@ module DispatcherModel {
       dispatchedCount := 0;
     }
 
-    method Submit(e: Ev) returns (r: SubmitResult)
+    method Submit(e: Event) returns (r: SubmitResult)
       requires Valid()
       modifies this, queue, queue.buf
       ensures Valid() && queue.buf == old(queue.buf)
       // R1
-      ensures |queue.Contents| <= Limit
+      ensures |queue.elems| <= Limit
       // R2
       ensures e.critical ==> r != REJECTED_FULL
       // which result: decided by the old state only
-      ensures r == ACCEPTED <==> |old(queue.Contents)| < Limit
+      ensures r == ACCEPTED <==> |old(queue.elems)| < Limit
       ensures r == ACCEPTED_EVICTED <==>
-        |old(queue.Contents)| == Limit && e.critical && !AllCritical(old(queue.Contents))
+        |old(queue.elems)| == Limit && e.critical && !AllCritical(old(queue.elems))
       ensures r == ACCEPTED_DRAINED <==>
-        |old(queue.Contents)| == Limit &&
-        ((e.critical && AllCritical(old(queue.Contents))) || (!e.critical && autoDrainOnFull))
+        |old(queue.elems)| == Limit &&
+        ((e.critical && AllCritical(old(queue.elems))) || (!e.critical && autoDrainOnFull))
       ensures r == REJECTED_FULL <==>
-        |old(queue.Contents)| == Limit && !e.critical && !autoDrainOnFull
+        |old(queue.elems)| == Limit && !e.critical && !autoDrainOnFull
       // R3 and the exact new state
       ensures r == ACCEPTED ==>
-        queue.Contents == old(queue.Contents) + [e] && Dispatched == old(Dispatched)
+        queue.elems == old(queue.elems) + [e] && Dispatched == old(Dispatched)
       ensures r == ACCEPTED_EVICTED ==>
-        queue.Contents == Remove(old(queue.Contents), IndexOfNonCritical(old(queue.Contents))) + [e]
+        queue.elems == Remove(old(queue.elems), IndexOfNonCritical(old(queue.elems))) + [e]
         && Dispatched == old(Dispatched)
       ensures r == ACCEPTED_DRAINED ==>
-        queue.Contents == old(queue.Contents)[1..] + [e]
-        && Dispatched == old(Dispatched) + [old(queue.Contents)[0]]
+        queue.elems == old(queue.elems)[1..] + [e]
+        && Dispatched == old(Dispatched) + [old(queue.elems)[0]]
       ensures r == REJECTED_FULL ==>
-        queue.Contents == old(queue.Contents) && Dispatched == old(Dispatched)
+        queue.elems == old(queue.elems) && Dispatched == old(Dispatched)
     {
       var res := queue.Offer(e);
       if res == OK {
@@ -129,28 +129,28 @@ module DispatcherModel {
     }
 
     // Java: rotate the whole queue once, dropping the first non-critical event.
-    method EvictOldestNonCritical() returns (found: bool, victim: Ev)
+    method EvictOldestNonCritical() returns (found: bool, victim: Event)
       requires Valid()
       modifies queue, queue.buf
       ensures Valid() && queue.buf == old(queue.buf)
-      ensures found <==> !AllCritical(old(queue.Contents))
+      ensures found <==> !AllCritical(old(queue.elems))
       ensures found ==>
-        var k := IndexOfNonCritical(old(queue.Contents));
-        k < |old(queue.Contents)| && victim == old(queue.Contents)[k]
-        && queue.Contents == Remove(old(queue.Contents), k)
-      ensures !found ==> queue.Contents == old(queue.Contents)
+        var k := IndexOfNonCritical(old(queue.elems));
+        k < |old(queue.elems)| && victim == old(queue.elems)[k]
+        && queue.elems == Remove(old(queue.elems), k)
+      ensures !found ==> queue.elems == old(queue.elems)
     {
-      ghost var orig := queue.Contents;
+      ghost var orig := queue.elems;
       ghost var k := IndexOfNonCritical(orig);
-      ghost var kept: seq<Ev> := [];
+      ghost var kept: seq<Event> := [];
       var n := queue.Size();
       var i: i32 := 0;
       found := false;
-      victim := Ev(0, false);
+      victim := Event(0, false);
       while i < n
         invariant Valid() && queue.buf == old(queue.buf)
         invariant 0 <= i <= n && n as int == |orig|
-        invariant queue.Contents == orig[i..] + kept
+        invariant queue.elems == orig[i..] + kept
         invariant kept == KeptOf(orig, i as int, k)
         invariant found <==> k < i as int
         invariant found ==> victim == orig[k]
@@ -158,7 +158,7 @@ module DispatcherModel {
         var ok, x := queue.Poll();
         TailOfConcat(orig[i..], kept);
         assert orig[i..][1..] == orig[i + 1..];
-        assert x == orig[i] && queue.Contents == orig[i + 1..] + kept;
+        assert x == orig[i] && queue.elems == orig[i + 1..] + kept;
         if !found && !x.critical {
           assert k == i as int;   // all earlier events are critical, this one is not
           KeptSkip(orig, k);
@@ -167,7 +167,7 @@ module DispatcherModel {
         } else {
           KeptStep(orig, i as int, k);
           var r := queue.Offer(x);
-          assert queue.Contents == orig[i + 1..] + (kept + [x]);
+          assert queue.elems == orig[i + 1..] + (kept + [x]);
           kept := kept + [x];
         }
         i := i + 1;
@@ -177,14 +177,14 @@ module DispatcherModel {
       assert !found ==> KeptOf(orig, n as int, k) == orig;
     }
 
-    method DispatchOne() returns (ok: bool, e: Ev)
+    method DispatchOne() returns (ok: bool, e: Event)
       requires Valid()
       modifies this, queue, queue.buf
       ensures Valid() && queue.buf == old(queue.buf)
-      ensures |old(queue.Contents)| == 0 ==>
-        !ok && queue.Contents == old(queue.Contents) && Dispatched == old(Dispatched)
-      ensures |old(queue.Contents)| > 0 ==>
-        ok && e == old(queue.Contents)[0] && queue.Contents == old(queue.Contents)[1..]
+      ensures |old(queue.elems)| == 0 ==>
+        !ok && queue.elems == old(queue.elems) && Dispatched == old(Dispatched)
+      ensures |old(queue.elems)| > 0 ==>
+        ok && e == old(queue.elems)[0] && queue.elems == old(queue.elems)[1..]
         && Dispatched == old(Dispatched) + [e]
     {
       ok, e := queue.Poll();
@@ -198,18 +198,18 @@ module DispatcherModel {
       requires Valid()
       modifies this, queue, queue.buf
       ensures Valid() && queue.buf == old(queue.buf)
-      ensures queue.Contents == [] && Dispatched == old(Dispatched) + old(queue.Contents)
-      ensures n as int == |old(queue.Contents)|
+      ensures queue.elems == [] && Dispatched == old(Dispatched) + old(queue.elems)
+      ensures n as int == |old(queue.elems)|
     {
       n := 0;
       var ok := true;
       while ok
         invariant Valid() && queue.buf == old(queue.buf)
-        invariant 0 <= n as int <= |old(queue.Contents)|
-        invariant queue.Contents == old(queue.Contents)[n..]
-        invariant Dispatched == old(Dispatched) + old(queue.Contents)[..n]
-        invariant !ok ==> n as int == |old(queue.Contents)|
-        decreases |queue.Contents| + (if ok then 1 else 0)
+        invariant 0 <= n as int <= |old(queue.elems)|
+        invariant queue.elems == old(queue.elems)[n..]
+        invariant Dispatched == old(Dispatched) + old(queue.elems)[..n]
+        invariant !ok ==> n as int == |old(queue.elems)|
+        decreases |queue.elems| + (if ok then 1 else 0)
       {
         var e;
         ok, e := DispatchOne();
