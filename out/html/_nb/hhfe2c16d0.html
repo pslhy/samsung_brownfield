@@ -1,0 +1,121 @@
+<!doctype html><html lang='ko'><head><meta charset='utf-8'><style>
+:root{
+  --paper:#FBFCFD; --sheet:#FFFFFF; --ink:#18212B; --muted:#5B6773; --rule:#D9DFE6; --rule2:#EEF1F4;
+  --accent:#1F5F8B; --accent-tint:#E9F1F7;
+  --same:#2D7A4C; --same-tint:#E7F3EB;
+  --diff:#B83227; --diff-tint:#FCEBE9;
+  --chg:#9A6512; --chg-tint:#FFF3D9;
+  --code:#F4F6F8;
+  --sans:"Pretendard","Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
+  --mono:"D2Coding","JetBrains Mono","SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#11161C; --sheet:#171E26; --ink:#E4E9EE; --muted:#9AA6B2; --rule:#2C3743; --rule2:#212A34;
+    --accent:#7DB4DD; --accent-tint:#1B2B39;
+    --same:#6CC08F; --same-tint:#17291F;
+    --diff:#F08A7E; --diff-tint:#36191A;
+    --chg:#E2B259; --chg-tint:#33270F;
+    --code:#1C242D;
+  }
+}
+*{box-sizing:border-box}
+html{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6;
+  -webkit-text-size-adjust:100%}
+body{margin:0}
+a{color:var(--accent)}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 24px 80px}
+.top{display:flex;justify-content:space-between;gap:16px;align-items:baseline;border-bottom:2px solid var(--ink);
+  padding-bottom:10px;margin-bottom:22px;font-size:13px;color:var(--muted)}
+.top a{color:var(--muted);text-decoration:none}
+.top a:hover{color:var(--accent)}
+h1{font-size:28px;line-height:1.3;margin:0 0 6px;font-weight:700;letter-spacing:-.01em}
+.lead{max-width:72ch;color:var(--muted);margin:0 0 20px}
+.verdict{border-left:6px solid var(--accent);background:var(--sheet);padding:16px 20px;margin:0 0 18px;
+  font-size:21px;line-height:1.45;font-weight:600;max-width:900px}
+.verdict.ok{border-color:var(--same)} .verdict.bad{border-color:var(--diff)} .verdict.warn{border-color:var(--chg)}
+.verdict .num{font-variant-numeric:tabular-nums}
+.facts{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:0;margin:0 0 26px;
+  border-top:1px solid var(--rule);border-left:1px solid var(--rule)}
+.facts div{border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:10px 14px;background:var(--sheet)}
+.facts b{display:block;font-size:22px;font-variant-numeric:tabular-nums;line-height:1.2}
+.facts span{font-size:13px;color:var(--muted)}
+.cmd{font-family:var(--mono);font-size:13px;background:var(--code);border:1px solid var(--rule);padding:6px 10px;
+  display:inline-block;border-radius:3px;margin:0 0 20px;color:var(--muted)}
+nav.toc{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14px;margin:0 0 28px;padding:10px 0;
+  border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+nav.toc a{text-decoration:none}
+section{margin:0 0 40px}
+h2{font-size:20px;margin:0 0 4px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+h3{font-size:16px;margin:22px 0 6px}
+.sub{color:var(--muted);margin:0 0 14px;max-width:80ch;font-size:14px}
+.badge{display:inline-block;font-size:12.5px;font-weight:600;padding:1px 8px;border-radius:999px;border:1px solid;
+  white-space:nowrap}
+.b-ok{color:var(--same);border-color:var(--same);background:var(--same-tint)}
+.b-bad{color:var(--diff);border-color:var(--diff);background:var(--diff-tint)}
+.b-warn{color:var(--chg);border-color:var(--chg);background:var(--chg-tint)}
+.b-info{color:var(--accent);border-color:var(--accent);background:var(--accent-tint)}
+.b-mute{color:var(--muted);border-color:var(--rule);background:transparent}
+table{border-collapse:collapse;width:100%;font-size:14px;background:var(--sheet)}
+th,td{text-align:left;vertical-align:top;padding:6px 10px;border-bottom:1px solid var(--rule2)}
+th{font-size:13px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--rule)}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+tr.bad td{background:var(--diff-tint)}
+table.state td{border-bottom:0;padding:3px 10px}
+tr.chg td{background:var(--chg-tint)}
+code,.mono{font-family:var(--mono);font-size:13px}
+.box{background:var(--sheet);border:1px solid var(--rule);padding:14px 16px}
+.scroll{overflow-x:auto}
+/* source / diff */
+.src{font-family:var(--mono);font-size:12.8px;line-height:1.55;border:1px solid var(--rule);background:var(--sheet);
+  overflow-x:auto;margin:0 0 14px}
+.src .split table{min-width:100%}
+.src .fh{font-family:var(--sans);font-size:13px;color:var(--muted);padding:6px 10px;border-bottom:1px solid var(--rule);
+  background:var(--code);display:flex;justify-content:space-between;gap:10px}
+.src table{background:transparent;font-size:inherit}
+.src td{padding:0 10px;border:0;white-space:pre}
+.src td.ln{color:var(--muted);text-align:right;user-select:none;width:1%;padding-right:8px;opacity:.75}
+.src tr.del td{background:var(--diff-tint)} .src tr.add td{background:var(--same-tint)}
+.src tr.mark td{background:var(--chg-tint)}
+.src tr.gap td{color:var(--muted);text-align:center;font-family:var(--sans);font-size:12px;background:var(--code)}
+.src .split{display:grid;grid-template-columns:1fr 1fr}
+.src .split>div{min-width:0;overflow-x:auto}
+.src .split>div+div{border-left:1px solid var(--rule)}
+.src .side{font-family:var(--sans);font-size:12px;color:var(--muted);padding:3px 10px;border-bottom:1px solid var(--rule2)}
+ins.w{background:var(--same-tint);color:var(--same);text-decoration:none;font-weight:600}
+del.w{background:var(--diff-tint);color:var(--diff);text-decoration:none;font-weight:600}
+/* chains */
+.chain{list-style:none;margin:6px 0 10px;padding:0 0 0 2px}
+.chain li{position:relative;padding:3px 0 3px 22px;font-size:14px}
+.chain li::before{content:"";position:absolute;left:6px;top:0;bottom:0;border-left:2px solid var(--rule)}
+.chain li::after{content:"";position:absolute;left:2px;top:12px;width:10px;height:10px;border-radius:50%;
+  background:var(--sheet);border:2px solid var(--accent)}
+.chain li.src-line::after{background:var(--chg);border-color:var(--chg)}
+.chain li:first-child::before{top:12px} .chain li:last-child::before{bottom:calc(100% - 12px)}
+.chain li:last-child::after{background:var(--accent)}
+.chain{background:var(--sheet);border:1px solid var(--rule2);padding:8px 12px 8px 10px;max-width:900px}
+.chain .via{color:var(--muted);font-size:13px}
+details{border-bottom:1px solid var(--rule2)}
+details>summary{cursor:pointer;padding:6px 4px;list-style:none;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+details>summary::-webkit-details-marker{display:none}
+details>summary::before{content:"+";font-family:var(--mono);color:var(--muted);width:12px}
+details[open]>summary::before{content:"−"}
+details>div{padding:4px 4px 12px 26px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-family:var(--mono);font-size:12.5px;padding:2px 8px;border:1px solid var(--rule);border-radius:3px;background:var(--sheet)}
+.chip.on{border-color:var(--accent);background:var(--accent-tint)}
+.chip.off{color:var(--muted);opacity:.7}
+.bar{height:8px;background:var(--rule2);border-radius:4px;overflow:hidden;min-width:80px}
+.bar>i{display:block;height:100%;background:var(--accent)}
+.bar.alt>i{background:var(--chg)}
+.filter{font:inherit;font-size:14px;padding:6px 10px;border:1px solid var(--rule);background:var(--sheet);color:var(--ink);
+  width:min(360px,100%);margin:0 0 10px;border-radius:3px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid3 .chip{font-size:11.5px}
+@media (max-width:980px){.grid3{grid-template-columns:1fr}}
+@media (max-width:760px){.grid2,.src .split{grid-template-columns:1fr}.verdict{font-size:18px}h1{font-size:23px}}
+.steps td.op{font-family:var(--mono);white-space:nowrap}
+.note{font-size:13px;color:var(--muted)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+ body .wrap{padding:6px}</style></head><body><div class='wrap'><style>.ann{border-collapse:collapse;width:100%;font-size:12.8px}.ann td{border:0;padding:0 8px;vertical-align:top}.ann td.code{font-family:var(--mono);white-space:pre;line-height:1.6}.ann td.ln{color:var(--muted);text-align:right;width:1%;font-family:var(--mono);line-height:1.6}.ann td.note{font-family:var(--sans);font-size:13px;line-height:1.5;width:42%;padding:3px 10px;background:#fbfcfd}.ann .tag{font-weight:700;font-size:12px;margin-right:4px}</style><div class="fh" style="font-size:13px;color:var(--muted);padding:4px 0">RewriteRules.dfy: 규칙 ③</div><div class="scroll"><table class="ann"><tr><td class="ln">66</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">// ---------------------------------------------------------------------------------------------</td><td class="note" rowspan="10" style="border-left:4px solid #9aa5b1;"><span class="tag" style="color:#9aa5b1">본문</span> 규칙 ③. E-2에서 깨진 <code>Dispatcher.evictOldestNonCritical</code>의 반복을 옮김</td></tr><tr><td class="ln">67</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">// Rule 3 (InlineVariable):</td></tr><tr><td class="ln">68</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">//   int n = e;  ... for (i = 0; i &lt; n; i++) ...   ~&gt;   ... for (i = 0; i &lt; e; i++) ...</td></tr><tr><td class="ln">69</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">// Condition: the value of e does not change while the variable is used.</td></tr><tr><td class="ln">70</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">//</td></tr><tr><td class="ln">71</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">// The place where it breaks in HomeHub: Dispatcher.evictOldestNonCritical rotates the queue once,</td></tr><tr><td class="ln">72</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">// keeping every event except the oldest non-critical one (the victim):</td></tr><tr><td class="ln">73</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">//   int n = queue.size();</td></tr><tr><td class="ln">74</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">//   for (int i = 0; i &lt; n; i++) { x = queue.poll(); if (no victim yet &amp;&amp; !x.critical) victim = x; else queue.offer(x); }</td></tr><tr><td class="ln">75</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">// Inlining n turns the bound into queue.size(), which shrinks when the victim is taken out.</td></tr><tr><td class="ln">76</td><td class="code" style="background:#e9f1fb;border-left:4px solid #3b6fb6;">module InlineVariableRule {</td><td class="note" rowspan="4" style="border-left:4px solid #3b6fb6;"><span class="tag" style="color:#3b6fb6">Java 필드</span> 이벤트(번호, 중요 여부)와 반복의 상태(대기열 내용, 밀어낸 이벤트 번호. 없으면 0)</td></tr><tr><td class="ln">77</td><td class="code" style="background:#e9f1fb;border-left:4px solid #3b6fb6;">  datatype Event = Event(id: int, critical: bool)</td></tr><tr><td class="ln">78</td><td class="code" style="background:#e9f1fb;border-left:4px solid #3b6fb6;">  datatype State = State(queue: seq&lt;Event&gt;, victim: int)   // victim: id, or 0 for none</td></tr><tr><td class="ln">79</td><td class="code" style="background:#e9f1fb;border-left:4px solid #3b6fb6;">&nbsp;</td></tr><tr><td class="ln">80</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  // one iteration of the loop body (the queue is never empty inside the loop)</td><td class="note" rowspan="8" style="border-left:4px solid #9aa5b1;"><span class="tag" style="color:#9aa5b1">함수</span> 반복 한 번: 맨 앞을 꺼내, 아직 밀어낸 것이 없고 비중요면 밀어냄. 아니면 뒤에 다시 넣음(Java의 <code>poll</code>/<code>offer</code>)</td></tr><tr><td class="ln">81</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  function Step(s: State): State</td></tr><tr><td class="ln">82</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">    requires |s.queue| &gt; 0</td></tr><tr><td class="ln">83</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  {</td></tr><tr><td class="ln">84</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">    var x := s.queue[0];</td></tr><tr><td class="ln">85</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">    if s.victim == 0 &amp;&amp; !x.critical then State(s.queue[1..], x.id)</td></tr><tr><td class="ln">86</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">    else State(s.queue[1..] + [x], s.victim)</td></tr><tr><td class="ln">87</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  }</td></tr><tr><td class="ln">88</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">&nbsp;</td><td class="note" rowspan="1" style="border-left:4px solid #9aa5b1;"><span class="tag" style="color:#9aa5b1">본문</span> </td></tr><tr><td class="ln">89</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  // with the variable: the bound n is fixed when the loop starts</td><td class="note" rowspan="6" style="border-left:4px solid #9aa5b1;"><span class="tag" style="color:#9aa5b1">함수</span> <b>바꾸기 전</b>: 반복 횟수 <code>n</code>을 시작할 때 정해 둠(<code>int n = queue.size()</code>)</td></tr><tr><td class="ln">90</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  function Fixed(s: State, i: nat, n: nat): State</td></tr><tr><td class="ln">91</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">    decreases n - i</td></tr><tr><td class="ln">92</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  {</td></tr><tr><td class="ln">93</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">    if i &gt;= n || |s.queue| == 0 then s else Fixed(Step(s), i + 1, n)</td></tr><tr><td class="ln">94</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  }</td></tr><tr><td class="ln">95</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">&nbsp;</td><td class="note" rowspan="1" style="border-left:4px solid #9aa5b1;"><span class="tag" style="color:#9aa5b1">본문</span> </td></tr><tr><td class="ln">96</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  // inlined: the bound is re-read from the queue every time</td><td class="note" rowspan="6" style="border-left:4px solid #9aa5b1;"><span class="tag" style="color:#9aa5b1">함수</span> <b>바꾼 뒤</b>: 반복할 때마다 <b>지금</b> 대기열 크기와 비교(<code>i &lt; queue.size()</code>)</td></tr><tr><td class="ln">97</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  function Inlined(s: State, i: nat, fuel: nat): State</td></tr><tr><td class="ln">98</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">    decreases fuel</td></tr><tr><td class="ln">99</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  {</td></tr><tr><td class="ln">100</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">    if fuel == 0 || i &gt;= |s.queue| then s else Inlined(Step(s), i + 1, fuel - 1)</td></tr><tr><td class="ln">101</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  }</td></tr><tr><td class="ln">102</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">&nbsp;</td><td class="note" rowspan="1" style="border-left:4px solid #9aa5b1;"><span class="tag" style="color:#9aa5b1">본문</span> </td></tr><tr><td class="ln">103</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  predicate AllCritical(q: seq&lt;Event&gt;) { forall k :: 0 &lt;= k &lt; |q| ==&gt; q[k].critical }</td><td class="note" rowspan="1" style="border-left:4px solid #9aa5b1;"><span class="tag" style="color:#9aa5b1">함수</span> 모든 이벤트가 중요 이벤트인가</td></tr><tr><td class="ln">104</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">&nbsp;</td><td class="note" rowspan="18" style="border-left:4px solid #d5dae0;opacity:.45;"><span class="tag" style="color:#d5dae0">증명 도우미</span> 증명 도우미: 모두 중요 이벤트면 한 번 돌아도 크기가 그대로이고, 그래서 두 반복이 한 단계씩 같게 진행됨</td></tr><tr><td class="ln">105</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">  lemma StepKeepsSize(s: State)</td></tr><tr><td class="ln">106</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">    requires |s.queue| &gt; 0 &amp;&amp; AllCritical(s.queue)</td></tr><tr><td class="ln">107</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">    ensures |Step(s).queue| == |s.queue| &amp;&amp; AllCritical(Step(s).queue)</td></tr><tr><td class="ln">108</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">  {</td></tr><tr><td class="ln">109</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">  }</td></tr><tr><td class="ln">110</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">&nbsp;</td></tr><tr><td class="ln">111</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">  lemma Loops(s: State, i: nat, n: nat, fuel: nat)</td></tr><tr><td class="ln">112</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">    requires AllCritical(s.queue) &amp;&amp; |s.queue| == n &amp;&amp; i &lt;= n &amp;&amp; fuel &gt;= n - i</td></tr><tr><td class="ln">113</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">    ensures Fixed(s, i, n) == Inlined(s, i, fuel)</td></tr><tr><td class="ln">114</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">    decreases n - i</td></tr><tr><td class="ln">115</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">  {</td></tr><tr><td class="ln">116</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">    if i &lt; n &amp;&amp; |s.queue| &gt; 0 {</td></tr><tr><td class="ln">117</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">      StepKeepsSize(s);</td></tr><tr><td class="ln">118</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">      Loops(Step(s), i + 1, n, fuel - 1);</td></tr><tr><td class="ln">119</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">    }</td></tr><tr><td class="ln">120</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">  }</td></tr><tr><td class="ln">121</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">&nbsp;</td></tr><tr><td class="ln">122</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  // Condition met: nothing is taken out of the queue inside the loop (here: every event is</td><td class="note" rowspan="3" style="border-left:4px solid #9aa5b1;"><span class="tag" style="color:#9aa5b1">본문</span> <b>같음 보조정리</b></td></tr><tr><td class="ln">123</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  // critical, so there is no victim), so queue.size() stays n and the two loops are the same.</td></tr><tr><td class="ln">124</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  lemma InlineVariable_Same(q: seq&lt;Event&gt;)</td></tr><tr><td class="ln">125</td><td class="code" style="background:#fdf0e1;border-left:4px solid #c07a1c;">    requires AllCritical(q)                    // condition: the loop does not change queue.size()</td><td class="note" rowspan="1" style="border-left:4px solid #c07a1c;"><span class="tag" style="color:#c07a1c">사전조건</span> <b>조건</b>: 대기열이 모두 중요 이벤트. 그러면 밀어낼 것이 없어 반복 중에 <code>queue.size()</code>가 바뀌지 않음. "식의 값이 바뀌지 않음"을 이 반복에 맞게 적은 것</td></tr><tr><td class="ln">126</td><td class="code" style="background:#e2f3f3;border-left:4px solid #1f8585;">    ensures Fixed(State(q, 0), 0, |q|) == Inlined(State(q, 0), 0, |q|)</td><td class="note" rowspan="1" style="border-left:4px solid #1f8585;"><span class="tag" style="color:#1f8585">사후조건</span> <b>증명할 것</b>: 두 반복이 끝난 뒤의 상태가 같음</td></tr><tr><td class="ln">127</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">  {</td><td class="note" rowspan="3" style="border-left:4px solid #d5dae0;opacity:.45;"><span class="tag" style="color:#d5dae0">증명 도우미</span> 위 도우미(<code>Loops</code>)를 불러 증명</td></tr><tr><td class="ln">128</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">    Loops(State(q, 0), 0, |q|, |q|);</td></tr><tr><td class="ln">129</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">  }</td></tr><tr><td class="ln">130</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">&nbsp;</td><td class="note" rowspan="4" style="border-left:4px solid #9aa5b1;"><span class="tag" style="color:#9aa5b1">본문</span> <b>반례 보조정리</b></td></tr><tr><td class="ln">131</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  // Without the condition: three non-critical events 1, 2, 3. With the variable, 1 is taken out and</td></tr><tr><td class="ln">132</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  // 2, 3 keep their order. Inlined, the loop stops one round early and 3 jumps ahead of 2.</td></tr><tr><td class="ln">133</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  lemma InlineVariable_Counterexample()</td></tr><tr><td class="ln">134</td><td class="code" style="background:#e2f3f3;border-left:4px solid #1f8585;">    ensures var q := [Event(1, false), Event(2, false), Event(3, false)];</td><td class="note" rowspan="3" style="border-left:4px solid #1f8585;"><span class="tag" style="color:#1f8585">사후조건</span> 비중요 이벤트 1, 2, 3: 변수를 쓰면 1을 빼고 [2, 3], 인라인하면 한 번 일찍 멈춰 [3, 2]. E-2에서 본 것과 같은 일</td></tr><tr><td class="ln">135</td><td class="code" style="background:#e2f3f3;border-left:4px solid #1f8585;">            Fixed(State(q, 0), 0, 3).queue == [Event(2, false), Event(3, false)] &amp;&amp;</td></tr><tr><td class="ln">136</td><td class="code" style="background:#e2f3f3;border-left:4px solid #1f8585;">            Inlined(State(q, 0), 0, 3).queue == [Event(3, false), Event(2, false)]</td></tr><tr><td class="ln">137</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  {</td><td class="note" rowspan="3" style="border-left:4px solid #9aa5b1;"><span class="tag" style="color:#9aa5b1">본문</span> </td></tr><tr><td class="ln">138</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">  }</td></tr><tr><td class="ln">139</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">}</td></tr></table></div></div></body></html>

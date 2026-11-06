@@ -24,7 +24,7 @@
 - DispatcherModel.Dispatcher.EvictOldestNonCritical       <- calls RingQueue.Offer (contract changed); calls RingQueue.Poll (contract changed); contract changed; mentions Dispatcher.Valid (definition changed)
 - DispatcherModel.Dispatcher.Submit                       <- calls Dispatcher.DispatchOne (contract changed); calls Dispatcher.EvictOldestNonCritical (contract changed); calls RingQueue.Offer (contract changed); contract changed; mentions Dispatcher.Valid (definition changed)
 - DispatcherModel.Dispatcher.Valid                        <- definition changed; mentions RingQueue.MaxCapacity (definition changed)
-- DispatcherModel.Dispatcher._ctor                        <- contract changed; mentions RingQueue.MaxCapacity (definition changed)
+- DispatcherModel.Dispatcher._ctor                        <- contract changed; mentions Dispatcher.Valid (definition changed)
 - RingQueueModel.RingQueue.Clear                          <- calls RingQueue.Poll (contract changed); contract changed; mentions RingQueue.Inv (definition changed)
 - RingQueueModel.RingQueue.GetCapacity                    <- mentions RingQueue.Inv (definition changed)
 - RingQueueModel.RingQueue.Grow                           <- added; mentions RingQueue.Inv (definition changed)
@@ -36,8 +36,8 @@
 - RingQueueModel.RingQueue.Poll                           <- contract changed; mentions RingQueue.Inv (definition changed)
 - RingQueueModel.RingQueue.Size                           <- mentions RingQueue.Inv (definition changed)
 - RingQueueModel.RingQueue.Snapshot                       <- mentions RingQueue.Inv (definition changed)
-- RingQueueModel.RingQueue.Valid                          <- definition changed; mentions RingQueue.MaxCapacity (definition changed)
-- RingQueueModel.RingQueue._ctor                          <- contract changed; mentions RingQueue.MaxCapacity (definition changed)
+- RingQueueModel.RingQueue.Valid                          <- definition changed; mentions RingQueue.Inv (definition changed)
+- RingQueueModel.RingQueue._ctor                          <- contract changed; mentions RingQueue.Inv (definition changed)
 
 ## Java impact analysis vs. Dafny proof dependencies
 
@@ -67,5 +67,5 @@ full      :   1.7s wall | Dafny program verifier finished with 73 verified, 0 er
 selective :   2.3s wall | 2 dafny run(s), 6 extra symbol(s) verified by module runs
 
 prover work (from the full run's log, start-up excluded):
-  all symbols     :   1.65s solver time,      4765720 resource units
-  selected only   :   1.04s solver time,      3335499 resource units (70%)
+  all symbols     :   1.64s solver time,      5109897 resource units
+  selected only   :   1.01s solver time,      3665742 resource units (72%)

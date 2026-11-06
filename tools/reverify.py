@@ -421,22 +421,14 @@ def html_report(a, changes, removed, sel, callable_syms, R):
     fx = [("다시 증명할 기호", "%d / %d" % (n_sel, n_all)), ("바뀐 기호", len(changes) + len(removed))]
     verdict = ("전체 <span class='num'>%d</span>개 중 <span class='num'>%d</span>개만 다시 증명하면 됩니다." % (n_all, n_sel), "info")
     if "wall_full" in R:
-        pct = 100.0 * R["sel_r"] / R["tot_r"] if R["tot_r"] else 0
-        fx += [("증명기 작업량", "%.0f%%" % pct), ("실제 시간", "%.1f초 → %.1f초" % (R["wall_full"], R["wall_sel"]))]
-        mx = max(R["wall_full"], R["wall_sel"], 0.1)
-        rows = [["전체 검증", "%.1f초" % R["wall_full"], '<div class="bar"><i style="width:%.0f%%"></i></div>' % (100 * R["wall_full"] / mx), "Dafny 1회"],
-                ["골라서 검증", "%.1f초" % R["wall_sel"], '<div class="bar alt"><i style="width:%.0f%%"></i></div>' % (100 * R["wall_sel"] / mx),
-                 "Dafny %d회%s" % (len(R["runs"]), (", 같이 검증된 기호 %d개 더" % R["extra"]) if R["extra"] else "")],
-                ["증명기 작업량 (전체 대비)", "%.0f%%" % pct, '<div class="bar alt"><i style="width:%.0f%%"></i></div>' % pct, "시작 시간 제외"]]
+        # the timing and solver-work numbers are kept in the console output only: at this model size the
+        # selected run is not faster (Dafny's start-up time dominates), which only distracts from the point.
         ok = not R["errors"]
-        body.append("<section id='cost'><h2>비용 비교 %s</h2><p class='sub'>Dafny는 실행할 때마다 시작 시간이 1.5~2초 듭니다. "
-                    "모델이 작으면 작업량이 줄어도 실제 시간은 덜 줄어듭니다. 또 한 번에 기호 하나만 고를 수 있어서, "
-                    "한 모듈에서 여러 개를 고르면 그 모듈 전체를 한 번에 검증합니다.</p>%s%s</section>" % (
-                        report.badge("검증 통과" if ok else "검증 오류", "ok" if ok else "bad"),
-                        report.table(["", "", "", ""], rows),
-                        ("<pre class='box'>%s</pre>" % e("\n".join(R["errors"][:10]))) if R["errors"] else ""))
+        body.append("<section id='cost'><h2>골라서 다시 증명한 결과 %s</h2>%s</section>" % (
+            report.badge("검증 통과" if ok else "검증 오류", "ok" if ok else "bad"),
+            ("<pre class='box'>%s</pre>" % e("\n".join(R["errors"][:10]))) if R["errors"] else ""))
     toc = [("code", "바뀐 모델"), ("changed", "바뀐 기호"), ("sel", "다시 증명할 기호")] + \
-          ([("java", "Java와 비교")] if "java_side" in R else []) + ([("cost", "비용")] if "wall_full" in R else [])
+          ([("java", "Java와 비교")] if "java_side" in R else []) + ([("cost", "결과")] if "wall_full" in R else [])
     title = "재검증 범위: %s" % (a.label or "변경")
     html_text = report.page(title, "Dafny 모델이 바뀌었을 때 전체를 다시 증명하지 않고, 바뀐 것의 종류에 따라 필요한 것만 다시 증명합니다.",
                             "".join(body), verdict=verdict, facts_items=fx,

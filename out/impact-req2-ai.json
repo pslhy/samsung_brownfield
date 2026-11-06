@@ -222,10 +222,10 @@
     ]
   ],
   "dafny": {
-    "com.dxlab.homehub.queue.RingEventQueue#offer(com.dxlab.homehub.model.Event)": {
-      "dafny": "RingQueueModel.RingQueue.Offer",
+    "com.dxlab.homehub.queue.RingEventQueue#clear()": {
+      "dafny": "RingQueueModel.RingQueue.Clear",
       "kind": "method",
-      "note": "null input is outside the model"
+      "note": ""
     },
     "com.dxlab.homehub.queue.RingEventQueue#snapshot()": {
       "dafny": "RingQueueModel.RingQueue.Snapshot",
@@ -237,10 +237,10 @@
       "kind": "method",
       "note": ""
     },
-    "com.dxlab.homehub.queue.RingEventQueue#clear()": {
-      "dafny": "RingQueueModel.RingQueue.Clear",
+    "com.dxlab.homehub.queue.RingEventQueue#offer(com.dxlab.homehub.model.Event)": {
+      "dafny": "RingQueueModel.RingQueue.Offer",
       "kind": "method",
-      "note": ""
+      "note": "null input is outside the model"
     }
   }
 }

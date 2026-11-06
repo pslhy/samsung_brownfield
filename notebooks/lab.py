@@ -43,47 +43,81 @@ HTML_DIR = os.path.join(ROOT, report.OUTDIR) if not os.path.isabs(report.OUTDIR)
 _server_port = None
 
 
+SERVER_PORT = 8765                      # links saved in notebook outputs point here, so keep it fixed
+_ID_FILE = "_server_id.txt"              # served file that tells our server apart from anything else on the port
+
+
+def _ours(port):
+    """is the web server on this port serving this lab's out/html?"""
+    import urllib.request
+    try:
+        with urllib.request.urlopen("http://127.0.0.1:%d/%s" % (port, _ID_FILE), timeout=0.5) as r:
+            return r.read().decode("utf-8", "replace").strip() == ROOT
+    except Exception:
+        return False
+
+
 def _serve():
-    """a small web server (this computer only) for out/html, so "새 탭에서 열기" works where blob: tabs don't (VS Code)"""
+    """a small web server (this computer only) for out/html, so "새 탭에서 열기" works where blob: tabs don't (VS Code).
+
+    It runs as its own process, not inside the kernel, and every notebook shares it on SERVER_PORT. So links in saved
+    outputs keep working across notebooks and kernel restarts: running `import lab` once is enough."""
     global _server_port
-    if _server_port:
+    if _server_port and _ours(_server_port):
         return _server_port
-    import functools
-    import http.server
-    import threading
-
-    class Quiet(http.server.SimpleHTTPRequestHandler):
-        def log_message(self, *args):
-            pass
-
+    _server_port = None
+    import time
     os.makedirs(HTML_DIR, exist_ok=True)
-    handler = functools.partial(Quiet, directory=HTML_DIR)
-    for port in list(range(8765, 8775)) + [0]:     # a fixed port first, so links in old outputs keep working
-        try:
-            srv = http.server.ThreadingHTTPServer(("127.0.0.1", port), handler)
-            break
-        except OSError:
-            continue
-    else:
-        return None
-    threading.Thread(target=srv.serve_forever, daemon=True).start()
-    _server_port = srv.server_address[1]
-    return _server_port
+    with open(os.path.join(HTML_DIR, _ID_FILE), "w") as f:
+        f.write(ROOT)
+    for port in range(SERVER_PORT, SERVER_PORT + 10):   # the next ports only if something else holds 8765
+        if _ours(port):
+            _server_port = port
+            return port
+        p = subprocess.Popen([sys.executable, "-m", "http.server", str(port), "--bind", "127.0.0.1",
+                              "--directory", HTML_DIR], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                             stderr=subprocess.DEVNULL, start_new_session=True)
+        for _ in range(30):
+            time.sleep(0.1)
+            if _ours(port):
+                _server_port = port
+                return port
+            if p.poll() is not None:     # port taken by something else
+                break
+        else:
+            p.kill()
+    return None
 
 
 def _page_url(page_html, link, fid):
-    """http address of the page: the report file itself, or a copy of the shown page under out/html/_nb/"""
+    """http address of a copy of the shown page (out/html/_nb/<fid>.html).
+    Always a copy, not the report file itself: a later run of the same target overwrites the report file, and the
+    new tab must still show what this output shows."""
     port = _serve()
     if not port:
         return None
-    if link and os.path.abspath(link).startswith(os.path.abspath(HTML_DIR) + os.sep):
-        rel = os.path.relpath(link, HTML_DIR)
-    else:
-        rel = os.path.join("_nb", fid + ".html")
-        os.makedirs(os.path.join(HTML_DIR, "_nb"), exist_ok=True)
-        with open(os.path.join(HTML_DIR, rel), "w") as f:
-            f.write(page_html)
+    rel = os.path.join("_nb", fid + ".html")
+    os.makedirs(os.path.join(HTML_DIR, "_nb"), exist_ok=True)
+    with open(os.path.join(HTML_DIR, rel), "w") as f:
+        f.write(page_html)
     return "http://localhost:%d/%s" % (port, rel.replace(os.sep, "/"))
+
+
+def _link_div(fid, url, link=None):
+    """the "새 탭에서 열기" line under a shown page.
+
+    Jupyter in a browser: a blob: tab made from the page shown here (works even when the Jupyter server is elsewhere).
+    VS Code (and other non-browser front ends): blob: URLs can't leave the editor, so follow the link to the
+    local web server instead; the editor hands http://localhost links to the default browser."""
+    return ('<div style="font-size:12.5px;color:#5b6773;margin:4px 0 0">'
+            '<a href="%s" target="_blank" rel="noopener" style="color:#1f5f99;font-weight:600" onclick="return (function(){'
+            'var inBrowser=/^https?:$/.test(location.protocol)&&!!document.querySelector(\'.jp-OutputArea,.output_area\');'
+            'if(!inBrowser){if(%s)return true;this.textContent=\'새 탭을 열 수 없습니다. 오른쪽 파일을 브라우저로 직접 여세요\';return false;}'
+            'var f=document.getElementById(\'%s\');'
+            'var u=window.URL.createObjectURL(new window.Blob([f.srcdoc],{type:\'text/html\'}));var w=window.open(u,\'_blank\');'
+            'if(!w){this.textContent=\'새 탭을 열 수 없습니다. 오른쪽 파일을 브라우저로 직접 여세요\';}return false;}).call(this);">새 탭에서 열기 ↗</a>'
+            '%s</div>') % (_html.escape(url or "#", quote=True), "true" if url else "false", fid,
+                           ('&nbsp;&nbsp;<span>파일: <code>%s</code></span>' % _html.escape(os.path.relpath(link, ROOT))) if link else "")
 
 
 def _frame(page_html, height=None, link=None, est=600):
@@ -99,19 +133,7 @@ def _frame(page_html, height=None, link=None, est=600):
            'if(!f._t){f._t=1;d.addEventListener("toggle",fit,true);}}catch(e){}}'
            'f.addEventListener("load",fit);[0,100,400,1200,3000].forEach(function(t){setTimeout(fit,t);});})();</script>'
            ) % (fid, doc, min(est, max_h), fid, max_h)
-    # open the same page in a new browser tab.
-    # Jupyter in a browser: a blob: tab made from the page shown here (works even when the Jupyter server is elsewhere).
-    # VS Code (and other non-browser front ends): blob: URLs can't leave the editor, so follow the link to the
-    # local web server instead; the editor hands http://localhost links to the default browser.
-    out += ('<div style="font-size:12.5px;color:#5b6773;margin:4px 0 0">'
-            '<a href="%s" target="_blank" rel="noopener" style="color:#1f5f99;font-weight:600" onclick="return (function(){'
-            'var inBrowser=/^https?:$/.test(location.protocol)&&!!document.querySelector(\'.jp-OutputArea,.output_area\');'
-            'if(!inBrowser){if(%s)return true;this.textContent=\'새 탭을 열 수 없습니다. 오른쪽 파일을 브라우저로 직접 여세요\';return false;}'
-            'var f=document.getElementById(\'%s\');'
-            'var u=window.URL.createObjectURL(new window.Blob([f.srcdoc],{type:\'text/html\'}));var w=window.open(u,\'_blank\');'
-            'if(!w){this.textContent=\'새 탭을 열 수 없습니다. 오른쪽 파일을 브라우저로 직접 여세요\';}return false;}).call(this);">새 탭에서 열기 ↗</a>'
-            '%s</div>') % (_html.escape(url or "#", quote=True), "true" if url else "false", fid,
-                           ('&nbsp;&nbsp;<span>파일: <code>%s</code></span>' % _html.escape(os.path.relpath(link, ROOT))) if link else "")
+    out += _link_div(fid, url, link)
     display(HTML(out) if HTML else out)
 
 
@@ -326,7 +348,7 @@ def annotate(path, groups, start=1, end=None, title=None, height=None):
     _frame(_bare(body), height, est=int((end - start + 1) * 21 + 60))
 
 
-def side_by_side(rows, title=None, height=None):
+def side_by_side(rows, title=None, height=None, headers=("Java (legacy)", "Dafny (AI 결과 예시)", "어떻게 옮겼나")):
     """rows: [((java path, first, last), (dafny path, first, last), note)] -> Java | Dafny | note"""
     def snip(spec):
         path, a, b = spec
@@ -341,8 +363,8 @@ def side_by_side(rows, title=None, height=None):
            ".sbs td.c{font-family:var(--mono);font-size:12px;line-height:1.55;white-space:nowrap}"
            ".sbs td.n{font-size:13px;line-height:1.5;min-width:220px}.sbs .ln2{color:var(--muted)}</style>")
     head = '<div style="font-size:13px;color:var(--muted);padding:4px 0">%s</div>' % report.e(title or "")
-    body = css + head + ('<div class="scroll"><table class="sbs"><tr><th>Java (legacy)</th><th>Dafny (AI 결과 예시)</th><th>어떻게 옮겼나</th></tr>%s</table></div>'
-                         % "".join(trs))
+    body = css + head + ('<div class="scroll"><table class="sbs"><tr><th>%s</th><th>%s</th><th>%s</th></tr>%s</table></div>'
+                         % (tuple(report.e(h) for h in headers) + ("".join(trs),)))
     n = sum(max(r[0][2] - r[0][1], r[1][2] - r[1][1]) + 1 for r in rows)
     _frame(_bare(body), height, est=n * 19 + len(rows) * 14 + 70)
 
@@ -496,6 +518,27 @@ CODEX_MODEL = "gpt-5.6-luna"
 CODEX_EFFORT = "none"
 
 
+def codex_models():
+    """the models (and reasoning efforts) this computer's Codex offers, from Codex's own model list"""
+    import json as _json
+    path = os.path.join(os.environ.get("CODEX_HOME") or os.path.expanduser("~/.codex"), "models_cache.json")
+    try:
+        d = _json.load(open(path))
+    except (OSError, ValueError):
+        print("Codex의 모델 목록을 찾지 못했습니다. 터미널에서 codex 를 한 번 실행하고 /model 로 확인하세요.")
+        return
+    rows = []
+    for m in (d.get("models", []) if isinstance(d, dict) else d):
+        if not isinstance(m, dict) or m.get("visibility") == "hide":
+            continue
+        levels = [x.get("effort") for x in m.get("supported_reasoning_levels") or [] if isinstance(x, dict)]
+        rows.append((m.get("slug") or m.get("id"), ", ".join(l for l in levels if l)))
+    print("이 컴퓨터의 Codex에서 쓸 수 있는 모델 (실습 기본값: %s, 추론 %s)" % (CODEX_MODEL, CODEX_EFFORT))
+    for slug, levels in rows:
+        print("  %-16s 추론: %s%s" % (slug, levels or "-", "   <- 기본값" if slug == CODEX_MODEL else ""))
+    print("추론 none(생각하지 않고 바로 답)은 목록에 없지만 %s에서 쓸 수 있는 것을 확인했습니다." % CODEX_MODEL)
+
+
 def _codex_ready():
     import shutil
     if not shutil.which("codex"):
@@ -533,15 +576,18 @@ def _code_block(text, path):
     return max(hit or [b for _, b in blocks], key=len)
 
 
-def codex(name, save=None, timeout=900, show_prompt=True, 깊게=False, **files):
+def codex(name, save=None, timeout=900, show_prompt=True, 깊게=False, model=None, effort=None, **files):
     """send a prompt from docs/PROMPTS.md to Codex (codex exec) and show its answer below.
     By default Codex answers from the prompt alone: it may not run commands or read files (read-only
-    sandbox); model and reasoning effort are CODEX_MODEL / CODEX_EFFORT, which keeps a call short. 깊게=True lets it work in
+    sandbox); model and reasoning effort are CODEX_MODEL / CODEX_EFFORT, which keeps a call short (model=, effort=
+    pick others for one call; lab.codex_models() lists what this Codex offers). 깊게=True lets it work in
     out/codex/<prompt>-<time>/ (write files, run dafny) and read the lab folder. With save="mine/X.dfy" the code
     block of the answer is written there (the previous file is kept as X.dfy.before and the change shown).
     Placeholders: see _prompt_text, e.g. lab.codex("P-4", diff=lab.diff_text("scenarios/req2/ai"))"""
     if _missing(name, files):
         return None
+    model = model or CODEX_MODEL
+    effort = effort or CODEX_EFFORT
     text, left = _prompt_text(name, files)
     if text is None:
         print("프롬프트 %s를 찾지 못했습니다." % name)
@@ -573,16 +619,16 @@ def codex(name, save=None, timeout=900, show_prompt=True, 깊게=False, **files)
     out = os.path.join(work, "answer.md")
     if 깊게:
         cmd = ["codex", "exec", "--skip-git-repo-check", "--ephemeral", "--color", "never",
-               "-s", "workspace-write", "-C", work, "-m", CODEX_MODEL, "-c", 'model_reasoning_effort="%s"' % CODEX_EFFORT,
+               "-s", "workspace-write", "-C", work, "-m", model, "-c", 'model_reasoning_effort="%s"' % effort,
                "--json", "-o", out, "-"]
         text = text + "\n\n(작업 폴더는 지금 폴더다. 실습 폴더 %s 는 읽기만 하라. 최종 답에 결과 코드 전체를 코드 블록 하나로 넣어라.)" % ROOT
     else:
         cmd = ["codex", "exec", "--skip-git-repo-check", "--ephemeral", "--color", "never",
-               "-s", "read-only", "-C", work, "-m", CODEX_MODEL, "-c", 'model_reasoning_effort="%s"' % CODEX_EFFORT,
+               "-s", "read-only", "-C", work, "-m", model, "-c", 'model_reasoning_effort="%s"' % effort,
                "--json", "-o", out, "-"]
         text = text + ("\n\n(필요한 것은 위에 다 있다. 명령을 실행하거나 파일을 찾아 읽지 말고 바로 답하라. "
                        "코드를 만들면 최종 답에 결과 코드 전체를 코드 블록 하나로 넣어라.)")
-    print("Codex 실행 중…%s" % (" (깊게: 직접 파일을 쓰고 명령을 돌리므로 몇 분 걸릴 수 있음)" if 깊게 else ""))
+    print("Codex 실행 중… (모델 %s, 추론 %s)%s" % (model, effort, " (깊게: 직접 파일을 쓰고 명령을 돌리므로 몇 분 걸릴 수 있음)" if 깊게 else ""))
     t0 = time.time()
     p = subprocess.Popen(cmd, cwd=ROOT, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                          text=True, bufsize=1)
@@ -634,3 +680,9 @@ def codex(name, save=None, timeout=900, show_prompt=True, 깊게=False, **files)
             if before:
                 diff(os.path.relpath(before, ROOT), save, title="%s: 이전 → Codex가 고친 것 (계약 줄이 바뀌었는지 확인)" % save)
     return answer
+
+
+try:                                     # start the page server now, so "새 탭에서 열기" in saved outputs works
+    _serve()                             # as soon as `import lab` has run
+except Exception:
+    pass

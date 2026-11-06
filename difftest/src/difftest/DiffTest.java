@@ -206,8 +206,8 @@ public final class DiffTest {
                 : new Event(id, "tv-1", EventType.HEARTBEAT, 0, id);
     }
 
-    static Types.Ev modelEvent(int id, boolean critical) {
-        return Types.Ev.create(id, critical);
+    static Types.Event modelEvent(int id, boolean critical) {
+        return Types.Event.create(id, critical);
     }
 
     static String javaIds(List<Event> evs) {
@@ -224,7 +224,7 @@ public final class DiffTest {
         StringBuilder sb = new StringBuilder("[");
         for (int i = 0; i < s.length(); i++) {
             if (i > 0) sb.append(',');
-            sb.append(((Types.Ev) s.select(i)).dtor_id());
+            sb.append(((Types.Event) s.select(i)).dtor_id());
         }
         return sb.append(']').toString();
     }
@@ -380,7 +380,7 @@ public final class DiffTest {
                 } else if (op.kind.equals("dispatchOne")) {
                     Event e = j.dispatchOne();
                     dafny.Tuple2<?, ?> t = (dafny.Tuple2<?, ?>) call(m, "DispatchOne");
-                    String mv = (Boolean) t.dtor__0() ? String.valueOf(((Types.Ev) t.dtor__1()).dtor_id()) : "none";
+                    String mv = (Boolean) t.dtor__0() ? String.valueOf(((Types.Event) t.dtor__1()).dtor_id()) : "none";
                     bad = check(i, op, "dispatchOne", e == null ? "none" : String.valueOf(e.getSeq()), mv);
                 } else if (op.kind.equals("drain")) {
                     bad = check(i, op, "drain", j.drain(), call(m, "Drain"));

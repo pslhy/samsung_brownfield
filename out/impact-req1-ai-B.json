@@ -413,28 +413,23 @@
     ]
   ],
   "dafny": {
-    "com.dxlab.homehub.dispatch.Dispatcher#submit(com.dxlab.homehub.model.Event)": {
-      "dafny": "DispatcherModel.Dispatcher.Submit",
-      "kind": "method",
-      "note": "metrics/audit side effects are outside the model"
-    },
     "com.dxlab.homehub.queue.RingEventQueue#<init>(int)": {
       "dafny": "RingQueueModel.RingQueue._ctor",
       "kind": "constructor",
       "note": ""
     },
-    "com.dxlab.homehub.dispatch.Dispatcher#evictOldestNonCritical()": {
-      "dafny": "DispatcherModel.Dispatcher.EvictOldestNonCritical",
+    "com.dxlab.homehub.dispatch.Dispatcher#submit(com.dxlab.homehub.model.Event)": {
+      "dafny": "DispatcherModel.Dispatcher.Submit",
       "kind": "method",
-      "note": ""
+      "note": "metrics/audit side effects are outside the model"
     },
     "com.dxlab.homehub.dispatch.Dispatcher#dispatchOne()": {
       "dafny": "DispatcherModel.Dispatcher.DispatchOne",
       "kind": "method",
       "note": "handlers and listener are outside the model"
     },
-    "com.dxlab.homehub.dispatch.Dispatcher#drain()": {
-      "dafny": "DispatcherModel.Dispatcher.Drain",
+    "com.dxlab.homehub.dispatch.Dispatcher#evictOldestNonCritical()": {
+      "dafny": "DispatcherModel.Dispatcher.EvictOldestNonCritical",
       "kind": "method",
       "note": ""
     },
@@ -442,6 +437,11 @@
       "dafny": "RingQueueModel.RingQueue.Offer",
       "kind": "method",
       "note": "null input is outside the model"
+    },
+    "com.dxlab.homehub.dispatch.Dispatcher#drain()": {
+      "dafny": "DispatcherModel.Dispatcher.Drain",
+      "kind": "method",
+      "note": ""
     }
   }
 }

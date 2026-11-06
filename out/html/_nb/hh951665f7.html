@@ -1,0 +1,121 @@
+<!doctype html><html lang='ko'><head><meta charset='utf-8'><style>
+:root{
+  --paper:#FBFCFD; --sheet:#FFFFFF; --ink:#18212B; --muted:#5B6773; --rule:#D9DFE6; --rule2:#EEF1F4;
+  --accent:#1F5F8B; --accent-tint:#E9F1F7;
+  --same:#2D7A4C; --same-tint:#E7F3EB;
+  --diff:#B83227; --diff-tint:#FCEBE9;
+  --chg:#9A6512; --chg-tint:#FFF3D9;
+  --code:#F4F6F8;
+  --sans:"Pretendard","Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
+  --mono:"D2Coding","JetBrains Mono","SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#11161C; --sheet:#171E26; --ink:#E4E9EE; --muted:#9AA6B2; --rule:#2C3743; --rule2:#212A34;
+    --accent:#7DB4DD; --accent-tint:#1B2B39;
+    --same:#6CC08F; --same-tint:#17291F;
+    --diff:#F08A7E; --diff-tint:#36191A;
+    --chg:#E2B259; --chg-tint:#33270F;
+    --code:#1C242D;
+  }
+}
+*{box-sizing:border-box}
+html{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6;
+  -webkit-text-size-adjust:100%}
+body{margin:0}
+a{color:var(--accent)}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 24px 80px}
+.top{display:flex;justify-content:space-between;gap:16px;align-items:baseline;border-bottom:2px solid var(--ink);
+  padding-bottom:10px;margin-bottom:22px;font-size:13px;color:var(--muted)}
+.top a{color:var(--muted);text-decoration:none}
+.top a:hover{color:var(--accent)}
+h1{font-size:28px;line-height:1.3;margin:0 0 6px;font-weight:700;letter-spacing:-.01em}
+.lead{max-width:72ch;color:var(--muted);margin:0 0 20px}
+.verdict{border-left:6px solid var(--accent);background:var(--sheet);padding:16px 20px;margin:0 0 18px;
+  font-size:21px;line-height:1.45;font-weight:600;max-width:900px}
+.verdict.ok{border-color:var(--same)} .verdict.bad{border-color:var(--diff)} .verdict.warn{border-color:var(--chg)}
+.verdict .num{font-variant-numeric:tabular-nums}
+.facts{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:0;margin:0 0 26px;
+  border-top:1px solid var(--rule);border-left:1px solid var(--rule)}
+.facts div{border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:10px 14px;background:var(--sheet)}
+.facts b{display:block;font-size:22px;font-variant-numeric:tabular-nums;line-height:1.2}
+.facts span{font-size:13px;color:var(--muted)}
+.cmd{font-family:var(--mono);font-size:13px;background:var(--code);border:1px solid var(--rule);padding:6px 10px;
+  display:inline-block;border-radius:3px;margin:0 0 20px;color:var(--muted)}
+nav.toc{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14px;margin:0 0 28px;padding:10px 0;
+  border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+nav.toc a{text-decoration:none}
+section{margin:0 0 40px}
+h2{font-size:20px;margin:0 0 4px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+h3{font-size:16px;margin:22px 0 6px}
+.sub{color:var(--muted);margin:0 0 14px;max-width:80ch;font-size:14px}
+.badge{display:inline-block;font-size:12.5px;font-weight:600;padding:1px 8px;border-radius:999px;border:1px solid;
+  white-space:nowrap}
+.b-ok{color:var(--same);border-color:var(--same);background:var(--same-tint)}
+.b-bad{color:var(--diff);border-color:var(--diff);background:var(--diff-tint)}
+.b-warn{color:var(--chg);border-color:var(--chg);background:var(--chg-tint)}
+.b-info{color:var(--accent);border-color:var(--accent);background:var(--accent-tint)}
+.b-mute{color:var(--muted);border-color:var(--rule);background:transparent}
+table{border-collapse:collapse;width:100%;font-size:14px;background:var(--sheet)}
+th,td{text-align:left;vertical-align:top;padding:6px 10px;border-bottom:1px solid var(--rule2)}
+th{font-size:13px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--rule)}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+tr.bad td{background:var(--diff-tint)}
+table.state td{border-bottom:0;padding:3px 10px}
+tr.chg td{background:var(--chg-tint)}
+code,.mono{font-family:var(--mono);font-size:13px}
+.box{background:var(--sheet);border:1px solid var(--rule);padding:14px 16px}
+.scroll{overflow-x:auto}
+/* source / diff */
+.src{font-family:var(--mono);font-size:12.8px;line-height:1.55;border:1px solid var(--rule);background:var(--sheet);
+  overflow-x:auto;margin:0 0 14px}
+.src .split table{min-width:100%}
+.src .fh{font-family:var(--sans);font-size:13px;color:var(--muted);padding:6px 10px;border-bottom:1px solid var(--rule);
+  background:var(--code);display:flex;justify-content:space-between;gap:10px}
+.src table{background:transparent;font-size:inherit}
+.src td{padding:0 10px;border:0;white-space:pre}
+.src td.ln{color:var(--muted);text-align:right;user-select:none;width:1%;padding-right:8px;opacity:.75}
+.src tr.del td{background:var(--diff-tint)} .src tr.add td{background:var(--same-tint)}
+.src tr.mark td{background:var(--chg-tint)}
+.src tr.gap td{color:var(--muted);text-align:center;font-family:var(--sans);font-size:12px;background:var(--code)}
+.src .split{display:grid;grid-template-columns:1fr 1fr}
+.src .split>div{min-width:0;overflow-x:auto}
+.src .split>div+div{border-left:1px solid var(--rule)}
+.src .side{font-family:var(--sans);font-size:12px;color:var(--muted);padding:3px 10px;border-bottom:1px solid var(--rule2)}
+ins.w{background:var(--same-tint);color:var(--same);text-decoration:none;font-weight:600}
+del.w{background:var(--diff-tint);color:var(--diff);text-decoration:none;font-weight:600}
+/* chains */
+.chain{list-style:none;margin:6px 0 10px;padding:0 0 0 2px}
+.chain li{position:relative;padding:3px 0 3px 22px;font-size:14px}
+.chain li::before{content:"";position:absolute;left:6px;top:0;bottom:0;border-left:2px solid var(--rule)}
+.chain li::after{content:"";position:absolute;left:2px;top:12px;width:10px;height:10px;border-radius:50%;
+  background:var(--sheet);border:2px solid var(--accent)}
+.chain li.src-line::after{background:var(--chg);border-color:var(--chg)}
+.chain li:first-child::before{top:12px} .chain li:last-child::before{bottom:calc(100% - 12px)}
+.chain li:last-child::after{background:var(--accent)}
+.chain{background:var(--sheet);border:1px solid var(--rule2);padding:8px 12px 8px 10px;max-width:900px}
+.chain .via{color:var(--muted);font-size:13px}
+details{border-bottom:1px solid var(--rule2)}
+details>summary{cursor:pointer;padding:6px 4px;list-style:none;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+details>summary::-webkit-details-marker{display:none}
+details>summary::before{content:"+";font-family:var(--mono);color:var(--muted);width:12px}
+details[open]>summary::before{content:"−"}
+details>div{padding:4px 4px 12px 26px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-family:var(--mono);font-size:12.5px;padding:2px 8px;border:1px solid var(--rule);border-radius:3px;background:var(--sheet)}
+.chip.on{border-color:var(--accent);background:var(--accent-tint)}
+.chip.off{color:var(--muted);opacity:.7}
+.bar{height:8px;background:var(--rule2);border-radius:4px;overflow:hidden;min-width:80px}
+.bar>i{display:block;height:100%;background:var(--accent)}
+.bar.alt>i{background:var(--chg)}
+.filter{font:inherit;font-size:14px;padding:6px 10px;border:1px solid var(--rule);background:var(--sheet);color:var(--ink);
+  width:min(360px,100%);margin:0 0 10px;border-radius:3px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid3 .chip{font-size:11.5px}
+@media (max-width:980px){.grid3{grid-template-columns:1fr}}
+@media (max-width:760px){.grid2,.src .split{grid-template-columns:1fr}.verdict{font-size:18px}h1{font-size:23px}}
+.steps td.op{font-family:var(--mono);white-space:nowrap}
+.note{font-size:13px;color:var(--muted)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+ body .wrap{padding:6px}</style></head><body><div class='wrap'><style>.ann{border-collapse:collapse;width:100%;font-size:12.8px}.ann td{border:0;padding:0 8px;vertical-align:top}.ann td.code{font-family:var(--mono);white-space:pre;line-height:1.6}.ann td.ln{color:var(--muted);text-align:right;width:1%;font-family:var(--mono);line-height:1.6}.ann td.note{font-family:var(--sans);font-size:13px;line-height:1.5;width:42%;padding:3px 10px;background:#fbfcfd}.ann .tag{font-weight:700;font-size:12px;margin-right:4px}</style><div class="fh" style="font-size:13px;color:var(--muted);padding:4px 0">AI 결과 예시 RingEventQueue.dfy: 나머지</div><div class="scroll"><table class="ann"><tr><td class="ln">101</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">    function Size(): int</td><td class="note" rowspan="17" style="border-left:4px solid #9aa5b1;"><span class="tag" style="color:#9aa5b1">함수</span> <code>function</code>: 값을 계산하기만 하는 것. 계약 대신 본문 자체가 뜻입니다(Size = count, Capacity = 칸 수, IsEmpty = count가 0)</td></tr><tr><td class="ln">102</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">      reads this</td></tr><tr><td class="ln">103</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">    {</td></tr><tr><td class="ln">104</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">      count</td></tr><tr><td class="ln">105</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">    }</td></tr><tr><td class="ln">106</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">&nbsp;</td></tr><tr><td class="ln">107</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">    function Capacity(): int</td></tr><tr><td class="ln">108</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">      reads this</td></tr><tr><td class="ln">109</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">    {</td></tr><tr><td class="ln">110</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">      buf.Length</td></tr><tr><td class="ln">111</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">    }</td></tr><tr><td class="ln">112</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">&nbsp;</td></tr><tr><td class="ln">113</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">    function IsEmpty(): bool</td></tr><tr><td class="ln">114</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">      reads this</td></tr><tr><td class="ln">115</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">    {</td></tr><tr><td class="ln">116</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">      count == 0</td></tr><tr><td class="ln">117</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">    }</td></tr><tr><td class="ln">118</td><td class="code" style="background:transparent;border-left:4px solid transparent;">&nbsp;</td><td class="note"></td></tr><tr><td class="ln">119</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">    method Clear()</td><td class="note" rowspan="1" style="border-left:4px solid #9aa5b1;"><span class="tag" style="color:#9aa5b1">본문</span> Java <code>clear()</code></td></tr><tr><td class="ln">120</td><td class="code" style="background:#fdf0e1;border-left:4px solid #c07a1c;">      requires Valid()</td><td class="note" rowspan="3" style="border-left:4px solid #c07a1c;"><span class="tag" style="color:#c07a1c">사전조건</span> Valid()이면 부를 수 있고, 필드와 배열 내용을 바꿀 수 있음. 끝나면 Valid(), 같은 배열</td></tr><tr><td class="ln">121</td><td class="code" style="background:#fdf0e1;border-left:4px solid #c07a1c;">      modifies this, buf</td></tr><tr><td class="ln">122</td><td class="code" style="background:#fdf0e1;border-left:4px solid #c07a1c;">      ensures Valid() &amp;&amp; buf == old(buf)</td></tr><tr><td class="ln">123</td><td class="code" style="background:#e2f3f3;border-left:4px solid #1f8585;">      ensures elems == []</td><td class="note" rowspan="1" style="border-left:4px solid #1f8585;"><span class="tag" style="color:#1f8585">사후조건</span> <b>끝나면 비어 있음</b></td></tr><tr><td class="ln">124</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">    {</td><td class="note" rowspan="10" style="border-left:4px solid #9aa5b1;"><span class="tag" style="color:#9aa5b1">본문</span> Java처럼 Poll을 반복. <code>invariant</code>(반복할 때마다 참인 것)와 <code>decreases</code>(반복이 끝난다는 근거)는 증명 도우미</td></tr><tr><td class="ln">125</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">      var e, ok := Poll();</td></tr><tr><td class="ln">126</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">      while ok</td></tr><tr><td class="ln">127</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">        invariant Valid() &amp;&amp; buf == old(buf)</td></tr><tr><td class="ln">128</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">        invariant !ok ==&gt; elems == []</td></tr><tr><td class="ln">129</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">        decreases |elems| + (if ok then 1 else 0)</td></tr><tr><td class="ln">130</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">      {</td></tr><tr><td class="ln">131</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">        e, ok := Poll();</td></tr><tr><td class="ln">132</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">      }</td></tr><tr><td class="ln">133</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">    }</td></tr><tr><td class="ln">134</td><td class="code" style="background:transparent;border-left:4px solid transparent;">&nbsp;</td><td class="note"></td></tr><tr><td class="ln">135</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">    method Snapshot() returns (out: seq&lt;Event&gt;)</td><td class="note" rowspan="1" style="border-left:4px solid #9aa5b1;"><span class="tag" style="color:#9aa5b1">본문</span> Java <code>snapshot()</code></td></tr><tr><td class="ln">136</td><td class="code" style="background:#e2f3f3;border-left:4px solid #1f8585;">      requires Valid()</td><td class="note" rowspan="2" style="border-left:4px solid #1f8585;"><span class="tag" style="color:#1f8585">사후조건</span> <b>돌려주는 목록 = elems 그대로</b></td></tr><tr><td class="ln">137</td><td class="code" style="background:#e2f3f3;border-left:4px solid #1f8585;">      ensures out == elems</td></tr><tr><td class="ln">138</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">    {</td><td class="note" rowspan="11" style="border-left:4px solid #9aa5b1;"><span class="tag" style="color:#9aa5b1">본문</span> Java 72~74줄을 옮긴 반복</td></tr><tr><td class="ln">139</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">      out := [];</td></tr><tr><td class="ln">140</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">      var i := 0;</td></tr><tr><td class="ln">141</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">      while i &lt; count</td></tr><tr><td class="ln">142</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">        invariant 0 &lt;= i &lt;= count</td></tr><tr><td class="ln">143</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">        invariant out == elems[..i]</td></tr><tr><td class="ln">144</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">      {</td></tr><tr><td class="ln">145</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">        out := out + [buf[(head + i) % buf.Length]];</td></tr><tr><td class="ln">146</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">        i := i + 1;</td></tr><tr><td class="ln">147</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">      }</td></tr><tr><td class="ln">148</td><td class="code" style="background:#f6f7f9;border-left:4px solid #9aa5b1;">    }</td></tr><tr><td class="ln">149</td><td class="code" style="background:transparent;border-left:4px solid transparent;">  }</td><td class="note"></td></tr><tr><td class="ln">150</td><td class="code" style="background:transparent;border-left:4px solid transparent;">&nbsp;</td><td class="note"></td></tr><tr><td class="ln">151</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">  // (h + i) % n stays a valid slot, and the slot at position i differs from the slot at</td><td class="note" rowspan="23" style="border-left:4px solid #d5dae0;opacity:.45;"><span class="tag" style="color:#d5dae0">증명 도우미</span> 보조정리(lemma): % 계산에 대한 사실을 증명해 두고 위에서 가져다 씀. 계약이 아님</td></tr><tr><td class="ln">152</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">  // position count-1 unless i == count-1 (positions are distinct within one lap).</td></tr><tr><td class="ln">153</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">  lemma ModLemma(h: int, i: int, n: int)</td></tr><tr><td class="ln">154</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">    requires 0 &lt;= h &lt; n &amp;&amp; 0 &lt;= i &lt; n</td></tr><tr><td class="ln">155</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">    ensures 0 &lt;= (h + i) % n &lt; n</td></tr><tr><td class="ln">156</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">    ensures (h + i) % n == if h + i &lt; n then h + i else h + i - n</td></tr><tr><td class="ln">157</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">  {</td></tr><tr><td class="ln">158</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">    if h + i &lt; n {</td></tr><tr><td class="ln">159</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">      assert h + i == 0 * n + (h + i);</td></tr><tr><td class="ln">160</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">    } else {</td></tr><tr><td class="ln">161</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">      assert h + i == 1 * n + (h + i - n);</td></tr><tr><td class="ln">162</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">    }</td></tr><tr><td class="ln">163</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">  }</td></tr><tr><td class="ln">164</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">&nbsp;</td></tr><tr><td class="ln">165</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">  lemma ShiftLemma(h: int, i: int, n: int)</td></tr><tr><td class="ln">166</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">    requires 0 &lt;= h &lt; n &amp;&amp; 0 &lt;= i &lt; n - 1</td></tr><tr><td class="ln">167</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">    ensures ((h + 1) % n + i) % n == (h + (i + 1)) % n</td></tr><tr><td class="ln">168</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">  {</td></tr><tr><td class="ln">169</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">    ModLemma(h, 1, n);</td></tr><tr><td class="ln">170</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">    ModLemma(h, i + 1, n);</td></tr><tr><td class="ln">171</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">    var h1 := (h + 1) % n;</td></tr><tr><td class="ln">172</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">    ModLemma(h1, i, n);</td></tr><tr><td class="ln">173</td><td class="code" style="background:#ffffff;border-left:4px solid #d5dae0;opacity:.45;">  }</td></tr></table></div></div></body></html>

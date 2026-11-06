@@ -1,0 +1,80 @@
+```java
+package difftest;
+
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
+
+import RingEventQueueModule.Event;
+import RingEventQueueModule.OfferResult;
+import RingEventQueueModule.RingEventQueue;
+
+public class MyQueueAdapter implements QueueModel {
+    private RingEventQueue model;
+
+    public MyQueueAdapter() {
+        model = new RingEventQueue();
+    }
+
+    @Override
+    public void init(int capacity) {
+        model = new RingEventQueue();
+        model.__ctor(BigInteger.valueOf(capacity));
+    }
+
+    @Override
+    public String offer(int id, boolean critical) {
+        Event event = Event.create(BigInteger.valueOf(id));
+        OfferResult result = model.Offer(event);
+
+        if (result == OfferResult.OK) {
+            return "OK";
+        }
+        if (result == OfferResult.FULL) {
+            return "FULL";
+        }
+        return "REJECTED";
+    }
+
+    @Override
+    public Integer poll() {
+        Event event = model.Poll();
+        return event == null ? null : event.dtor_id().intValue();
+    }
+
+    @Override
+    public Integer peek() {
+        Event event = model.Peek();
+        return event == null ? null : event.dtor_id().intValue();
+    }
+
+    @Override
+    public int size() {
+        return model.Size().intValue();
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return model.IsEmpty();
+    }
+
+    @Override
+    public int capacity() {
+        return model.Capacity().intValue();
+    }
+
+    @Override
+    public void clear() {
+        model.Clear();
+    }
+
+    @Override
+    public List<Integer> snapshot() {
+        List<Integer> result = new ArrayList<>();
+        for (Event event : model.Snapshot()) {
+            result.add(event.dtor_id().intValue());
+        }
+        return result;
+    }
+}
+```

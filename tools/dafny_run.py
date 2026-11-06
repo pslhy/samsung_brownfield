@@ -30,7 +30,7 @@ def main():
                 cur = {"file": f, "line": int(ln), "col": int(col), "msg": msg, "related": []}
                 errors.append(cur)
             elif cur is not None:
-                cur["related"].append({"file": f, "line": int(ln), "msg": msg})
+                cur["related"].append({"file": f, "line": int(ln), "col": int(col), "msg": msg})
     m = re.search(r"finished with (\d+) verified, (\d+) errors?", text)
     verified = int(m.group(1)) if m else None
     n_err = int(m.group(2)) if m else len(errors) or (0 if p.returncode == 0 else 1)

@@ -229,14 +229,62 @@ def source_block(title, lines, marks, context=3, right=""):
         e(title), right, "".join(rows))
 
 
+_DECL_DFY = re.compile(r"^\s*(?:(?:ghost|static|opaque|twostate)\s+)*(method|function|constructor|lemma|predicate)\b\s*(\w*)")
+_DECL_JAVA = re.compile(r"^\s*((?:(?:public|private|protected|static|final|synchronized|abstract)\s+)*)([\w<>\[\],.?]+\s+)?(\w+)\s*\([^;]*\)\s*(?:throws [\w., ]+)?\{\s*$")
+
+
+def _decl_name(line):
+    m = _DECL_DFY.match(line)
+    if m:
+        return m.group(2) or m.group(1)
+    m = _DECL_JAVA.match(line)
+    if m and (m.group(1) or m.group(2)):
+        typ = (m.group(2) or "").strip()
+        if typ not in ("new", "return", "else", "throw") and m.group(3) not in ("if", "for", "while", "switch", "catch", "synchronized"):
+            return m.group(3)
+    return None
+
+
+def _enclosing(lines, i):
+    """name of the method/function that line i (0-based) belongs to: a declaration within the next 2 lines
+    (a comment just above a method), else the nearest one above"""
+    k = i
+    while k < min(i + 3, len(lines)) and lines[k].strip().startswith(("//", "/*", "*", "@")):
+        k += 1                           # a comment or annotation just above a declaration belongs to it
+    if k < len(lines) and k != i:
+        n = _decl_name(lines[k])
+        if n:
+            return n
+    for k in range(min(i, len(lines) - 1), -1, -1):
+        n = _decl_name(lines[k])
+        if n:
+            return n
+    return None
+
+
 def split_diff(title, a_lines, b_lines, a_label="변경 전", b_label="변경 후", context=3):
-    """side-by-side diff of two files, only hunks with context"""
+    """side-by-side diff of two files, only hunks with context; each hunk is headed by the methods it changes"""
     sm = difflib.SequenceMatcher(None, a_lines, b_lines, autojunk=False)
     left, right = [], []
     for grp in sm.get_grouped_opcodes(context):
         if left:
             left.append('<tr class="gap"><td></td><td>⋯</td></tr>')
             right.append('<tr class="gap"><td></td><td>⋯</td></tr>')
+        names = []
+        for tag, i1, i2, j1, j2 in grp:
+            if tag == "equal":
+                continue
+            idx = [(b_lines, j) for j in range(j1, j2)] or [(a_lines, i) for i in range(i1, i2)]
+            for ls, k in idx:
+                if not ls[k].strip():
+                    continue
+                n = _enclosing(ls, k)
+                if n and n not in names:
+                    names.append(n)
+        if names:
+            hd = '<tr class="gap"><td></td><td style="font-weight:600;color:var(--ink,#1d2733)">▸ %s</td></tr>' % e(", ".join(names))
+            left.append(hd)
+            right.append(hd)
         for tag, i1, i2, j1, j2 in grp:
             if tag == "equal":
                 for k in range(i2 - i1):
@@ -535,6 +583,25 @@ def gloss(msg):
     return e(msg)
 
 
+def _token_at(lines, line, col):
+    """the name (with its call parentheses) at a 1-based column, e.g. "Inv()", for Dafny's related locations"""
+    if not col or not (0 < line <= len(lines)):
+        return ""
+    t = lines[line - 1]
+    i = col - 1
+    if not (0 <= i < len(t)) or not (t[i].isalnum() or t[i] == "_"):
+        return ""
+    a = i
+    while a > 0 and (t[a - 1].isalnum() or t[a - 1] in "_."):
+        a -= 1
+    b = i
+    while b < len(t) and (t[b].isalnum() or t[b] == "_"):
+        b += 1
+    if t[b:b + 2] == "()":
+        b += 2
+    return "`%s`" % t[a:b]
+
+
 def sec_dafny(path):
     d = json.load(open(path))
     errs = d["errors"]
@@ -558,11 +625,14 @@ def sec_dafny(path):
         rel = []
         for er in ers:
             for r in er.get("related", []):
-                rel.append("%d번 줄: %s" % (r["line"], {"this is the postcondition that could not be proved": "증명하지 못한 사후조건",
-                    "this proposition could not be proved": "성립함을 보이지 못한 부분"}.get(r["msg"], r["msg"])))
+                what = {"this is the postcondition that could not be proved": "증명하지 못한 사후조건",
+                        "this is the precondition that could not be proved": "증명하지 못한 사전조건",
+                        "this proposition could not be proved": "성립함을 보이지 못한 부분"}.get(r["msg"], r["msg"])
+                tok = _token_at(lines, r["line"], r.get("col")) if r["file"] == f else ""
+                rel.append("%d번 줄%s: %s" % (r["line"], " %s" % tok if tok else "", what))
         parts.append('<div class="box" style="margin-bottom:12px"><b>%s:%d</b>%s<ul>%s</ul>%s%s</div>' % (
             e(os.path.basename(f)), ln, " ×%d" % len(ers) if len(ers) > 1 else "", msgs,
-            source_block(f, lines, marks, context=2) if lines else "",
+            source_block(f, lines, marks, context=1) if lines else "",
             ('<p class="note">관련 위치(노란 줄): %s</p>' % e("; ".join(sorted(set(rel))))) if rel else ""))
     return head + "".join(parts), ok, "오류 %d개" % d["errors_count"]
 

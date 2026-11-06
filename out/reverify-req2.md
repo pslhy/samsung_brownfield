@@ -42,5 +42,5 @@ full      :   1.5s wall | Dafny program verifier finished with 71 verified, 0 er
 selective :   1.0s wall | 1 dafny run(s), 9 extra symbol(s) verified by module runs
 
 prover work (from the full run's log, start-up excluded):
-  all symbols     :   1.28s solver time,      3782797 resource units
-  selected only   :   0.14s solver time,       790430 resource units (21%)
+  all symbols     :   1.35s solver time,      3800895 resource units
+  selected only   :   0.14s solver time,       790432 resource units (21%)

@@ -65,75 +65,52 @@ module ForEachRule {
 
 // ---------------------------------------------------------------------------------------------
 // Rule 3 (InlineVariable):
-//   int n = e;  ... for (i = 0; i < n; i++) ...   ~>   ... for (i = 0; i < e; i++) ...
-// Condition: the value of e does not change while the variable is used.
+//   int n = e;  for (int i = 0; i < n; i++) { body }   ~>   for (int i = 0; i < e; i++) { body }
+// Condition: the body does not change the value of e.
 //
-// The place where it breaks in HomeHub: Dispatcher.evictOldestNonCritical rotates the queue once,
-// keeping every event except the oldest non-critical one (the victim):
-//   int n = queue.size();
-//   for (int i = 0; i < n; i++) { x = queue.poll(); if (no victim yet && !x.critical) victim = x; else queue.offer(x); }
-// Inlining n turns the bound into queue.size(), which shrinks when the victim is taken out.
+// The state can be anything (type S). The expression e is a function `size` of the state, and the
+// loop body a function from state to state. We compare the states the two loops end in.
 module InlineVariableRule {
-  datatype Ev = Ev(id: int, critical: bool)
-  datatype State = State(queue: seq<Ev>, victim: int)   // victim: id, or 0 for none
-
-  // one iteration of the loop body (the queue is never empty inside the loop)
-  function Step(s: State): State
-    requires |s.queue| > 0
-  {
-    var x := s.queue[0];
-    if s.victim == 0 && !x.critical then State(s.queue[1..], x.id)
-    else State(s.queue[1..] + [x], s.victim)
-  }
-
-  // with the variable: the bound n is fixed when the loop starts
-  function Fixed(s: State, i: nat, n: nat): State
+  // with the variable: n is computed once, before the loop
+  function Fixed<S>(s: S, body: S -> S, i: nat, n: nat): S
     decreases n - i
   {
-    if i >= n || |s.queue| == 0 then s else Fixed(Step(s), i + 1, n)
+    if i >= n then s else Fixed(body(s), body, i + 1, n)
   }
 
-  // inlined: the bound is re-read from the queue every time
-  function Inlined(s: State, i: nat, fuel: nat): State
+  // inlined: e (here size(s)) is computed again before every round, on the current state
+  function Inlined<S>(s: S, size: S -> nat, body: S -> S, i: nat, fuel: nat): S
     decreases fuel
   {
-    if fuel == 0 || i >= |s.queue| then s else Inlined(Step(s), i + 1, fuel - 1)
+    if fuel == 0 || i >= size(s) then s else Inlined(body(s), size, body, i + 1, fuel - 1)
   }
 
-  predicate AllCritical(q: seq<Ev>) { forall k :: 0 <= k < |q| ==> q[k].critical }
-
-  lemma StepKeepsSize(s: State)
-    requires |s.queue| > 0 && AllCritical(s.queue)
-    ensures |Step(s).queue| == |s.queue| && AllCritical(Step(s).queue)
-  {
-  }
-
-  lemma Loops(s: State, i: nat, n: nat, fuel: nat)
-    requires AllCritical(s.queue) && |s.queue| == n && i <= n && fuel >= n - i
-    ensures Fixed(s, i, n) == Inlined(s, i, fuel)
+  lemma Loops<S>(s: S, size: S -> nat, body: S -> S, i: nat, n: nat, fuel: nat)
+    requires forall t :: size(body(t)) == size(t)
+    requires size(s) == n && i <= n && fuel >= n - i
+    ensures Fixed(s, body, i, n) == Inlined(s, size, body, i, fuel)
     decreases n - i
   {
-    if i < n && |s.queue| > 0 {
-      StepKeepsSize(s);
-      Loops(Step(s), i + 1, n, fuel - 1);
+    if i < n {
+      Loops(body(s), size, body, i + 1, n, fuel - 1);
     }
   }
 
-  // Condition met: nothing is taken out of the queue inside the loop (here: every event is
-  // critical, so there is no victim), so queue.size() stays n and the two loops are the same.
-  lemma InlineVariable_Same(q: seq<Ev>)
-    requires AllCritical(q)                    // condition: the loop does not change queue.size()
-    ensures Fixed(State(q, 0), 0, |q|) == Inlined(State(q, 0), 0, |q|)
+  lemma InlineVariable_Same<S>(s: S, size: S -> nat, body: S -> S)
+    requires forall t :: size(body(t)) == size(t)        // condition: the body does not change e
+    ensures Fixed(s, body, 0, size(s)) == Inlined(s, size, body, 0, size(s))
   {
-    Loops(State(q, 0), 0, |q|, |q|);
+    Loops(s, size, body, 0, size(s), size(s));
   }
 
-  // Without the condition: three non-critical events 1, 2, 3. With the variable, 1 is taken out and
-  // 2, 3 keep their order. Inlined, the loop stops one round early and 3 jumps ahead of 2.
+  // Without the condition: the state is a list, e is its length, and the body takes out the first
+  // element. [1, 2, 3]: with the variable the loop runs 3 times and ends at []; inlined, it stops
+  // after 2 rounds at [3] (the loop ends one round early, as in lab E-2).
   lemma InlineVariable_Counterexample()
-    ensures var q := [Ev(1, false), Ev(2, false), Ev(3, false)];
-            Fixed(State(q, 0), 0, 3).queue == [Ev(2, false), Ev(3, false)] &&
-            Inlined(State(q, 0), 0, 3).queue == [Ev(3, false), Ev(2, false)]
+    ensures var size := (l: seq<int>) => |l|;
+            var removeFirst := (l: seq<int>) => if |l| > 0 then l[1..] else l;
+            Fixed([1, 2, 3], removeFirst, 0, 3) == [] &&
+            Inlined([1, 2, 3], size, removeFirst, 0, 3) == [3]
   {
   }
 }
