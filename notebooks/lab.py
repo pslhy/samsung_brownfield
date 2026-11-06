@@ -397,6 +397,16 @@ def queue_picture(buf, head, count, title=None, height=None):
     _frame(_bare(body), height, est=230)
 
 
+def _invalidate_legacy_build(path):
+    legacy_src = _p("legacy/src")
+    if path.endswith(".java") and os.path.commonpath([os.path.abspath(path), legacy_src]) == legacy_src:
+        # Older make versions can miss source edits made in the same second as the build.
+        try:
+            os.remove(_p("legacy/build/classes/.stamp"))
+        except FileNotFoundError:
+            pass
+
+
 def patch(path, old, new):
     """replace text in a file (a backup is kept for lab.restore) and show the change"""
     full = _p(path)
@@ -407,6 +417,7 @@ def patch(path, old, new):
     if not os.path.exists(full + ".orig"):
         open(full + ".orig", "w").write(text)
     open(full, "w").write(text.replace(old, new, 1))
+    _invalidate_legacy_build(full)
     print("바꿨습니다: %s   (되돌리기: lab.restore(%r))" % (path, path))
     diff(path + ".orig", path, title=path + " (변경 전 → 지금)")
 
@@ -416,6 +427,7 @@ def restore(path):
     full = _p(path)
     if os.path.exists(full + ".orig"):
         open(full, "w").write(open(full + ".orig").read())
+        _invalidate_legacy_build(full)
         os.remove(full + ".orig")
         print("되돌렸습니다: " + path)
     else:
