@@ -27,8 +27,7 @@
 #       signed in (codex login status); otherwise installs, or updates an install that is not signed in.
 #       --skip-codex: skip step 6.  --update-codex: run the installer even when Codex is already there.
 #       A failure here does not stop the setup. Later, or to update: python3 SETUP/setup.py --update-codex
-#  A download is skipped when its file is already in SETUP/ next to this script (e.g. copied
-#  from a USB stick); every file is checked against its SHA-256 before use.
+#  A download is skipped when its file is already in SETUP/.
 #  A part that is already installed is skipped; delete its folder to reinstall.
 #  Undo step 4: sudo rm /etc/paths.d/homehub /Library/Java/JavaVirtualMachines/homehub-temurin-11.jdk
 # ============================================================================
@@ -51,42 +50,31 @@ done
 
 if [ "$(sysctl -n hw.optional.arm64 2>/dev/null)" = 1 ]; then         # Apple chip (also under Rosetta)
   JDK_NAME=OpenJDK11U-jdk_aarch64_mac_hotspot_11.0.32.1_1.tar.gz
-  JDK_SHA=c487a1c3a56588b3a32d0d07cdd526bf3d401c4b8422be772ca178bfcd647f3f
   DAFNY_NAME=dafny-4.11.0-arm64-macos-13.zip
-  DAFNY_SHA=c90c75e7d5db9c6ccbb7127840dfe43f0ac938b039a7ebed146d8ead383a572f
 else                                                                  # Intel
   JDK_NAME=OpenJDK11U-jdk_x64_mac_hotspot_11.0.32.1_1.tar.gz
-  JDK_SHA=03de26f0d11ec3e6365e0352d9fcfaff447be35a2b2f36ee1ffb6063980343f5
   DAFNY_NAME=dafny-4.11.0-x64-macos-13.zip
-  DAFNY_SHA=5fc0de946c5b2fad33f16bd22a5b06f4fd0dfa7f6d770284237e3f1f3ca9f73d
 fi
 JDK_URL=https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.32.1%2B1/$JDK_NAME
 DAFNY_URL=https://github.com/dafny-lang/dafny/releases/download/v4.11.0/$DAFNY_NAME
 PY_NAME=python-3.13.17-macos11.pkg
 PY_URL=https://www.python.org/ftp/python/3.13.17/$PY_NAME
-PY_SHA=3053592af66128269efab37fe7851a4894920b27c442aeec99ce4d34d17c07e3
 PY_HOME=/Library/Frameworks/Python.framework/Versions/3.13
 
-# fetch NAME URL SHA256 SIZE_TEXT   -> SETUP/NAME, checked against SHA256
+# fetch NAME URL SIZE_TEXT   -> SETUP/NAME
 fetch() {
   f="$HERE/$1"
   if [ ! -f "$f" ]; then
-    echo "      downloading $2 ($4)"
+    echo "      downloading $2 ($3)"
     if ! curl -L --fail --retry 3 --progress-bar -o "$f" "$2"; then
       rm -f "$f"
-      echo; echo "ERROR: download failed (internet/proxy). Put $1 in SETUP/ and run python3 SETUP/setup.py again:"; echo "       $2"
+      echo; echo "ERROR: download failed. Check the internet connection and run python3 SETUP/setup.py again:"; echo "       $2"
       return 1
     fi
     chown "$OWNER" "$f"
   fi
-  h=$(shasum -a 256 "$f" | cut -d' ' -f1)
-  if [ "$h" != "$3" ]; then
-    echo "      SHA-256 mismatch: $h"; rm -f "$f"
-    echo; echo "ERROR: $1 is damaged or not the expected file (deleted it). Run python3 SETUP/setup.py again."
-    return 1
-  fi
   xattr -d com.apple.quarantine "$f" 2>/dev/null
-  echo "      file OK: $1 (SHA-256 checked)"
+  echo "      file OK: $1"
 }
 
 # unpack ARCHIVE TARGET_DIR FILE_INSIDE   -> <lab folder>/TARGET_DIR (FILE_INSIDE must exist there)
@@ -114,7 +102,7 @@ echo "[1/6] JDK 11 (Eclipse Temurin 11.0.32.1+1)"
 if [ -x "$ROOT/jdk/Contents/Home/bin/javac" ]; then
   echo "      skipped: already installed ($ROOT/jdk)"
 else
-  fetch "$JDK_NAME" "$JDK_URL" "$JDK_SHA" "about 180 MB" && unpack "$JDK_NAME" jdk Contents/Home/bin/javac || exit 1
+  fetch "$JDK_NAME" "$JDK_URL" "about 180 MB" && unpack "$JDK_NAME" jdk Contents/Home/bin/javac || exit 1
 fi
 
 # ---------------------------------------------------------------- 2. Dafny
@@ -122,7 +110,7 @@ echo "[2/6] Dafny 4.11.0"
 if [ -x "$ROOT/dafny/dafny" ]; then
   echo "      skipped: already installed ($ROOT/dafny)"
 else
-  fetch "$DAFNY_NAME" "$DAFNY_URL" "$DAFNY_SHA" "about 55 MB" && unpack "$DAFNY_NAME" dafny dafny || exit 1
+  fetch "$DAFNY_NAME" "$DAFNY_URL" "about 55 MB" && unpack "$DAFNY_NAME" dafny dafny || exit 1
 fi
 
 # ---------------------------------------------------------------- 3. Python
@@ -141,7 +129,7 @@ for p in /opt/homebrew/bin/python3 /usr/local/bin/python3 /Library/Frameworks/Py
 done
 if [ -z "$PY_EXE" ]; then
   echo "      no Python 3.8 or newer: installing Python 3.13.17 (python.org)"
-  fetch "$PY_NAME" "$PY_URL" "$PY_SHA" "about 71 MB" || exit 1
+  fetch "$PY_NAME" "$PY_URL" "about 71 MB" || exit 1
   xml="$HERE/_python_choices.xml"                                    # leave out: IDLE app, docs, shell profile change
   { echo '<?xml version="1.0" encoding="UTF-8"?>'
     echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">'

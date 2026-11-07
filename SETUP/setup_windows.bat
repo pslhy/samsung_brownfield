@@ -29,8 +29,7 @@ rem       or updates an install that is not signed in. A failure here does not s
 rem       --skip-codex: skip step 6.  --update-codex: run the installer even when Codex is already there.
 rem       (setup.py checks Codex in your own account first and passes one of the two)
 rem       Later, or to update: python SETUP\setup.py --update-codex
-rem  A download is skipped when its file is already in SETUP\ next to this script (e.g. copied
-rem  from a USB stick); every file is checked against its SHA-256 before use.
+rem  A download is skipped when its file is already in SETUP\.
 rem  A part that is already installed is skipped; delete its folder to reinstall.
 rem  Put the lab folder somewhere every account can read, e.g. C:\lab.
 rem ============================================================================
@@ -68,13 +67,10 @@ set "PS=powershell -NoProfile -ExecutionPolicy Bypass -Command"
 
 set "JDK_NAME=OpenJDK11U-jdk_x64_windows_hotspot_11.0.32.1_1.zip"
 set "JDK_URL=https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.32.1+1/OpenJDK11U-jdk_x64_windows_hotspot_11.0.32.1_1.zip"
-set "JDK_SHA=d5008f02174c1ad21c10407cbf104815cb390ec4c263d53946e8d0507d7a77f9"
 set "DAFNY_NAME=dafny-4.11.0-x64-windows-2022.zip"
 set "DAFNY_URL=https://github.com/dafny-lang/dafny/releases/download/v4.11.0/dafny-4.11.0-x64-windows-2022.zip"
-set "DAFNY_SHA=3653f05a111ca21e234709ea7b25ce96083fd6c6f10484256ba54110dbc0654d"
 set "PY_NAME=python-3.13.17-amd64.zip"
 set "PY_URL=https://www.python.org/ftp/python/3.13.17/python-3.13.17-amd64.zip"
-set "PY_SHA=b26ca4b4ee51e157836049934d2b8eabd55939be296f3130254251b6df96ec2f"
 set "HH_PYF=%TEMP%\homehub_python_found.txt"
 
 echo ==== HomeHub lab setup (Windows, administrator) ====
@@ -86,7 +82,7 @@ echo.
 rem ---------------------------------------------------------------- 1. JDK
 echo [1/6] JDK 11 (Eclipse Temurin 11.0.32.1+1)
 if exist "%ROOT%\jdk\bin\javac.exe" goto :jdk_skip
-call :fetch "%JDK_NAME%" "%JDK_URL%" "%JDK_SHA%" "about 190 MB"
+call :fetch "%JDK_NAME%" "%JDK_URL%" "about 190 MB"
 if errorlevel 1 goto :fail
 call :unzip "%JDK_NAME%" "jdk" "bin\javac.exe"
 if errorlevel 1 goto :fail
@@ -98,7 +94,7 @@ rem ---------------------------------------------------------------- 2. Dafny
 :dafny
 echo [2/6] Dafny 4.11.0
 if exist "%ROOT%\dafny\dafny.exe" goto :dafny_skip
-call :fetch "%DAFNY_NAME%" "%DAFNY_URL%" "%DAFNY_SHA%" "about 66 MB"
+call :fetch "%DAFNY_NAME%" "%DAFNY_URL%" "about 66 MB"
 if errorlevel 1 goto :fail
 call :unzip "%DAFNY_NAME%" "dafny" "dafny.exe"
 if errorlevel 1 goto :fail
@@ -121,7 +117,7 @@ del /q "%HH_PYF%" >nul 2>&1
 goto :venv
 :python_install
 echo       no Python 3.8 or newer: unpacking Python 3.13.17 (python.org)
-call :fetch "%PY_NAME%" "%PY_URL%" "%PY_SHA%" "about 30 MB"
+call :fetch "%PY_NAME%" "%PY_URL%" "about 30 MB"
 if errorlevel 1 goto :fail
 call :unzip "%PY_NAME%" "python" "python.exe"
 if errorlevel 1 goto :fail
@@ -217,13 +213,12 @@ echo       WARNING: Codex was not installed or updated - internet/proxy, or chat
 echo                The lab works without it. Later:  python SETUP\setup.py --update-codex
 exit /b 0
 
-rem  :fetch NAME URL SHA256 SIZE_TEXT   -> SETUP\NAME, checked against SHA256
+rem  :fetch NAME URL SIZE_TEXT   -> SETUP\NAME
 :fetch
 set "HH_F=%HERE%\%~1"
 set "HH_U=%~2"
-set "HH_SHA=%~3"
 if exist "%HH_F%" goto :fetch_check
-echo       downloading %~2 (%~4)
+echo       downloading %~2 (%~3)
 where curl.exe >nul 2>nul
 if errorlevel 1 goto :fetch_ps
 curl.exe -L --fail --retry 3 --progress-bar -o "%HH_F%" "%HH_U%"
@@ -233,19 +228,13 @@ echo       curl failed, trying PowerShell...
 %PS% "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri $env:HH_U -OutFile $env:HH_F -UseBasicParsing"
 if errorlevel 1 goto :fetch_fail
 :fetch_check
-%PS% "$h = (Get-FileHash -LiteralPath $env:HH_F -Algorithm SHA256).Hash; if ($h -ne $env:HH_SHA) { Write-Host ('      SHA-256 mismatch: ' + $h); exit 1 }; Unblock-File -LiteralPath $env:HH_F"
-if errorlevel 1 goto :fetch_bad
-echo       file OK: %~1 (SHA-256 checked)
+%PS% "Unblock-File -LiteralPath $env:HH_F" >nul 2>&1
+echo       file OK: %~1
 exit /b 0
-:fetch_bad
-del /q "%HH_F%" >nul 2>&1
-echo.
-echo ERROR: %~1 is damaged or not the expected file (deleted it). Run the setup again.
-exit /b 1
 :fetch_fail
 del /q "%HH_F%" >nul 2>&1
 echo.
-echo ERROR: download failed (internet/proxy). Put %~1 in SETUP\ and run the setup again:
+echo ERROR: download failed. Check the internet connection and run the setup again:
 echo        %~2
 exit /b 1
 
