@@ -1,8 +1,9 @@
 """
 lab: helpers for the HomeHub lab notebooks.
 
-    import lab
-    lab.run("impact", V="scenarios/req2/ai")      # runs `make impact V=...`, shows its report below
+    import lab                                    # puts the lab's jdk/ and dafny/ first on PATH
+    lab.run("check-env")                          # versions, then where java / javac / dafny / PATH point (lab.check_tools())
+    lab.run("impact", V="scenarios/req2/ai")      # runs `make impact V=...` (Windows: SETUP/make_fallback.py), shows its report
     lab.structure()                               # HomeHub structure map (docs/homehub_구조.html); lab.structure("queue")
     lab.show("legacy/src/.../Watchdog.java", 20, 35)
     lab.diff("formal/RingQueue.dfy", "scenarios/req2/model/RingQueue.dfy")
@@ -24,6 +25,49 @@ import uuid
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "tools"))
+
+
+def _use_lab_tools():
+    """put the lab folder's own JDK and Dafny (installed by SETUP) first on PATH, and set JAVA_HOME and DAFNY,
+    so everything the notebooks run uses them, whatever PATH VS Code or Jupyter started with
+    (the same as the export / set lines of the self-study guide). Only folders that are there are added."""
+    mac_jdk = os.path.join(ROOT, "jdk", "Contents", "Home")
+    jdk = mac_jdk if os.path.isdir(mac_jdk) else os.path.join(ROOT, "jdk")
+    dafny_dir = os.path.join(ROOT, "dafny")
+    first = [d for d in (os.path.join(jdk, "bin"), dafny_dir) if os.path.isdir(d)]
+    rest = [d for d in os.environ.get("PATH", "").split(os.pathsep) if d and d not in first]
+    os.environ["PATH"] = os.pathsep.join(first + rest)
+    if os.path.isdir(os.path.join(jdk, "bin")):
+        os.environ["JAVA_HOME"] = jdk
+    dafny_exe = os.path.join(dafny_dir, "dafny.exe" if os.name == "nt" else "dafny")
+    if os.path.isfile(dafny_exe):
+        os.environ["DAFNY"] = dafny_exe
+
+
+def check_tools():
+    """where java / javac / dafny, the front of PATH, JAVA_HOME and DAFNY point. All must be in the lab
+    folder (jdk/, dafny/); if not, it says to call an assistant. lab.run("check-env") shows it too."""
+    import shutil
+    here = os.path.normcase(os.path.realpath(ROOT)) + os.sep
+    inside = lambda v: bool(v) and os.path.normcase(os.path.realpath(v)).startswith(here)
+    path = os.environ.get("PATH", "").split(os.pathsep) + ["", ""]
+    rows = [(n, shutil.which(n)) for n in ("java", "javac", "dafny")]
+    rows += [("PATH[0]", path[0]), ("PATH[1]", path[1])]
+    rows += [(v, os.environ.get(v, "")) for v in ("JAVA_HOME", "DAFNY")]
+    print("실습 도구 경로: 모두 실습 폴더 %s 안이어야 합니다" % ROOT)
+    bad = []
+    for name, v in rows:
+        ok = inside(v)
+        print("  %-10s %s" % (name, v + ("" if ok else "   <- 실습 폴더 밖") if v else "없음   <- 설정 안 됨"))
+        if not ok:
+            bad.append(name)
+    if bad:
+        print("\n%s 이(가) 실습 폴더를 가리키지 않습니다. 실습 결과가 달라질 수 있으니 보조강사를 불러 주세요."
+              % ", ".join(bad))
+    return not bad
+
+
+_use_lab_tools()
 import report  # noqa: E402
 
 try:
@@ -51,7 +95,8 @@ def _ours(port):
     """is the web server on this port serving this lab's out/html?"""
     import urllib.request
     try:
-        with urllib.request.urlopen("http://127.0.0.1:%d/%s" % (port, _ID_FILE), timeout=0.5) as r:
+        opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))   # never through a proxy (classroom PCs)
+        with opener.open("http://127.0.0.1:%d/%s" % (port, _ID_FILE), timeout=0.5) as r:
             return r.read().decode("utf-8", "replace").strip() == ROOT
     except Exception:
         return False
@@ -68,7 +113,7 @@ def _serve():
     _server_port = None
     import time
     os.makedirs(HTML_DIR, exist_ok=True)
-    with open(os.path.join(HTML_DIR, _ID_FILE), "w") as f:
+    with open(os.path.join(HTML_DIR, _ID_FILE), "w", encoding="utf-8") as f:
         f.write(ROOT)
     for port in range(SERVER_PORT, SERVER_PORT + 10):   # the next ports only if something else holds 8765
         if _ours(port):
@@ -76,7 +121,8 @@ def _serve():
             return port
         p = subprocess.Popen([sys.executable, "-m", "http.server", str(port), "--bind", "127.0.0.1",
                               "--directory", HTML_DIR], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                             stderr=subprocess.DEVNULL, start_new_session=True)
+                             stderr=subprocess.DEVNULL, start_new_session=True,   # outlives kernel restarts
+                             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0))  # Windows: no console window, no interrupts
         for _ in range(30):
             time.sleep(0.1)
             if _ours(port):
@@ -98,7 +144,7 @@ def _page_url(page_html, link, fid):
         return None
     rel = os.path.join("_nb", fid + ".html")
     os.makedirs(os.path.join(HTML_DIR, "_nb"), exist_ok=True)
-    with open(os.path.join(HTML_DIR, rel), "w") as f:
+    with open(os.path.join(HTML_DIR, rel), "w", encoding="utf-8") as f:
         f.write(page_html)
     return "http://localhost:%d/%s" % (port, rel.replace(os.sep, "/"))
 
@@ -139,18 +185,28 @@ def _frame(page_html, height=None, link=None, est=600):
 
 def _embed_page(path):
     """a report file, without its top bar (the notebook is the navigation)"""
-    t = open(path).read()
+    t = open(path, encoding="utf-8").read()
     t = re.sub(r"<div class='top'>.*?</div>", "", t, count=1, flags=re.S)
     return t
 
 
 def run(target, height=None, show_report=True, **variables):
-    """run `make <target> VAR=value ...` in the lab folder, stream its output, then show its report"""
-    cmd = ["make", "-s", "--no-print-directory", target] + ["%s=%s" % (k, v) for k, v in variables.items()]
-    env = dict(os.environ, HH_OPEN="0")
+    """run `make <target> VAR=value ...` in the lab folder, stream its output, then show its report.
+    On Windows (no make; the Makefile needs bash) the same target runs with SETUP/make_fallback.py,
+    which does what the Makefile does."""
+    args = [target] + ["%s=%s" % (k, v) for k, v in variables.items()]
+    if os.name == "nt":
+        cmd, note = [sys.executable, os.path.join(ROOT, "SETUP", "make_fallback.py")] + args, "   (Windows: make_fallback.py로 실행)"
+    else:
+        cmd, note = ["make", "-s", "--no-print-directory"] + args, ""
+    env = dict(os.environ, HH_OPEN="0", PYTHONUTF8="1")
     env.pop("JAVA_TOOL_OPTIONS", None)
-    print("$ " + " ".join(cmd[0:1] + cmd[3:]))
-    p = subprocess.Popen(cmd, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, env=env, bufsize=1)
+    print("$ make %s%s" % (" ".join(args), note))
+    try:
+        p = subprocess.Popen(cmd, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, env=env, bufsize=1, encoding="utf-8", errors="replace")
+    except OSError:
+        print("make가 없습니다. macOS: xcode-select --install (Command Line Tools), Linux: 배포판의 make 패키지를 설치하세요.")
+        return None
     reports = []
     for line in p.stdout:
         if line.startswith(("Picked up JAVA_TOOL_OPTIONS", "make: ***", "built variant ", "built legacy")):
@@ -161,6 +217,9 @@ def run(target, height=None, show_report=True, **variables):
             continue
         print(line, end="", flush=True)
     code = p.wait()
+    if target == "check-env":
+        print()
+        check_tools()
     if code != 0 and not reports:
         print("\n(명령이 실패했습니다: 종료 코드 %d. 위 메시지를 확인하세요.)" % code)
     if show_report and reports:
@@ -173,7 +232,7 @@ def ingest(message, setup=(), height=None):
     setup: lines run first (messages or !drain), e.g. ["2|fridge-2|PWR_ON|0|0|fw=1.4", "!drain"]"""
     path = os.path.join(ROOT, "out", "raw", "ingest-input.txt")
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w") as f:
+    with open(path, "w", encoding="utf-8") as f:
         for l in list(setup) + [message]:
             f.write(l + "\n")
     run("ingest", height=height)
@@ -184,7 +243,7 @@ def path(message, setup=(), height=None):
     setup: lines run first (messages or !drain), e.g. ["1|fridge-2|PWR_ON|0|0", "!drain"]"""
     p = os.path.join(ROOT, "out", "raw", "path-input.txt")
     os.makedirs(os.path.dirname(p), exist_ok=True)
-    with open(p, "w") as f:
+    with open(p, "w", encoding="utf-8") as f:
         for l in list(setup) + [message]:
             f.write(l + "\n")
     run("path", height=height)
@@ -198,15 +257,15 @@ def sources(root="legacy/src/main/java"):
         for n in sorted(names):
             if n.endswith(".java"):
                 full = os.path.join(dirpath, n)
-                out.append("// ===== %s\n%s" % (os.path.relpath(full, base), open(full).read()))
+                out.append("// ===== %s\n%s" % (os.path.relpath(full, base), open(full, encoding="utf-8").read()))
     return "\n".join(out)
 
 
 def trace_table(name, start=1, end=None, height=None):
     """input file lines and the recorded trace side by side: legacy/workloads/<name>.txt + golden/<name>.trace"""
-    wl = open(_p("legacy/workloads/%s.txt" % name)).read().splitlines()
+    wl = open(_p("legacy/workloads/%s.txt" % name), encoding="utf-8").read().splitlines()
     tr = {}
-    for line in open(_p("golden/%s.trace" % name)).read().splitlines():
+    for line in open(_p("golden/%s.trace" % name), encoding="utf-8").read().splitlines():
         st = report.parse_state(line)
         if st:
             tr[st["n"]] = (line, st)
@@ -276,7 +335,7 @@ def report_page(name, height=None):
 
 def show(path, start=1, end=None, mark=(), title=None, height=None):
     """show lines start..end of a file; `mark` = line numbers to highlight"""
-    lines = open(_p(path)).read().splitlines()
+    lines = open(_p(path), encoding="utf-8").read().splitlines()
     end = end or len(lines)
     marks = {ln: "mark" for ln in mark}
     rows = "".join('<tr class="%s"><td class="ln">%d</td><td>%s</td></tr>' % (marks.get(i, ""), i, report.e(lines[i - 1]))
@@ -287,7 +346,7 @@ def show(path, start=1, end=None, mark=(), title=None, height=None):
 
 def diff(a, b, title=None, height=None):
     """side-by-side diff of two files (paths relative to the lab folder)"""
-    la, lb = open(_p(a)).read().splitlines(), open(_p(b)).read().splitlines()
+    la, lb = open(_p(a), encoding="utf-8").read().splitlines(), open(_p(b), encoding="utf-8").read().splitlines()
     body = report.split_diff(title or "%s → %s" % (a, b), la, lb) or '<p class="note">두 파일이 같습니다.</p>'
     _frame(_bare(body), height, est=body.count("<tr") // 2 * 20 + 80)
 
@@ -315,7 +374,7 @@ KINDS = {   # kind -> (label, background, bar color)
 def annotate(path, groups, start=1, end=None, title=None, height=None):
     """code with colored line groups and a note beside each group.
     groups: [(first line, last line, kind, note)], kind in KINDS ("proof" lines are dimmed)"""
-    lines = open(_p(path)).read().splitlines()
+    lines = open(_p(path), encoding="utf-8").read().splitlines()
     end = min(end or len(lines), len(lines))
     at = {}
     for g in groups:
@@ -352,7 +411,7 @@ def side_by_side(rows, title=None, height=None, headers=("Java (legacy)", "Dafny
     """rows: [((java path, first, last), (dafny path, first, last), note)] -> Java | Dafny | note"""
     def snip(spec):
         path, a, b = spec
-        ls = open(_p(path)).read().splitlines()
+        ls = open(_p(path), encoding="utf-8").read().splitlines()
         return "<br>".join('<span class="ln2">%d</span> %s' % (i, report.e(ls[i - 1]).replace(" ", "&nbsp;"))
                            for i in range(a, min(b, len(ls)) + 1))
     trs = []
@@ -398,7 +457,7 @@ def queue_picture(buf, head, count, title=None, height=None):
 
 
 def _invalidate_legacy_build(path):
-    legacy_src = _p("legacy/src")
+    legacy_src = os.path.abspath(_p("legacy/src"))       # abspath: one kind of separator on Windows, as commonpath returns
     if path.endswith(".java") and os.path.commonpath([os.path.abspath(path), legacy_src]) == legacy_src:
         # Older make versions can miss source edits made in the same second as the build.
         try:
@@ -410,13 +469,13 @@ def _invalidate_legacy_build(path):
 def patch(path, old, new):
     """replace text in a file (a backup is kept for lab.restore) and show the change"""
     full = _p(path)
-    text = open(full).read()
+    text = open(full, encoding="utf-8").read()
     if old not in text:
         print("바꿀 내용을 찾지 못했습니다. 이미 바꿨다면 lab.restore(%r)로 되돌린 뒤 다시 하세요." % path)
         return
     if not os.path.exists(full + ".orig"):
-        open(full + ".orig", "w").write(text)
-    open(full, "w").write(text.replace(old, new, 1))
+        open(full + ".orig", "w", encoding="utf-8").write(text)
+    open(full, "w", encoding="utf-8").write(text.replace(old, new, 1))
     _invalidate_legacy_build(full)
     print("바꿨습니다: %s   (되돌리기: lab.restore(%r))" % (path, path))
     diff(path + ".orig", path, title=path + " (변경 전 → 지금)")
@@ -426,7 +485,7 @@ def restore(path):
     """undo lab.patch"""
     full = _p(path)
     if os.path.exists(full + ".orig"):
-        open(full, "w").write(open(full + ".orig").read())
+        open(full, "w", encoding="utf-8").write(open(full + ".orig", encoding="utf-8").read())
         _invalidate_legacy_build(full)
         os.remove(full + ".orig")
         print("되돌렸습니다: " + path)
@@ -439,7 +498,7 @@ def _prompt_text(name, files):
     A placeholder is filled from files[name] (spaces in the name may be written as _): a path in the lab
     folder is replaced by that file's contents, anything else is used as text. A placeholder that is
     itself a path is replaced by that file. Returns (text, [placeholders left unfilled])."""
-    text = open(os.path.join(ROOT, "docs", "PROMPTS.md")).read()
+    text = open(os.path.join(ROOT, "docs", "PROMPTS.md"), encoding="utf-8").read()
     m = re.search(r"## %s\..*?```\n(.*?)```" % re.escape(name), text, flags=re.S)
     if not m:
         return None, []
@@ -453,7 +512,7 @@ def _prompt_text(name, files):
         elif not os.path.exists(_p(str(val))):
             return str(val)
         if os.path.exists(_p(str(val))) and os.path.isfile(_p(str(val))):
-            return open(_p(str(val))).read()
+            return open(_p(str(val)), encoding="utf-8").read()
         left.append(key)
         return mt.group(0)
     return re.sub(r"\{([^{}\n]+)\}", fill, m.group(1)), left
@@ -489,8 +548,8 @@ def diff_text(folder):
             new = os.path.join(dirpath, n)
             rel = os.path.relpath(new, base)
             old = os.path.join(ROOT, "legacy", rel)
-            a = open(old).read().splitlines(True) if os.path.exists(old) else []
-            b = open(new).read().splitlines(True)
+            a = open(old, encoding="utf-8").read().splitlines(True) if os.path.exists(old) else []
+            b = open(new, encoding="utf-8").read().splitlines(True)
             out += difflib.unified_diff(a, b, "legacy/" + rel, folder.rstrip("/") + "/" + rel)
     return "".join(out)
 
@@ -502,7 +561,7 @@ def source_text(folder="legacy/src"):
         for n in sorted(names):
             if n.endswith(".java"):
                 f = os.path.join(dirpath, n)
-                out.append("=== %s ===\n%s" % (os.path.relpath(f, ROOT), open(f).read()))
+                out.append("=== %s ===\n%s" % (os.path.relpath(f, ROOT), open(f, encoding="utf-8").read()))
     return "\n".join(out)
 
 
@@ -515,12 +574,12 @@ def impact_tests(folder):
     if not os.path.exists(jp):
         print("도구 결과가 없습니다. 먼저 lab.run(\"impact\", V=%r)를 실행하세요." % folder)
         return None
-    return "\n".join(re.sub(r"\(.*\)$", "", t.replace("com.dxlab.homehub.", "")) for t in _json.load(open(jp))["tests"])
+    return "\n".join(re.sub(r"\(.*\)$", "", t.replace("com.dxlab.homehub.", "")) for t in _json.load(open(jp, encoding="utf-8"))["tests"])
 
 
 def dafny_errors(path):
     """`dafny verify <path>` output, as text for a prompt (P-2)"""
-    p = subprocess.run(["dafny", "verify", _p(path)], cwd=ROOT, capture_output=True, text=True)
+    p = subprocess.run([_dafny(), "verify", _p(path)], cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace")
     return (p.stdout + p.stderr).strip()
 
 
@@ -535,7 +594,7 @@ def codex_models():
     import json as _json
     path = os.path.join(os.environ.get("CODEX_HOME") or os.path.expanduser("~/.codex"), "models_cache.json")
     try:
-        d = _json.load(open(path))
+        d = _json.load(open(path, encoding="utf-8"))
     except (OSError, ValueError):
         print("Codex의 모델 목록을 찾지 못했습니다. 터미널에서 codex 를 한 번 실행하고 /model 로 확인하세요.")
         return
@@ -551,13 +610,31 @@ def codex_models():
     print("추론 none(생각하지 않고 바로 답)은 목록에 없지만 %s에서 쓸 수 있는 것을 확인했습니다." % CODEX_MODEL)
 
 
+def _dafny():
+    """dafny on PATH, or the release unpacked in ./dafny/ (by the setup)"""
+    import shutil
+    for cand in (os.environ.get("DAFNY"), shutil.which("dafny"), os.path.join(ROOT, "dafny", "dafny.exe"),
+                 os.path.join(ROOT, "dafny", "dafny")):
+        if cand and (os.path.isfile(cand) or shutil.which(cand)):
+            return cand
+    return "dafny"
+
+
+def _codex():
+    """the Codex CLI as a full path (on Windows npm installs codex.cmd, which subprocess finds only by full path)"""
+    import shutil
+    return shutil.which("codex") or "codex"
+
+
 def _codex_ready():
     import shutil
+    if os.environ.get("HH_NO_CODEX") == "1":       # e.g. when the notebooks run unattended (make smoke-notebooks)
+        return "Codex를 쓰지 않도록 설정되어 있습니다(HH_NO_CODEX=1)."
     if not shutil.which("codex"):
         return "Codex CLI가 없습니다. 설치: npm install -g @openai/codex"
     if os.environ.get("CODEX_API_KEY") or os.environ.get("OPENAI_API_KEY"):
         return None
-    st = subprocess.run(["codex", "login", "status"], capture_output=True, text=True)
+    st = subprocess.run([_codex(), "login", "status"], capture_output=True, text=True, encoding="utf-8", errors="replace")
     if st.returncode != 0 or "not logged in" in (st.stdout + st.stderr).lower():
         return "Codex에 로그인되어 있지 않습니다. 터미널에서 codex login 을 실행하거나, CODEX_API_KEY 환경 변수를 설정한 뒤 Jupyter를 다시 시작하세요."
     return None
@@ -630,20 +707,22 @@ def codex(name, save=None, timeout=900, show_prompt=True, 깊게=False, model=No
     os.makedirs(work, exist_ok=True)
     out = os.path.join(work, "answer.md")
     if 깊게:
-        cmd = ["codex", "exec", "--skip-git-repo-check", "--ephemeral", "--color", "never",
+        cmd = [_codex(), "exec", "--skip-git-repo-check", "--ephemeral", "--color", "never",
                "-s", "workspace-write", "-C", work, "-m", model, "-c", 'model_reasoning_effort="%s"' % effort,
                "--json", "-o", out, "-"]
         text = text + "\n\n(작업 폴더는 지금 폴더다. 실습 폴더 %s 는 읽기만 하라. 최종 답에 결과 코드 전체를 코드 블록 하나로 넣어라.)" % ROOT
     else:
-        cmd = ["codex", "exec", "--skip-git-repo-check", "--ephemeral", "--color", "never",
+        cmd = [_codex(), "exec", "--skip-git-repo-check", "--ephemeral", "--color", "never",
                "-s", "read-only", "-C", work, "-m", model, "-c", 'model_reasoning_effort="%s"' % effort,
                "--json", "-o", out, "-"]
         text = text + ("\n\n(필요한 것은 위에 다 있다. 명령을 실행하거나 파일을 찾아 읽지 말고 바로 답하라. "
                        "코드를 만들면 최종 답에 결과 코드 전체를 코드 블록 하나로 넣어라.)")
+    with open(os.path.join(work, "prompt.md"), "w", encoding="utf-8") as f:   # what was sent, next to answer.md
+        f.write(text)
     print("Codex 실행 중… (모델 %s, 추론 %s)%s" % (model, effort, " (깊게: 직접 파일을 쓰고 명령을 돌리므로 몇 분 걸릴 수 있음)" if 깊게 else ""))
     t0 = time.time()
     p = subprocess.Popen(cmd, cwd=ROOT, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                         text=True, bufsize=1)
+                         text=True, bufsize=1, encoding="utf-8", errors="replace")
     p.stdin.write(text)
     p.stdin.close()
     import json as _json
@@ -669,7 +748,7 @@ def codex(name, save=None, timeout=900, show_prompt=True, 깊게=False, model=No
             print("  시간 초과(%d초)로 멈췄습니다." % timeout)
             break
     code = p.wait()
-    answer = open(out).read().strip() if os.path.exists(out) else ""
+    answer = open(out, encoding="utf-8").read().strip() if os.path.exists(out) else ""
     print("끝났습니다 (%.0f초)." % (time.time() - t0))
     if not answer:
         print("Codex의 답이 없습니다(종료 코드 %d). 위 오류를 확인하세요." % code)
@@ -686,8 +765,8 @@ def codex(name, save=None, timeout=900, show_prompt=True, 깊게=False, model=No
             before = None
             if os.path.exists(full):
                 before = full + ".before"
-                open(before, "w").write(open(full).read())
-            open(full, "w").write(blk)
+                open(before, "w", encoding="utf-8").write(open(full, encoding="utf-8").read())
+            open(full, "w", encoding="utf-8").write(blk)
             print("저장했습니다: %s" % save)
             if before:
                 diff(os.path.relpath(before, ROOT), save, title="%s: 이전 → Codex가 고친 것 (계약 줄이 바뀌었는지 확인)" % save)
