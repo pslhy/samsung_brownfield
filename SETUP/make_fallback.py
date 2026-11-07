@@ -519,7 +519,7 @@ def t_difftest_mine():
            "make difftest-mine DFY=%s ADAPTER=%s" % (dfy_s, ad_s),
            ("dafny", "1. Dafny 검증", RAW + "/mine-verify.json", "pass"),
            ("text", "2. Java로 컴파일, 연결 코드 컴파일 (메시지)", log, "-"),
-           ("difftest", "3. 차분 테스트: 레거시 RingEventQueue vs 내 모델", RAW + "/mine-difftest.json", "pass"))
+           ("difftest", "3. 차분 테스트: 레거시 RingEventQueue vs 내 모델", RAW + "/mine-difftest.json", var("DT_EXPECT", "pass")))
 
 
 # the same with the example AI output in scenarios/b1-ai-sample/

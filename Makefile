@@ -209,7 +209,7 @@ difftest-mine: $(BUILD)/difftest/.stamp
 	  --command "make difftest-mine DFY=$(DFY) ADAPTER=$(ADAPTER)" \
 	  --sec dafny "1. Dafny 검증" $(RAW)/mine-verify.json pass \
 	  --sec text "2. Java로 컴파일, 연결 코드 컴파일 (메시지)" $(RAW)/mine-build.txt - \
-	  --sec difftest "3. 차분 테스트: 레거시 RingEventQueue vs 내 모델" $(RAW)/mine-difftest.json pass
+	  --sec difftest "3. 차분 테스트: 레거시 RingEventQueue vs 내 모델" $(RAW)/mine-difftest.json $(or $(DT_EXPECT),pass)
 
 # the same with the example AI output in scenarios/b1-ai-sample/
 difftest-sample:
