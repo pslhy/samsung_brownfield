@@ -4,7 +4,7 @@ account, then runs the right setup script with options decided from what it foun
 
     python3 SETUP/setup.py [--skip-codex | --update-codex]
         macOS   -> sudo sh SETUP/setup_mac.sh <options>   (asks for your password)
-        Windows -> SETUP\\setup_windows.bat <options>    (asks for administrator rights, UAC)
+        Windows -> SETUP\\setup_windows.bat <options>    (your own account, no administrator rights)
         Linux   -> not supported: install JDK 11 and Dafny 4.11 yourself (it says what to install)
     It shows what it found before it runs anything. Parts already installed are skipped, so running it
     again with --update-codex only installs or updates Codex.
@@ -12,15 +12,16 @@ account, then runs the right setup script with options decided from what it foun
 What it reads, and what it passes on:
     OS, CPU, the lab folder           which script to run (the script picks the JDK/Dafny download itself)
     jdk/, dafny/, .venv/              shown only: the scripts skip a part whose folder is already there
-    java, javac, dafny on PATH        shown only (after the setup, new windows find the lab's own jdk/, dafny/)
+    java, javac, dafny on PATH        shown only (the setup changes no PATH: make and the notebooks put the
+                                      lab's own jdk/, dafny/ first themselves)
     make (macOS)                      shown only: `make --version` must run (the Command Line Tools); without it
                                       it says xcode-select --install. Windows uses make.cmd -> SETUP/make_fallback.py.
     codex on PATH, codex login status,  installed, signed in and CODEX_MIN_VERSION or newer -> --skip-codex;
     codex --version                   lower than that, not signed in, or not installed -> --update-codex.
-                                      Checked here because sudo / the administrator window does not see
-                                      your account's PATH (~/.local/bin, npm). Your own option wins.
+                                      Checked here because sudo does not see your account's PATH
+                                      (~/.local/bin, npm). Your own option wins.
 
-Run it from your own account, not as root / administrator: the setup scripts ask for the rights they need,
+Run it from your own account, not as root / administrator: setup_mac.sh asks for the rights it needs,
 and Codex is installed into the account that runs it (macOS/Linux ~/.local/bin,
 Windows %LOCALAPPDATA%\\Programs\\OpenAI\\Codex\\bin).
 Windows without any Python yet: double-click SETUP\\setup_windows.bat instead (it installs Python too).
@@ -142,7 +143,7 @@ def main(args):
                                             if f["codex"] else "Codex is not installed")
 
     if WINDOWS:
-        # setup_windows.bat asks for administrator rights itself, waits for that window, then does Codex here
+        # setup_windows.bat runs in this window as you: no administrator rights, Codex in your account
         cmd = [os.environ.get("COMSPEC", "cmd.exe"), "/c", os.path.join(HERE, "setup_windows.bat"), option]
     elif MAC:
         cmd = ["sudo", "sh", os.path.join(HERE, "setup_mac.sh"), option]

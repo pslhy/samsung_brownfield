@@ -4,6 +4,8 @@
 # Run `make help` for the target list.
 
 SHELL   := /bin/bash
+# the lab's own JDK and Dafny (SETUP/) first on PATH: SETUP changes no PATH of the PC (make_fallback.py the same)
+export PATH := $(CURDIR)/jdk/Contents/Home/bin:$(CURDIR)/dafny:$(PATH)
 JAVA    ?= java
 JAVAC   ?= javac
 PY      ?= python3

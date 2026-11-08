@@ -23,6 +23,10 @@ for _s in (sys.stdout, sys.stderr):
     except (AttributeError, ValueError):
         pass
 
+# Makefile 맨 위와 같음: 실습 폴더의 JDK·Dafny(SETUP)를 PATH 맨 앞에. SETUP은 PC의 PATH를 바꾸지 않습니다
+os.environ["PATH"] = os.pathsep.join([os.path.join(ROOT, "jdk", "bin"), os.path.join(ROOT, "dafny"),
+                                      os.environ.get("PATH", "")])
+
 LEGACY, OUT, BUILD, WORK = "legacy", "out", "build", "work"
 RAW = OUT + "/raw"
 JFLAGS = ["-nowarn", "-Xlint:-options", "-encoding", "UTF-8"]

@@ -17,19 +17,19 @@
 #                  .pkg (only the interpreter, pip and /usr/local/bin/python3: no IDLE app, no docs, no
 #                  shell profile change). Then makes <lab folder>/.venv with that Python
 #                  and installs jupyterlab into it (pip, from PyPI; brings ipykernel, nbconvert)
-#    4. For all users (made again when run again):
-#         /etc/paths.d/homehub    PATH += jdk/Contents/Home/bin, dafny   (new Terminal windows)
-#         /Library/Java/JavaVirtualMachines/homehub-temurin-11.jdk -> jdk  (/usr/bin/java, javac find it)
-#    5. Prints the versions
-#    6. Codex CLI (optional): OpenAI's installer (https://chatgpt.com/codex/install.sh), run as the one
+#    4. Prints the versions
+#    5. Codex CLI (optional): OpenAI's installer (https://chatgpt.com/codex/install.sh), run as the one
 #       who ran sudo, not as root: it installs into that account (~/.local/bin, ~/.codex) and adds
 #       ~/.local/bin to that account's shell profile. Skipped when Codex is already installed and
 #       signed in (codex login status); otherwise installs, or updates an install that is not signed in.
-#       --skip-codex: skip step 6.  --update-codex: run the installer even when Codex is already there.
+#       --skip-codex: skip step 5.  --update-codex: run the installer even when Codex is already there.
 #       A failure here does not stop the setup. Later, or to update: python3 SETUP/setup.py --update-codex
 #  A download is skipped when its file is already in SETUP/.
 #  A part that is already installed is skipped; delete its folder to reinstall.
-#  Undo step 4: sudo rm /etc/paths.d/homehub /Library/Java/JavaVirtualMachines/homehub-temurin-11.jdk
+#  No PATH or Java setting of this Mac is changed (only Codex's installer adds ~/.local/bin, step 5):
+#  the Makefile and the notebooks (notebooks/lab.py) put jdk/ and dafny/ first on PATH themselves.
+#  An older version of this script wrote these; remove them with:
+#    sudo rm /etc/paths.d/homehub /Library/Java/JavaVirtualMachines/homehub-temurin-11.jdk
 # ============================================================================
 
 HERE=$(cd "$(dirname "$0")" && pwd -P) || exit 1
@@ -98,7 +98,7 @@ echo "Lab folder: $ROOT"
 echo
 
 # ---------------------------------------------------------------- 1. JDK
-echo "[1/6] JDK 11 (Eclipse Temurin 11.0.32.1+1)"
+echo "[1/5] JDK 11 (Eclipse Temurin 11.0.32.1+1)"
 if [ -x "$ROOT/jdk/Contents/Home/bin/javac" ]; then
   echo "      skipped: already installed ($ROOT/jdk)"
 else
@@ -106,7 +106,7 @@ else
 fi
 
 # ---------------------------------------------------------------- 2. Dafny
-echo "[2/6] Dafny 4.11.0"
+echo "[2/5] Dafny 4.11.0"
 if [ -x "$ROOT/dafny/dafny" ]; then
   echo "      skipped: already installed ($ROOT/dafny)"
 else
@@ -114,7 +114,7 @@ else
 fi
 
 # ---------------------------------------------------------------- 3. Python
-echo "[3/6] Python 3.8 or newer, .venv and Jupyter"
+echo "[3/5] Python 3.8 or newer, .venv and Jupyter"
 # sudo's PATH has no user folders, so these are looked at by name; /usr/bin/python3 only with the
 # Command Line Tools (without them it opens an install dialog instead of running)
 PY_EXE=""
@@ -160,24 +160,15 @@ as_owner "$VPY" -m pip install --disable-pip-version-check -q jupyterlab \
   || fail "pip could not install jupyterlab into .venv (internet/proxy, or PyPI blocked?). Run python3 SETUP/setup.py again."
 echo "      done: jupyterlab"
 
-# ---------------------------------------------------------------- 4. environment
-echo "[4/6] PATH and Java for all users"
-printf '%s\n%s\n' "$ROOT/jdk/Contents/Home/bin" "$ROOT/dafny" > /etc/paths.d/homehub || fail "could not write /etc/paths.d/homehub."
-echo "      PATH      : $ROOT/jdk/Contents/Home/bin"
-echo "      PATH      : $ROOT/dafny"
-mkdir -p /Library/Java/JavaVirtualMachines && ln -sfn "$ROOT/jdk" /Library/Java/JavaVirtualMachines/homehub-temurin-11.jdk \
-  || fail "could not link the JDK into /Library/Java/JavaVirtualMachines."
-echo "      JDK       : /Library/Java/JavaVirtualMachines/homehub-temurin-11.jdk -> $ROOT/jdk"
-
-# ---------------------------------------------------------------- 5. versions
-echo "[5/6] Versions"
+# ---------------------------------------------------------------- 4. versions
+echo "[4/5] Versions"
 "$ROOT/jdk/Contents/Home/bin/java" -version || fail "java did not run."
 "$ROOT/jdk/Contents/Home/bin/javac" -version || fail "javac did not run."
 "$ROOT/dafny/dafny" --version || fail "dafny did not run."
 "$VPY" --version || fail ".venv/bin/python did not run."
 
-# ---------------------------------------------------------------- 6. Codex CLI (optional)
-echo "[6/6] Codex CLI (optional: skipped when already installed and signed in)"
+# ---------------------------------------------------------------- 5. Codex CLI (optional)
+echo "[5/5] Codex CLI (optional: skipped when already installed and signed in)"
 CODEX_SH=https://chatgpt.com/codex/install.sh
 OHOME=$(eval echo "~$OWNER")                                        # sudo's PATH has no ~/.local/bin: look by name
 CODEX_BIN=""
@@ -197,6 +188,6 @@ else
   echo "               The lab works without it. Later:  python3 SETUP/setup.py --update-codex"
 fi
 echo
-echo "OK. Open a NEW Terminal window (and restart VS Code / Jupyter) to use java, javac and dafny."
-echo "    Next:  make check-env   (make comes with the Command Line Tools: xcode-select --install)"
+echo "OK. Next:  make check-env   in the lab folder (make comes with the Command Line Tools: xcode-select --install)"
+echo "    Codex was installed now? Open a NEW Terminal window (and restart VS Code / Jupyter) so codex is found."
 exit 0

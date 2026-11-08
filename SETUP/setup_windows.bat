@@ -8,7 +8,8 @@ rem  Lives in <lab folder>\SETUP\ and sets up <lab folder> (the folder above it)
 rem  Downloads are kept here in SETUP\.
 rem
 rem  Official downloads only (adoptium, dafny-lang, python.org), no installer window, no
-rem  package manager. Double-click it: it asks for administrator rights (UAC) and then
+rem  package manager, no administrator rights (no UAC). Double-click it or let setup.py run it:
+rem  it runs as your current user and then
 rem    1. JDK 11     Eclipse Temurin 11.0.32.1+1 zip -> <lab folder>\jdk\
 rem                  (the javac that built the committed legacy\build: the same bytecode, see A-1)
 rem    2. Dafny      4.11.0 zip                     -> <lab folder>\dafny\
@@ -17,47 +18,30 @@ rem                  ones inside a user profile and the Microsoft Store stub, si
 rem                  account must run it); only otherwise unpacks 3.13.17 zip (python.org)
 rem                  -> <lab folder>\python\. Then makes <lab folder>\.venv with that Python
 rem                  and installs jupyterlab into it (pip, from PyPI; brings ipykernel, nbconvert)
-rem    4. System environment variables (all users), PATH rewritten in place when run again:
-rem         PATH = jdk\bin; dafny; [python, only when step 3 unpacked it;] <old PATH>
-rem         JAVA_HOME = <lab folder>\jdk,  DAFNY = <lab folder>\dafny\dafny.exe
-rem    5. Prints the versions
-rem    6. Codex CLI (optional): OpenAI's installer (https://chatgpt.com/codex/install.ps1). It installs into
-rem       one account (%LOCALAPPDATA%\Programs\OpenAI\Codex\bin, user PATH), so it runs in the first,
-rem       normal window after the administrator window has finished, not as administrator.
+rem    4. Prints the versions
+rem    5. Codex CLI (optional): OpenAI's installer (https://chatgpt.com/codex/install.ps1). It installs into
+rem       one account (%LOCALAPPDATA%\Programs\OpenAI\Codex\bin, user PATH),
+rem       in this same window as your current user. Existing account login state is unchanged.
 rem       Skipped when Codex is already installed and signed in (codex login status); otherwise installs,
 rem       or updates an install that is not signed in. A failure here does not stop the setup.
-rem       --skip-codex: skip step 6.  --update-codex: run the installer even when Codex is already there.
-rem       (setup.py checks Codex in your own account first and passes one of the two)
-rem       Later, or to update: python SETUP\setup.py --update-codex
+rem       --skip-codex: skip step 5.  --update-codex: run the installer even when Codex is already there.
+rem       Later, or to update: SETUP\setup_windows.bat --update-codex
 rem  A download is skipped when its file is already in SETUP\.
 rem  A part that is already installed is skipped; delete its folder to reinstall.
-rem  Put the lab folder somewhere every account can read, e.g. C:\lab.
+rem  Put the lab folder somewhere your account can write.
+rem  No environment variable of this PC is changed (only Codex's installer adds itself to the user PATH):
+rem  make.cmd (SETUP\make_fallback.py) and the notebooks (notebooks\lab.py) put jdk\ and dafny\ first on PATH.
 rem ============================================================================
 setlocal
 
-rem ---- options: setup_windows.bat [--skip-codex | --update-codex]   (--elevated: added by the relaunch below)
+rem ---- options: setup_windows.bat [--skip-codex | --update-codex]
 set "HH_CODEX=auto"
-set "HH_ELEVATED="
 for %%A in (%*) do (
   if /i "%%~A"=="--skip-codex" set "HH_CODEX=skip"
   if /i "%%~A"=="--update-codex" set "HH_CODEX=update"
-  if /i "%%~A"=="--elevated" set "HH_ELEVATED=1"
 )
 
-rem ---- administrator rights: ask once (UAC) and run this script again elevated
-fltmc >nul 2>&1
-if not errorlevel 1 goto :admin
-if defined HH_ELEVATED goto :fail_admin
-echo Asking for administrator rights...
-set "HH_SELF=%~f0"
-rem  waits for the administrator window (steps 1-5), then installs Codex here, in your own account
-powershell -NoProfile -ExecutionPolicy Bypass -Command "try { $p = Start-Process -FilePath $env:HH_SELF -ArgumentList '--elevated' -Verb RunAs -Wait -PassThru -ErrorAction Stop } catch { exit 2 }; exit $p.ExitCode"
-if errorlevel 2 goto :fail_admin
-if errorlevel 1 goto :fail_elevated
-call :codex
-goto :end
-
-:admin
+rem ---- continue as the current user; no elevation
 set "HERE=%~dp0"
 set "HERE=%HERE:~0,-1%"
 rem  the lab folder (project root) is the folder above SETUP\
@@ -73,14 +57,12 @@ set "PY_NAME=python-3.13.17-amd64.zip"
 set "PY_URL=https://www.python.org/ftp/python/3.13.17/python-3.13.17-amd64.zip"
 set "HH_PYF=%TEMP%\homehub_python_found.txt"
 
-echo ==== HomeHub lab setup (Windows, administrator) ====
+echo ==== HomeHub lab setup (Windows, current user) ====
 echo Lab folder: %ROOT%
-echo %ROOT%\ | find /i "\Users\" >nul
-if not errorlevel 1 echo WARNING: this folder is inside a user profile. Other accounts may not be able to read it. C:\lab is safer.
 echo.
 
 rem ---------------------------------------------------------------- 1. JDK
-echo [1/6] JDK 11 (Eclipse Temurin 11.0.32.1+1)
+echo [1/5] JDK 11 (Eclipse Temurin 11.0.32.1+1)
 if exist "%ROOT%\jdk\bin\javac.exe" goto :jdk_skip
 call :fetch "%JDK_NAME%" "%JDK_URL%" "about 190 MB"
 if errorlevel 1 goto :fail
@@ -92,7 +74,7 @@ echo       skipped: already installed (%ROOT%\jdk)
 
 rem ---------------------------------------------------------------- 2. Dafny
 :dafny
-echo [2/6] Dafny 4.11.0
+echo [2/5] Dafny 4.11.0
 if exist "%ROOT%\dafny\dafny.exe" goto :dafny_skip
 call :fetch "%DAFNY_NAME%" "%DAFNY_URL%" "about 66 MB"
 if errorlevel 1 goto :fail
@@ -104,13 +86,12 @@ echo       skipped: already installed (%ROOT%\dafny)
 
 rem ---------------------------------------------------------------- 3. Python
 :python
-echo [3/6] Python 3.8 or newer, .venv and Jupyter
+echo [3/5] Python 3.8 or newer, .venv and Jupyter
 rem  python.exe on PATH first (not in a user profile, not the Store stub), then the one
 rem  this script unpacked; the one found is written to HH_PYF
-set "HH_ADDPY=0"
 set "HH_ROOT=%ROOT%"
 del /q "%HH_PYF%" >nul 2>&1
-%PS% "$c = @(Get-Command python.exe -All -CommandType Application -ErrorAction SilentlyContinue | Where-Object { $_.Source -notlike '*\WindowsApps\*' -and $_.Source -notlike '*\Users\*' } | ForEach-Object { $_.Source }); $own = $env:HH_ROOT + '\python\python.exe'; if (Test-Path -LiteralPath $own) { $c += $own }; foreach ($p in $c) { & $p -c 'import sys; sys.exit(sys.version_info < (3, 8))' 2>$null; $ok = ($LASTEXITCODE -eq 0); $v = ((& $p --version 2>&1) | Out-String).Trim(); if ($ok) { Write-Host ('      found: ' + $p + ' (' + $v + '), no install needed'); Set-Content -LiteralPath $env:HH_PYF -Value $p -Encoding ASCII; exit 0 }; Write-Host ('      too old: ' + $p + ' (' + $v + ')') }; exit 1"
+%PS% "$c = @(Get-Command python.exe -All -CommandType Application -ErrorAction SilentlyContinue | Where-Object { $_.Source -notlike '*\WindowsApps\*' -and $_.Source -notlike '*\Users\*' } | ForEach-Object { $_.Source }); $own = $env:HH_ROOT + '\python\python.exe'; if (Test-Path -LiteralPath $own) { $c += $own }; foreach ($p in $c) { & $p -c 'import sys; sys.exit(sys.version_info < (3, 8))' 2>$null; $ok = ($LASTEXITCODE -eq 0); $v = ((& $p --version 2>&1) | Out-String).Trim(); if ($ok) { Write-Host ('      found: ' + $p + ' (' + $v + '), no install needed'); [IO.File]::WriteAllBytes($env:HH_PYF, [Console]::OutputEncoding.GetBytes($p)); exit 0 }; Write-Host ('      too old: ' + $p + ' (' + $v + ')') }; exit 1"
 if errorlevel 1 goto :python_install
 set /p PY_EXE=<"%HH_PYF%"
 del /q "%HH_PYF%" >nul 2>&1
@@ -124,8 +105,6 @@ if errorlevel 1 goto :fail
 set "PY_EXE=%ROOT%\python\python.exe"
 
 :venv
-rem  PATH gets the python folder only when it is the one used
-if /i "%PY_EXE%"=="%ROOT%\python\python.exe" set "HH_ADDPY=1"
 set "HH_VPY=%ROOT%\.venv\Scripts\python.exe"
 if not exist "%HH_VPY%" goto :venv_make
 "%HH_VPY%" -c "import sys" >nul 2>&1
@@ -139,8 +118,6 @@ rd /s /q "%ROOT%\.venv"
 echo       making %ROOT%\.venv ...
 "%PY_EXE%" -m venv "%ROOT%\.venv"
 if errorlevel 1 goto :fail_venv
-rem  made as administrator: let normal accounts (Users) install packages into it
-icacls "%ROOT%\.venv" /grant *S-1-5-32-545:(OI)(CI)M /T /Q >nul
 echo       done: %HH_VPY%
 :jupyter
 echo       installing jupyterlab into .venv (pip, from PyPI) ...
@@ -148,18 +125,8 @@ echo       installing jupyterlab into .venv (pip, from PyPI) ...
 if errorlevel 1 goto :fail_pip
 echo       done: jupyterlab
 
-rem ---------------------------------------------------------------- 4. environment
-:env
-echo [4/6] System environment variables (all users)
-%PS% "$r = $env:HH_ROOT; $add = @(($r + '\jdk\bin'), ($r + '\dafny')); if ($env:HH_ADDPY -eq '1') { $add += ($r + '\python') }; $k = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment'; $raw = (Get-Item $k).GetValue('Path', '', 'DoNotExpandEnvironmentNames'); $old = $raw -split ';' | Where-Object { $_ -ne '' -and $add -notcontains $_.TrimEnd('\') }; Set-ItemProperty -Path $k -Name Path -Type ExpandString -Value (($add + $old) -join ';'); $add | ForEach-Object { Write-Host ('      PATH      : ' + $_) }; [Environment]::SetEnvironmentVariable('JAVA_HOME', ($r + '\jdk'), 'Machine'); Write-Host ('      JAVA_HOME : ' + $r + '\jdk'); [Environment]::SetEnvironmentVariable('DAFNY', ($r + '\dafny\dafny.exe'), 'Machine'); Write-Host ('      DAFNY     : ' + $r + '\dafny\dafny.exe')"
-if errorlevel 1 goto :fail_env
-set "PATH=%ROOT%\jdk\bin;%ROOT%\dafny;%PATH%"
-if "%HH_ADDPY%"=="1" set "PATH=%ROOT%\python;%PATH%"
-set "JAVA_HOME=%ROOT%\jdk"
-set "DAFNY=%ROOT%\dafny\dafny.exe"
-
-rem ---------------------------------------------------------------- 5. versions
-echo [5/6] Versions
+rem ---------------------------------------------------------------- 4. versions
+echo [4/5] Versions
 "%ROOT%\jdk\bin\java.exe" -version
 if errorlevel 1 goto :fail_run_java
 "%ROOT%\jdk\bin\javac.exe" -version
@@ -168,28 +135,21 @@ if errorlevel 1 goto :fail_run_javac
 if errorlevel 1 goto :fail_run_dafny
 "%HH_VPY%" --version
 if errorlevel 1 goto :fail_run_venv
-rem  started from the normal window: Codex comes there after this window closes
-if defined HH_ELEVATED goto :codex_later
 call :codex
-goto :versions_done
-:codex_later
-echo [6/6] Codex CLI: next, in the first window, for your own account
-:versions_done
 echo.
-echo OK. Open a NEW cmd / PowerShell window (and restart VS Code / Jupyter) to use
-echo     java, javac and dafny.
-echo     Next:  make check-env   in cmd, in the lab folder: make.cmd runs SETUP\make_fallback.py
+echo OK. Next:  make check-env   in cmd, in the lab folder: make.cmd runs SETUP\make_fallback.py
+echo     Codex was installed now? Open a NEW cmd window (and restart VS Code / Jupyter) so codex is found.
 goto :end
 
 
 rem ============================================================================
-rem  :codex   [6/6] Codex CLI with OpenAI's installer, for the account running this window
+rem  :codex   [5/5] Codex CLI with OpenAI's installer, for the account running this window
 :codex
-echo [6/6] Codex CLI - optional: skipped when already installed and signed in
+echo [5/5] Codex CLI - optional: skipped when already installed and signed in
 if "%HH_CODEX%"=="update" goto :codex_install
 if not "%HH_CODEX%"=="skip" goto :codex_check
 echo       skipped --skip-codex: already installed and signed in
-echo                to update:  python SETUP\setup.py --update-codex
+echo                to update:  SETUP\setup_windows.bat --update-codex
 exit /b 0
 :codex_check
 where codex >nul 2>nul
@@ -198,7 +158,7 @@ rem  call: an npm install is codex.cmd, and a .cmd started without call ends thi
 call codex login status >nul 2>&1
 if errorlevel 1 goto :codex_install
 echo       skipped: already installed and signed in
-echo                to update:  python SETUP\setup.py --update-codex
+echo                to update:  SETUP\setup_windows.bat --update-codex
 exit /b 0
 :codex_install
 set "CODEX_NON_INTERACTIVE=1"
@@ -210,7 +170,7 @@ echo       done. In a NEW cmd window, sign in once:  codex login
 exit /b 0
 :codex_failed
 echo       WARNING: Codex was not installed or updated - internet/proxy, or chatgpt.com blocked?
-echo                The lab works without it. Later:  python SETUP\setup.py --update-codex
+echo                The lab works without it. Later:  SETUP\setup_windows.bat --update-codex
 exit /b 0
 
 rem  :fetch NAME URL SIZE_TEXT   -> SETUP\NAME
@@ -256,18 +216,6 @@ exit /b 1
 
 
 rem ============================================================================
-:fail_admin
-echo.
-echo ERROR: administrator rights are needed. Run the setup again and choose "Yes".
-goto :end_error
-:fail_elevated
-echo.
-echo ERROR: the setup did not finish. See the message in the administrator window.
-goto :end_error
-:fail_env
-echo.
-echo ERROR: could not set the system environment variables.
-goto :end_error
 :fail_venv
 echo.
 echo ERROR: could not make .venv with %PY_EXE%.
