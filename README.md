@@ -23,15 +23,11 @@
 | `D_재검증범위.ipynb` | 바뀐 것의 종류로 재검증 범위 줄이기 |
 | `E_정리규칙.ipynb` | 정리 규칙을 코드 전체에 적용하고 확인하기 |
 
-**처음이면 먼저 [`SETUP.md`](SETUP.md)대로 실습 환경을 설치합니다.** JDK 11, Dafny 4.11, Python과 Jupyter를 실습 폴더에 한 번에 설치합니다(macOS·Windows).
-
-노트북 여는 방법 (둘 중 하나)
-- Jupyter: `pip install jupyterlab` 후 실습 폴더에서 `make notebook`
-- VS Code: Python 확장과 Jupyter 확장을 설치하고 `notebooks/0_시작하기.ipynb`를 엽니다. 커널은 Python 3를 고릅니다.
-
-Windows는 `SETUP.md`대로 설치하면 cmd와 노트북에서 같은 `make` 명령을 그대로 씁니다(cmd는 `make.cmd`, 노트북은 `lab.py`가 `SETUP/make_fallback.py`로 실행).
+처음이면 [실습 환경 설치](SETUP.md#2-설치하기)를 마친 뒤, [브라우저에서 실습하기](SETUP.md#브라우저에서-실습하기) 또는 [VS Code에서 실습하기](SETUP.md#vs-code에서-실습하기-선택)를 따릅니다.
 
 ## 빠른 시작
+
+Windows의 명령 실행 방법은 [SETUP.md](SETUP.md#준비-도구)를 참고하세요.
 
 ```
 make check-env     # java, javac, python3, dafny 확인
@@ -43,9 +39,6 @@ make report        # 지금까지 만든 결과 보고서 목록 열기
 ```
 
 각 `make` 명령은 터미널에 한두 줄 요약만 찍고, 자세한 결과를 브라우저용 보고서(`out/html/*.html`, 목록은 `out/html/index.html`)로 만들어 엽니다. 자동으로 열지 않으려면 `HH_OPEN=0`을 붙입니다. 보고서는 인터넷 연결 없이 열립니다.
-
-필요한 것: JDK 11, Python 3, Dafny 4.11, Jupyter(또는 VS Code + Jupyter 확장). 모두 [`SETUP.md`](SETUP.md)대로 설치합니다. macOS는 make(Command Line Tools)도 필요합니다.
-선택: Codex CLI(`npm install -g @openai/codex` 후 `codex login`. 노트북에서 AI 프롬프트를 바로 보내고 결과를 받는 `lab.codex`).
 
 ## 폴더
 
