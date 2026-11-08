@@ -285,8 +285,9 @@ def t_check_env():
     print("jupyter: " + (jup[0] if jup else "없음 (%s, 또는 VS Code의 Python·Jupyter 확장)" % (r"python SETUP\setup.py" if win else "python3 SETUP/setup.py")))
     cx = lines(["codex", "--version"], subprocess.DEVNULL)
     st = lines(["codex", "login", "status"]) if cx else []
-    print("codex: %s %s" % (cx[0] if cx else "없음 (선택: %s, 이후 codex login)" % ("brew install --cask codex" if mac else
-                                                                              "Node.js·npm 설치 후 npm install -g @openai/codex"),
+    print("codex: %s %s" % (cx[0] if cx else "없음 (선택: %s, 이후 새 창에서 codex login)" % (
+                                "PowerShell에서 irm https://chatgpt.com/codex/install.ps1 | iex" if win else
+                                "curl -fsSL https://chatgpt.com/codex/install.sh | sh"),
                             "· " + st[0] if st else ""))
 
 

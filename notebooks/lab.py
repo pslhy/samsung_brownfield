@@ -631,7 +631,9 @@ def _codex_ready():
     if os.environ.get("HH_NO_CODEX") == "1":       # e.g. when the notebooks run unattended (make smoke-notebooks)
         return "Codex를 쓰지 않도록 설정되어 있습니다(HH_NO_CODEX=1)."
     if not shutil.which("codex"):
-        return "Codex CLI가 없습니다. 설치: npm install -g @openai/codex"
+        return ("Codex CLI가 없습니다. 설치: " + ("PowerShell에서 irm https://chatgpt.com/codex/install.ps1 | iex" if os.name == "nt"
+                else "터미널에서 curl -fsSL https://chatgpt.com/codex/install.sh | sh")
+                + " 후 Jupyter를 다시 시작하세요.")
     if os.environ.get("CODEX_API_KEY") or os.environ.get("OPENAI_API_KEY"):
         return None
     st = subprocess.run([_codex(), "login", "status"], capture_output=True, text=True, encoding="utf-8", errors="replace")

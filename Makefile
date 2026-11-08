@@ -61,7 +61,7 @@ check-env:
 	@echo "dafny: $$($(DAFNY) --version 2>&1 | head -1)"; $(DAFNY) --version >/dev/null 2>&1 || echo '  https://github.com/dafny-lang/dafny/releases/tag/v4.11.0 에서 $(if $(filter Darwin,$(ENV_OS)),Mac용 ZIP 설치 후 해당 폴더에서 ./allow_on_mac.sh 실행,Linux용 ZIP 설치)'
 	@$(DAFNY) --version >/dev/null 2>&1 || { echo '  압축을 푼 뒤 dafny 실행 파일이 있는 디렉터리로 이동해서 실행하세요:'; echo '    export PATH="$$PWD:$$PATH"'; echo '  새 터미널에서도 유지하려면 현재 디렉터리의 절대경로(pwd 출력)를 $(if $(filter Darwin,$(ENV_OS)),~/.zshrc,Bash는 ~/.bashrc · Zsh는 ~/.zshrc)에 export PATH="절대경로:$$PATH" 형태로 추가하세요.'; echo '  확인: dafny --version'; }
 	@echo "jupyter: $$(jupyter --version 2>/dev/null | grep -m1 -i 'jupyterlab\|notebook' || echo '없음 (python3 -m venv .venv 후 source .venv/bin/activate 후 python -m pip install jupyterlab ipykernel, 또는 VS Code의 Python·Jupyter 확장)')"
-	@echo "codex: $$(codex --version 2>/dev/null || echo '없음 (선택: $(if $(filter Darwin,$(ENV_OS)),brew install --cask codex,Node.js·npm 설치 후 npm install -g @openai/codex), 이후 codex login)') $$(command -v codex >/dev/null && codex login status 2>&1 | head -1 | sed 's/^/· /' 2>/dev/null)"
+	@echo "codex: $$(codex --version 2>/dev/null || echo '없음 (선택: curl -fsSL https://chatgpt.com/codex/install.sh | sh, 이후 새 터미널에서 codex login)') $$(command -v codex >/dev/null && codex login status 2>&1 | head -1 | sed 's/^/· /' 2>/dev/null)"
 
 # ---------------------------------------------------------------- build / test
 
