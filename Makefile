@@ -330,9 +330,11 @@ smoke: check-env test trace verify-all difftest difftest-sample req1 rules
 	@echo; echo "모든 보고서: $(OUT)/html/index.html"
 
 # the lab notebooks (notebooks/0_시작하기.ipynb first)
+# the setup's .venv first (as make_fallback.py), else a jupyter on PATH
+JUPYTER = $(firstword $(wildcard $(CURDIR)/.venv/bin/jupyter) $(shell command -v jupyter 2>/dev/null))
 notebook:
-	@command -v jupyter >/dev/null || { echo "Jupyter가 없습니다. pip install jupyterlab 으로 설치하거나, VS Code에서 notebooks/ 의 .ipynb 파일을 여세요."; exit 2; }
-	@cd notebooks && HH_OPEN=0 jupyter lab
+	@[ -n "$(JUPYTER)" ] || { echo "Jupyter가 없습니다. 먼저 python3 SETUP/setup.py 로 설치하세요(.venv에 JupyterLab을 넣음)."; exit 2; }
+	@cd notebooks && HH_OPEN=0 "$(JUPYTER)" lab
 
 # open the list of all reports
 report:

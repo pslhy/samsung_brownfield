@@ -1,9 +1,10 @@
 # HomeHub 실습 자습 가이드: 도구를 직접 다루며 처음부터
 
-노트북도, 실습 실행 명령(`make`, Windows에서 make 대신 쓰는 `SETUP/make_fallback.py`)도 쓰지 않습니다. **javac, java, dafny**와 실습의 분석 도구(`tools/*.py`)를 직접 실행하면서 실습 A~E를 처음부터 끝까지 따라갑니다. 실습에서 AI에게 시키는 일(패치, Dafny 모델 등)은 손으로 직접 해 보거나, 저장소에 들어 있는 **모범 답안**(AI가 만든 결과)을 씁니다. Codex 없이 끝까지 따라갈 수 있습니다. 단계마다 실습생이 직접 판단할 일과 AI에게 맡기는 일을 표시해 두었습니다(아래 "단계 표시").
+> **수업이 끝난 뒤 따로 하는 복습·자습용입니다.** 수업 시간에는 `notebooks/`의 노트북으로 실습합니다(README의 "읽는 순서").
+
+노트북도, 실습 실행 명령(`make`)도 쓰지 않습니다. **javac, java, dafny**와 실습의 분석 도구(`tools/*.py`)를 직접 실행하면서 실습 A~E를 처음부터 끝까지 따라갑니다. 실습에서 AI에게 시키는 일(패치, Dafny 모델 등)은 손으로 직접 해 보거나, 저장소에 들어 있는 **모범 답안**(AI가 만든 결과)을 씁니다. Codex 없이 끝까지 따라갈 수 있습니다. 단계마다 실습생이 직접 판단할 일과 AI에게 맡기는 일을 표시해 두었습니다(아래 "단계 표시").
 
 읽기용 해설은 `docs/LAB_GUIDE.md`에 있습니다. 이 문서는 "무엇을 치고, 어디를 고치고, 무엇이 나와야 하는가"만 다룹니다. 아래의 예상 결과는 모두 macOS에서 이 문서의 명령을 그대로 실행해 얻은 값입니다.
-
 
 이 실습에서 다루는 질문은 하나입니다.
 
@@ -23,40 +24,51 @@
 
 ### 필요한 것
 
-JDK 11(저장소의 `legacy/build`를 만든 것과 같은 버전), Dafny 4.11, Python 3. 없으면 `python3 SETUP/setup.py`(Windows: `python SETUP\setup.py`)로 설치합니다. OS를 보고 알맞은 설치 스크립트를 실행합니다. Windows에 Python이 아직 없으면 대신 `SETUP\setup_windows.bat`을 더블클릭합니다(Python도 설치). 설치 도구는 JDK와 Dafny를 실습 폴더 안의 `jdk/`, `dafny/`에 풀고, 마지막 단계에서 Codex CLI(선택)를 내 계정에 설치하거나 업데이트합니다. Codex를 다시 설치하거나 업데이트하려면 `python3 SETUP/setup.py --update-codex`(이미 설치된 부분은 건너뜀).
+**macOS나 WSL(Windows의 Linux, Ubuntu)의 터미널(bash, zsh)에서 합니다.** 이 문서의 명령은 모두 이 모양이고, Windows의 명령 프롬프트(cmd)나 PowerShell에서는 하지 않습니다.
+
+준비할 것은 JDK 11(저장소의 `legacy/build`를 만든 것과 같은 버전), Dafny 4.11, Python 3입니다.
+
+- **macOS:** 수업 때 `python3 SETUP/setup.py`로 설치했으면 그대로 씁니다. JDK와 Dafny가 실습 폴더 안의 `jdk/`, `dafny/`에 있습니다.
+- **WSL:** 수업 때 Windows에 설치한 `jdk\`, `dafny\`는 Windows용이라 WSL에서 쓸 수 없습니다. WSL 안에 실습 폴더를 새로 풀고 Linux용을 받습니다(처음 한 번, 수백 MB).
+  ```
+  sudo apt update && sudo apt install -y python3 unzip curl libicu-dev
+  mkdir -p ~/homehub && cd ~/homehub && unzip -q /mnt/c/Users/<Windows 사용자>/Downloads/<받은 zip 파일>.zip
+  cd <풀린 실습 폴더>
+  mkdir -p jdk && curl -fL https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.32.1%2B1/OpenJDK11U-jdk_x64_linux_hotspot_11.0.32.1_1.tar.gz | tar -xz -C jdk --strip-components=1
+  curl -fLo /tmp/dafny.zip https://github.com/dafny-lang/dafny/releases/download/v4.11.0/dafny-4.11.0-x64-ubuntu-22.04.zip && unzip -q /tmp/dafny.zip
+  ```
+  zip 파일 경로와 폴더 이름은 내 PC에 맞게 바꿉니다. `ls jdk/bin/javac dafny/dafny`가 두 파일을 보여 주면 됩니다.
 
 **터미널을 열 때마다, 실습 폴더 맨 위에서 한 번** 실습 폴더의 JDK와 Dafny를 PATH 맨 앞에 둡니다. PC에 다른 JDK나 Dafny가 있어도 이 실습에서는 항상 이것을 쓰게 하기 위해서입니다. A-1처럼 바이트코드를 비교하는 단계는 레거시와 내 코드를 **같은 javac**로 빌드해야 숫자가 맞습니다.
 
-macOS (bash, zsh):
+macOS:
 ```
 export JAVA_HOME="$PWD/jdk/Contents/Home"
 export DAFNY="$PWD/dafny/dafny"
 export PATH="$JAVA_HOME/bin:$PWD/dafny:$PATH"
 ```
 
-Linux에서 JDK를 `jdk/`에 직접 풀었다면 첫 줄만 `export JAVA_HOME="$PWD/jdk"`로 바꿉니다.
-
-Windows (cmd):
+WSL(Linux): 첫 줄만 다릅니다.
 ```
-set "JAVA_HOME=%CD%\jdk"
-set "DAFNY=%CD%\dafny\dafny.exe"
-set "PATH=%CD%\jdk\bin;%CD%\dafny;%PATH%"
+export JAVA_HOME="$PWD/jdk"
+export DAFNY="$PWD/dafny/dafny"
+export PATH="$JAVA_HOME/bin:$PWD/dafny:$PATH"
 ```
 
-확인합니다. 경로가 모두 실습 폴더 안이어야 합니다(cmd: `where javac dafny`의 각 첫 줄).
+확인합니다. 경로가 모두 실습 폴더 안이어야 합니다.
 
 ```
 command -v java javac dafny   # <실습 폴더>/jdk/.../bin/java, .../javac, <실습 폴더>/dafny/dafny
 java -version        # openjdk version "11.0.32.1" ...
 javac -version       # javac 11.0.32.1
 dafny --version      # 4.11.0+...
-python3 --version    # Python 3.x   (Windows: python --version)
+python3 --version    # Python 3.x
 ```
 
 ### 규칙
 
 - 모든 명령은 **실습 폴더 맨 위**에서 실행합니다. 명령은 모두 한 줄입니다(줄이 길어 보여도 한 줄로 붙여 넣습니다).
-- 직접 만드는 것은 아래 네 폴더에만 둡니다. 이 폴더들에는 모범 답안으로 미리 만들어 둔 결과도 저장소에 함께 들어 있습니다(실습이 막힐 때 이어 가는 데 씁니다). 그래서 실습을 하면 `git status`에 바뀐 파일이 많이 나오는데, 정상입니다. 폴더째 지우지 말고, 시작할 때 0-0에서 백업해 둔 뒤 끝나면 맨 끝의 "끝나고 정리하기"대로 되돌립니다.
+- 직접 만드는 것은 아래 네 폴더에만 둡니다. 이 폴더들에는 모범 답안으로 미리 만들어 둔 결과도 저장소에 함께 들어 있습니다(실습이 막힐 때 이어 가는 데 씁니다). 폴더째 지우지 말고, 시작할 때 0-0에서 백업해 둔 뒤 끝나면 맨 끝의 "끝나고 정리하기"대로 되돌립니다.
 
   | 폴더 | 무엇을 |
   |---|---|
@@ -66,7 +78,7 @@ python3 --version    # Python 3.x   (Windows: python --version)
   | `mine/` | B-1에서 AI가 만든 Dafny 모델과 연결 코드. 처음부터 예시 파일이 들어 있고, B-1 2단계에서 덮어씁니다 |
 
 - `legacy/`(원본)를 직접 고치는 단계가 한 번(B-3), `rewrite/RewriteRules.dfy`를 고치는 단계가 한 번(E-3) 있습니다. 끝나면 **반드시 되돌립니다**.
-- 분석 도구는 보고서를 만들면 브라우저로 엽니다. 열지 않으려면 터미널을 열 때마다 `export HH_OPEN=0`(cmd: `set HH_OPEN=0`).
+- 분석 도구는 보고서를 만들면 브라우저로 엽니다. 열지 않으려면 터미널을 열 때마다 `export HH_OPEN=0`.
 
 ### 단계 표시
 
@@ -74,7 +86,7 @@ python3 --version    # Python 3.x   (Windows: python --version)
 
 | 표시 | 하는 사람 | 하는 일 |
 |---|---|---|
-| **[실행]** | 실습생 | 적힌 명령을 그대로 실행하거나 적힌 대로 고치고, 결과가 "예상"과 같은지만 봅니다. 다르면 그 단계의 안내를 보고, 그래도 다르면 보조강사를 부릅니다 |
+| **[실행]** | 실습생 | 적힌 명령을 그대로 실행하거나 적힌 대로 고치고, 결과가 "예상"과 같은지만 봅니다. 다르면 그 단계의 안내를 보고, 그래도 다르면 강사에게 문의합니다 |
 | **[직접 확인]** | 실습생 (AI에게 맡기지 않음) | 코드, 계약, 보고서를 읽고 맞는지 스스로 판단합니다. 이 실습에서 익히는 부분입니다 |
 | **[AI 몫]** | 실습에서는 AI(Codex). 직접 해도 됨 | 노트북 실습에서는 요청서나 `docs/PROMPTS.md`의 프롬프트를 AI에게 주고 받는 결과입니다. 이 문서에서는 직접 쓰거나 모범 답안(아래 "모범 답안이 있는 곳")을 씁니다. 누가 만들었든 결과는 뒤의 [직접 확인]에서 사람이 검사합니다 |
 
@@ -87,13 +99,11 @@ python3 --version    # Python 3.x   (Windows: python --version)
 
 Codex를 쓰는 순서(모든 [AI 몫] 단계 공통):
 
-1. 처음 한 번: `python3 SETUP/setup.py`(Windows: `python SETUP\setup.py`)가 마지막 단계에서 Codex를 설치합니다. 설치한 뒤 `codex login`으로 로그인합니다.
-2. 터미널에서 "필요한 것"의 `export`(cmd: `set`) 세 줄을 실행해 둡니다. Codex가 `javac`나 `dafny`를 실행할 때도 실습 폴더의 것을 쓰게 됩니다.
+1. 처음 한 번: macOS는 `python3 SETUP/setup.py`가 마지막 단계에서 Codex를 설치합니다. WSL은 `curl -fsSL https://chatgpt.com/codex/install.sh | sh`로 설치하고 터미널을 새로 엽니다. 설치한 뒤 `codex login`으로 로그인합니다.
+2. 터미널에서 "필요한 것"의 `export` 세 줄을 실행해 둡니다. Codex가 `javac`나 `dafny`를 실행할 때도 실습 폴더의 것을 쓰게 됩니다.
 3. 실습 폴더 맨 위에서, 상자에 적힌 폴더를 지정해 Codex를 엽니다: `codex -C <폴더>`. 기본 설정에서 Codex는 그 폴더 안의 파일만 고칠 수 있고, 다른 폴더는 읽기만 합니다.
 4. 예시 프롬프트를 붙여 넣습니다. 파일을 고치거나 명령을 실행하겠다고 물으면 내용을 보고 허락합니다.
 5. 끝나면 `/quit`으로 나옵니다. 상자의 "확인" 명령으로 무엇이 바뀌었는지 봅니다. 고치라고 한 파일 말고 다른 파일이 바뀌었으면 그 변경은 되돌립니다.
-
-노트북에서는 `lab.codex("P-1")`처럼 부르면 `docs/PROMPTS.md`의 프롬프트로 같은 일을 합니다.
 
 ### 이 문서를 읽는 법
 
@@ -105,43 +115,13 @@ Codex를 쓰는 순서(모든 [AI 몫] 단계 공통):
 결과를 보는 곳에는 접힌 상자가 두 개 있습니다. 편한 쪽 하나를 펼칩니다.
 
 - **HTML 보고서로 보기**: 실습이 제공하는 도구(`tools/*.py` 등)로 결과를 HTML 보고서로 만들어 봅니다. 명령의 마지막 줄이 보고서를 만들고 브라우저로 엽니다.
-- **도구 없이 검토하기**: `git diff`, `javap`, `diff`, `dafny verify` 같은 기본 명령으로 직접 확인합니다. 도구는 손으로도 할 수 있는 일을 빠르고 빠짐없이 해 줄 뿐이므로, 한 번은 이쪽으로 따라 해 보며 도구가 무엇을 세는지 확인해 보세요. 단, `[실행]` 단계의 "예상"에 적힌 숫자(예: `메서드 2, 데이터 0, 테스트 0/38`)는 "HTML 보고서로 보기"의 도구 명령이 화면에 찍는 값입니다. "도구 없이 검토하기"로 하면 이 숫자는 나오지 않고, 같은 결론을 손으로 확인합니다.
+- **도구 없이 검토하기**: `diff`, `javap`, `dafny verify` 같은 기본 명령으로 직접 확인합니다. 도구는 손으로도 할 수 있는 일을 빠르고 빠짐없이 해 줄 뿐이므로, 한 번은 이쪽으로 따라 해 보며 도구가 무엇을 세는지 확인해 보세요. 단, `[실행]` 단계의 "예상"에 적힌 숫자(예: `메서드 2, 데이터 0, 테스트 0/38`)는 "HTML 보고서로 보기"의 도구 명령이 화면에 찍는 값입니다. "도구 없이 검토하기"로 하면 이 숫자는 나오지 않고, 같은 결론을 손으로 확인합니다.
 
-빌드·테스트처럼 꼭 해야 하는 명령과, 뒤 단계가 쓰는 결과 파일을 만드는 명령은 상자에 넣지 않고 본문에 둡니다.
-
-### Windows(cmd)에서 바꿔 칠 것
-
-이 문서의 명령은 macOS·Linux(bash, zsh) 모양입니다. Windows에서는 **명령 프롬프트(cmd)**를 열고 아래만 바꿉니다. (Windows 모양은 아직 실제로 돌려 보지 않았습니다.)
-
-먼저 터미널을 열 때마다 한 번(위 "필요한 것"의 `set` 세 줄과 함께):
-
-```
-set PYTHONUTF8=1
-```
-
-도구가 UTF-8로 된 소스와 기록 파일을 읽기 때문입니다. 실습 폴더 경로에는 **공백이 없어야** 합니다(예: `C:\lab`). 아래의 소스 목록 파일이 경로를 따옴표로 감싸지 않기 때문입니다.
-
-| macOS·Linux | Windows cmd |
-|---|---|
-| `python3` | `python`. **`python3`라고 치면 안 됩니다**: Windows의 `python3`는 Microsoft Store 안내용 가짜 실행 파일이라 `Python` 한 단어만 찍고 끝납니다. `python`도 그렇다면(`where python`의 첫 줄이 `...\WindowsApps\...`) 설정 → 앱 → 고급 앱 설정 → 앱 실행 별칭에서 `python.exe`·`python3.exe`를 끄거나, `.venv\Scripts\python`으로 칩니다 |
-| `export HH_OPEN=0`, `P=legacy` | `set HH_OPEN=0`, `set P=legacy` (`=` 뒤에 공백을 두지 않음) |
-| `$P` | `%P%` |
-| 클래스 경로 구분 `a:b:c` | `a;b;c` (따옴표 필요 없음) |
-| `$(find D -name '*.java')` (소스 전체) | 먼저 `dir /s /b D\*.java > 목록.txt`, 그리고 그 자리에 `@목록.txt` (아래 명령 묶음 참고) |
-| `difftest/src/difftest/*.java` | `dir /s /b difftest\src\difftest\*.java > build\difftest-src.txt` 후 `@build\difftest-src.txt` |
-| `rm -rf X` | `if exist X rmdir /s /q X` |
-| `mkdir -p X Y` | `mkdir X Y` (중간 폴더도 만듦. 이미 있으면 오류 문구만 나오고 넘어감) |
-| `cp -r legacy work/x` (폴더 복사) | `xcopy /e /i /q legacy work\x` |
-| `cp -r scenarios/req1/ai-A/src work/req1-ai-A/` (덮어쓰기) | `xcopy /e /i /q /y scenarios\req1\ai-A\src work\req1-ai-A\src` |
-| `cp A B` (파일 복사) | `copy A B` |
-| `printf '...' > 파일` | 메모장으로 그 파일을 만들고 내용을 적음 |
-| `명령 \| head -1`, `명령 \| tail -1` | `명령 > work\out.txt` 후 메모장으로 첫 줄·끝 줄을 봄 |
-| 경로의 `/` | `java`·`javac`·`python`·`dafny`·`git`의 인자는 `/` 그대로 됨. `dir`·`xcopy`·`rmdir`·`copy`·`mkdir`에는 `\` |
-| `git checkout -- F`, `git diff --no-index A B` | 같음 (git이 없으면 편집기로 되돌리고, VS Code "선택한 항목 비교"로 비교) |
+빌드·테스트처럼 꼭 해야 하는 명령과, 뒤 단계가 쓰는 결과 파일을 만드는 명령은 상자에 넣지 않고 본문에 둡니다. 결과를 보는 단계에는 본문에 **명령:** 줄을 두어, 두 상자 중 하나를 펼쳐 실행하라고 적었습니다.
 
 ### 빌드하고 테스트하는 명령 묶음
 
-실습 내내 쓰는 다섯 줄입니다. 각 단계에는 첫 줄의 `P=`를 채운 명령이 그대로 적혀 있으니 복사해 붙여 넣으면 됩니다(Windows cmd용은 그 아래 "Windows cmd" 상자). 여기서는 각 줄이 무슨 일을 하는지 설명합니다.
+실습 내내 쓰는 다섯 줄입니다. 각 단계에는 첫 줄의 `P=`를 채운 명령이 그대로 적혀 있으니 복사해 붙여 넣으면 됩니다. 여기서는 각 줄이 무슨 일을 하는지 설명합니다.
 
 ```
 P=legacy
@@ -157,21 +137,6 @@ java -cp $P/build/classes:$P/build/test-classes com.dxlab.homehub.testkit.TestRu
 | 3 | 제품 코드 전체를 컴파일합니다. `--release 8`: Java 8 코드로(레거시가 Java 8). `-encoding UTF-8`: 소스의 한글 주석. `-nowarn -Xlint:-options`: 경고 끄기 |
 | 4 | 테스트 코드 전체를 컴파일합니다. 제품 코드를 `-cp`로 봅니다 |
 | 5 | 사내 테스트 실행기(JUnit 이전에 만든 것)가 `test`로 시작하는 메서드를 모두 돌립니다. 마지막 줄이 `tests: N, passed: N, failed: 0` |
-
-Windows cmd에서는(폴더 이름의 `/`를 `\`로: `set P=work\my-req2`):
-
-```
-set P=legacy
-if exist %P%\build rmdir /s /q %P%\build
-mkdir %P%\build\classes %P%\build\test-classes
-dir /s /b %P%\src\main\java\*.java > %P%\build\main-src.txt
-dir /s /b %P%\src\test\java\*.java > %P%\build\test-src.txt
-javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -d %P%\build\classes @%P%\build\main-src.txt
-javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -cp %P%\build\classes -d %P%\build\test-classes @%P%\build\test-src.txt
-java -cp %P%\build\classes;%P%\build\test-classes com.dxlab.homehub.testkit.TestRunner
-```
-
-`dir /s /b`가 소스 파일 목록을 파일로 쓰고, javac는 `@파일`로 그 목록을 읽습니다.
 
 ### 모범 답안이 있는 곳
 
@@ -209,18 +174,13 @@ AI가 고친 코드는 아래 폴더에 **바뀐 파일만** 들어 있습니다
 
 ### 0-0. 시작 상태 백업 (처음 한 번)
 
-**[실행]** 실습은 `work/`, `build/`, `out/`, `legacy/`, `mine/`, `rewrite/`의 파일을 고치거나 덮어씁니다(바로 다음 0-1도 `legacy/build`를 다시 만듭니다). 끝나고 되돌릴 때는 보통 git을 쓰지만, git이 없거나 되돌리기가 안 될 때를 대비해 **아무것도 하기 전에** 이 여섯 폴더를 `_backup/`에 복사해 둡니다(약 12MB).
+**[실행]** 실습은 `work/`, `build/`, `out/`, `legacy/`, `mine/`, `rewrite/`의 파일을 고치거나 덮어씁니다(바로 다음 0-1도 `legacy/build`를 다시 만듭니다). 끝나고 실습 전 상태로 되돌릴 수 있도록 **아무것도 하기 전에** 이 여섯 폴더를 `_backup/`에 복사해 둡니다(약 12MB).
 
 ```
 mkdir -p _backup && cp -R work build out legacy mine rewrite _backup/
 ```
 
-cmd:
-```
-for %d in (work build out legacy mine rewrite) do xcopy /e /i /q %d _backup\%d
-```
-
-`_backup/`은 실습 중에 고치지 않습니다. 되돌리는 방법은 맨 끝 "끝나고 정리하기"에 있습니다. 이미 실습을 시작한 뒤라면 백업은 건너뛰고 git으로 되돌립니다(이미 바뀐 상태가 백업되기 때문입니다).
+`_backup/`은 실습 중에 고치지 않습니다. 되돌리는 방법은 맨 끝 "끝나고 정리하기"에 있습니다. 이미 실습을 시작한 뒤라면 지금 상태를 백업하지 말고(바뀐 상태가 백업됩니다), 받은 zip을 다른 곳에 풀어 그 안의 여섯 폴더를 `_backup/`에 복사합니다.
 
 ### 0-1. 레거시 빌드와 테스트
 
@@ -236,21 +196,6 @@ javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -cp $P/build/classes -
 java -cp $P/build/classes:$P/build/test-classes com.dxlab.homehub.testkit.TestRunner
 ```
 
-<details><summary>Windows cmd</summary>
-
-```
-set P=legacy
-if exist %P%\build rmdir /s /q %P%\build
-mkdir %P%\build\classes %P%\build\test-classes
-dir /s /b %P%\src\main\java\*.java > %P%\build\main-src.txt
-dir /s /b %P%\src\test\java\*.java > %P%\build\test-src.txt
-javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -d %P%\build\classes @%P%\build\main-src.txt
-javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -cp %P%\build\classes -d %P%\build\test-classes @%P%\build\test-src.txt
-java -cp %P%\build\classes;%P%\build\test-classes com.dxlab.homehub.testkit.TestRunner
-```
-
-</details>
-
 예상 결과(마지막 줄):
 
 ```
@@ -259,7 +204,7 @@ tests: 38, passed: 38, failed: 0
 
 이 빌드 결과(`legacy/build/classes`)가 앞으로 모든 비교의 기준입니다. 레거시를 고치지 않는 한 다시 할 필요 없습니다.
 
-**`legacy/build`가 이미 있어도 이 PC에서 한 번은 빌드합니다.** 빌드 전에 "필요한 것"의 `export`(cmd: `set`)를 실행했는지 확인합니다. 저장소에 들어 있는 `legacy/build`는 실습 폴더의 JDK 11로 만든 것이라 다시 빌드해도 바이트코드가 같습니다. 그래도 빌드하는 이유는, 다른 JDK가 잡힌 채로 실습을 하면 내 코드만 그 javac로 빌드되기 때문입니다. javac 버전이 다르면 소스가 같아도 바이트코드가 달라지고, A-1의 영향 분석은 바이트코드를 비교하므로 모든 클래스가 바뀐 것으로 잡힙니다. 여기서 레거시도 같은 javac로 빌드해 두면 그런 일이 없습니다.
+**`legacy/build`가 이미 있어도 이 PC에서 한 번은 빌드합니다.** 빌드 전에 "필요한 것"의 `export`를 실행했는지 확인합니다. 저장소에 들어 있는 `legacy/build`는 실습 폴더의 JDK 11로 만든 것이라 다시 빌드해도 바이트코드가 같습니다. 그래도 빌드하는 이유는, 다른 JDK가 잡힌 채로 실습을 하면 내 코드만 그 javac로 빌드되기 때문입니다. javac 버전이 다르면 소스가 같아도 바이트코드가 달라지고, A-1의 영향 분석은 바이트코드를 비교하므로 모든 클래스가 바뀐 것으로 잡힙니다. 여기서 레거시도 같은 javac로 빌드해 두면 그런 일이 없습니다.
 
 **알게 된 것:** 레거시 빌드(`legacy/build/classes`)가 준비되었습니다. 테스트 38개가 이 실습의 출발점입니다.
 
@@ -269,6 +214,8 @@ tests: 38, passed: 38, failed: 0
 
 **[실행]** 아래 네 묶음을 검증합니다. 예상 결과는 이렇습니다.
 
+**명령:** 아래 "HTML 보고서로 보기"와 "도구 없이 검토하기" 중 하나를 펼쳐, 그 안의 명령을 그대로 실행합니다.
+
 | 명령 | 무엇 | 예상 (마지막 줄) |
 |---|---|---|
 | 1 | 기준 모델 (`formal/`: 대기열, Dispatcher, 전력) | `71 verified, 0 errors` |
@@ -276,7 +223,7 @@ tests: 38, passed: 38, failed: 0
 | 3 | 변경 요청 2를 반영한 모델 | `71 verified, 0 errors` |
 | 4 | 정리 규칙의 조건 | `15 verified, 0 errors` |
 
-`formal/dfyconfig.toml`은 `formal/`의 `.dfy` 파일을 한 번에 검증하라는 설정 파일입니다. 묶음 하나에 1분 가까이 걸릴 수 있습니다. 시간 초과(`timed out`)가 나오면 다시 실행해 보고, 그래도 나오면 보조강사에게 알립니다.
+`formal/dfyconfig.toml`은 `formal/`의 `.dfy` 파일을 한 번에 검증하라는 설정 파일입니다. 묶음 하나에 1분 가까이 걸릴 수 있습니다. 시간 초과(`timed out`)가 나오면 다시 실행해 보고, 그래도 나오면 강사에게 문의합니다.
 
 <details><summary>HTML 보고서로 보기</summary>
 
@@ -376,8 +323,6 @@ printf '1|fridge-2|PWR_ON|0|0\n2|fridge-2|TEMP|12|60000|unit=C\n' > work/two.txt
 java -cp legacy/build/classes com.dxlab.homehub.app.HubMain work/two.txt
 ```
 
-(cmd: `mkdir work out` 후, `printf` 대신 메모장으로 `work\two.txt`를 만들고 위의 두 줄(`1|fridge-2|PWR_ON|0|0`, `2|fridge-2|TEMP|12|60000|unit=C`)을 적습니다.)
-
 예상:
 ```
 1 ACCEPTED | q=1[1] dev=aircon-1:OFF,dryer-1:OFF,...,washer-1:OFF power=0/4000 metrics={submit.accepted=1} audit=[]
@@ -392,7 +337,7 @@ java -cp legacy/build/classes com.dxlab.homehub.app.HubMain work/two.txt
 
 **이 단계의 질문:** 코드를 고쳐도 허브의 동작이 그대로인지 어떻게 확인하는가?
 
-동작 기록 비교는 회귀 검사입니다. 레거시의 동작을 미리 녹화해 두고, 다시 돌린 결과를 그 녹화와 한 줄씩 비교합니다.
+동작 기록 비교는 회귀 검사입니다. 레거시의 동작을 미리 녹화해 두고, 다시 돌린 결과를 그 녹화와 한 줄씩 비교합니다. 옳은 동작인지는 따지지 않고 "지금 이렇게 동작한다"는 사실만 남기므로 **특성화 테스트**(characterization test)라고도 부릅니다.
 
 - 입력: `legacy/workloads/`의 `normal_day.txt`, `burst.txt`, `fridge_firmware.txt`. 가전 메시지를 시나리오별로 모은 파일입니다.
 - 녹화(정답): `golden/*.trace`. 위 입력을 원본 레거시에 넣었을 때 나온 상태 줄을 저장해 둔 것입니다.
@@ -404,6 +349,8 @@ java -cp legacy/build/classes com.dxlab.homehub.app.HubMain work/two.txt
 | `fridge_firmware` (22줄) | 냉장고 2대. 한 대는 문이 열려 온도가 오르고, 한 대는 화씨로 보고함 |
 
 **[실행]** 지금은 원본 레거시를 원본에서 만든 녹화와 비교하므로 셋 다 같아야 정상입니다(환경이 제대로 갖춰졌는지 보는 기준선).
+
+**명령:** 아래 "HTML 보고서로 보기"와 "도구 없이 검토하기" 중 하나를 펼쳐, 그 안의 명령을 그대로 실행합니다.
 
 <details><summary>HTML 보고서로 보기</summary>
 
@@ -420,7 +367,7 @@ python3 tools/report.py --out trace --title "동작 기록 비교" --sec trace "
 
 <details><summary>도구 없이 검토하기</summary>
 
-입력 하나마다 두 줄입니다. `diff`가 아무것도 출력하지 않으면 같은 것입니다(cmd: `diff` 대신 `fc golden\normal_day.trace out\normal_day.trace`).
+입력 하나마다 두 줄입니다. `diff`가 아무것도 출력하지 않으면 같은 것입니다.
 
 ```
 java -cp legacy/build/classes com.dxlab.homehub.app.HubMain legacy/workloads/normal_day.txt > out/normal_day.trace
@@ -438,6 +385,8 @@ diff golden/normal_day.trace out/normal_day.trace
 **이 단계의 질문:** 서로 부르지 않는 클래스들이 어떤 상태로 이어져 있고, 설정값 하나는 어디까지 닿는가?
 
 **[실행]** 예상: 공유 상태 13개, 서로 부르지 않는데 상태로 이어진 곳 7곳. 키 `temp.highCelsius`는 코드에 2곳, 값이 닿는 메서드 80개, 값으로 판단하는 조건 83곳.
+
+**명령:** 아래 "HTML 보고서로 보기"와 "도구 없이 검토하기" 중 하나를 펼쳐, 그 안의 명령을 그대로 실행합니다.
 
 <details><summary>HTML 보고서로 보기</summary>
 
@@ -460,7 +409,7 @@ python3 tools/structure.py config --classes legacy/build/classes --src legacy/sr
   ```
   javap -c -p -cp legacy/build/classes com.dxlab.homehub.queue.RingEventQueue | grep -E "putfield|getfield"
   ```
-- 설정값: 키가 나오는 곳을 찾습니다. `HubConfig.java` 21줄(기본값)과 `HomeHub.java` 69줄(`TemperatureHandler`에 넘김) 2곳이 나옵니다. 그다음 값을 받은 생성자 인자 → 필드 → 그 필드를 쓰는 조건을 "모든 참조 찾기"로 한 단계씩 따라가며 적습니다(cmd: `findstr /s /n "temp.highCelsius" legacy\src\main\java\*.java`).
+- 설정값: 키가 나오는 곳을 찾습니다. `HubConfig.java` 21줄(기본값)과 `HomeHub.java` 69줄(`TemperatureHandler`에 넘김) 2곳이 나옵니다. 그다음 값을 받은 생성자 인자 → 필드 → 그 필드를 쓰는 조건을 "모든 참조 찾기"로 한 단계씩 따라가며 적습니다.
   ```
   grep -rn "temp.highCelsius" legacy/src/main/java
   ```
@@ -591,8 +540,8 @@ codex -C work/my-req2
 확인: 바뀐 파일이 `RingEventQueue.java` 하나인지, 모범 답안과 무엇이 다른지 봅니다.
 
 ```
-git diff --no-index --stat legacy/src work/my-req2/src
-git diff --no-index scenarios/req2/ai/src/main/java/com/dxlab/homehub/queue/RingEventQueue.java work/my-req2/src/main/java/com/dxlab/homehub/queue/RingEventQueue.java
+diff -rq legacy/src work/my-req2/src
+diff -u scenarios/req2/ai/src/main/java/com/dxlab/homehub/queue/RingEventQueue.java work/my-req2/src/main/java/com/dxlab/homehub/queue/RingEventQueue.java
 ```
 
 Codex가 다른 메서드까지 고쳤으면 5단계의 숫자(메서드 79, 데이터 24, 테스트 33/38)가 달라집니다. 무엇을 더 고쳤기에 달라졌는지 6단계의 `--why`로 따라가 봅니다.
@@ -604,7 +553,7 @@ Codex가 다른 메서드까지 고쳤으면 5단계의 숫자(메서드 79, 데
 **[실행] 4단계: 모범 답안과 비교하고 빌드·테스트.**
 
 ```
-git diff --no-index scenarios/req2/ai/src/main/java/com/dxlab/homehub/queue/RingEventQueue.java work/my-req2/src/main/java/com/dxlab/homehub/queue/RingEventQueue.java
+diff -u scenarios/req2/ai/src/main/java/com/dxlab/homehub/queue/RingEventQueue.java work/my-req2/src/main/java/com/dxlab/homehub/queue/RingEventQueue.java
 ```
 
 방법 1로 고쳤다면 모범 답안과는 **주석 두 줄만** 달라야 합니다(클래스 설명의 `REQ-2 ...` 줄, `offer`의 `// no modulo ...`). 방법 2는 더 다를 수 있습니다.
@@ -618,21 +567,6 @@ javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -d $P/build/classes $(
 javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -cp $P/build/classes -d $P/build/test-classes $(find $P/src/test/java -name '*.java')
 java -cp $P/build/classes:$P/build/test-classes com.dxlab.homehub.testkit.TestRunner
 ```
-
-<details><summary>Windows cmd</summary>
-
-```
-set P=work\my-req2
-if exist %P%\build rmdir /s /q %P%\build
-mkdir %P%\build\classes %P%\build\test-classes
-dir /s /b %P%\src\main\java\*.java > %P%\build\main-src.txt
-dir /s /b %P%\src\test\java\*.java > %P%\build\test-src.txt
-javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -d %P%\build\classes @%P%\build\main-src.txt
-javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -cp %P%\build\classes -d %P%\build\test-classes @%P%\build\test-src.txt
-java -cp %P%\build\classes;%P%\build\test-classes com.dxlab.homehub.testkit.TestRunner
-```
-
-</details>
 
 예상: `tests: 38, passed: 38, failed: 0`. 요청이 "동작은 바꾸지 않는다"이므로 실패가 없어야 정상입니다. Codex로 고쳤는데 실패가 나오면 Codex가 동작을 바꾼 것입니다. `FAIL` 줄의 테스트와 3단계의 "확인" diff를 보고 어디서 달라졌는지 찾습니다. 5단계는 소스와 함께 **이 빌드 결과(바이트코드)**를 비교합니다. 소스를 고친 뒤 빌드를 빼먹으면 레거시와 같은 바이트코드를 비교하게 되어 결과가 전부 0으로 나옵니다. 소스를 다시 고쳤다면 이 단계도 다시 실행합니다.
 
@@ -658,7 +592,7 @@ python3 tools/impact.py --base legacy/build/classes legacy/build/test-classes --
 
 | 항목 | 이 결과 | 뜻 |
 |---|---|---|
-| 바뀐 코드(바뀐 줄) | `offer`, `poll`, `clear`, `snapshot` | 분석의 출발점. 주석·줄바꿈만 바뀐 메서드는 뺍니다 |
+| 바뀐 코드(바뀐 줄) | `offer`, `poll`, `clear`, `snapshot` | 분석의 출발점. 주석·줄바꿈만 바뀐 메서드는 빼고, 지운 줄은 변경 전 코드에서, 새로 쓴 줄은 변경 후 코드에서 출발합니다 |
 | 패키지별 범위 | 대기열에서 시작해 기기·전력·로그까지 | 대기열은 허브의 한가운데 있어서 넓게 퍼집니다 |
 | 값이 달라질 수 있는 데이터 | 24개 | 값이 달라질 수 있는 필드와 컬렉션 내용(대기열 `buf`·`head`·`count`에서 시작해 기기 상태, 전력, 로그, 지표까지) |
 | 출력이 달라질 수 있는 메서드 | 79개 | 반환값, 예외, 필드에 쓰는 값 중 하나라도 달라질 수 있는 메서드 |
@@ -676,7 +610,7 @@ python3 tools/impact.py --base legacy/build/classes legacy/build/test-classes --
 
 1. 소스 차이와 바이트코드 차이를 봅니다. 바이트코드가 다른 클래스는 `RingEventQueue` 하나뿐입니다(다른 클래스로 해 보면 `diff`가 아무것도 출력하지 않음).
    ```
-   git diff --no-index legacy/src/main/java work/my-req2/src/main/java
+   diff -ru legacy/src/main/java work/my-req2/src/main/java
    javap -c -p -cp legacy/build/classes com.dxlab.homehub.queue.RingEventQueue > out/base.txt
    javap -c -p -cp work/my-req2/build/classes com.dxlab.homehub.queue.RingEventQueue > out/changed.txt
    diff out/base.txt out/changed.txt
@@ -747,7 +681,7 @@ codex -s read-only
 ```
 영향 분석 도구가 변경 요청 2의 패치를 보고 "다시 돌릴 테스트" 목록을 냈다. 파일은 고치지 말고 읽기만 하라.
 - 도구가 고른 테스트: out/impact-my-req2.json 의 "tests"
-- 바뀐 코드: git diff --no-index legacy/src/main/java work/my-req2/src/main/java 의 결과
+- 바뀐 코드: diff -ru legacy/src/main/java work/my-req2/src/main/java 의 결과
 - 테스트 코드: legacy/src/test/java/com/dxlab/homehub/ 아래
 
 이 도구는 놓치지 않으려고 넓게 잡기 때문에, 바뀐 코드를 실제로는 거치지 않는 테스트도 들어 있을 수 있다.
@@ -895,8 +829,8 @@ codex -C work/my-req1-A
 확인:
 
 ```
-git diff --no-index --stat legacy/src work/my-req1-A/src
-git diff --no-index scenarios/req1/ai-A/src/main/java/com/dxlab/homehub/queue/RingEventQueue.java work/my-req1-A/src/main/java/com/dxlab/homehub/queue/RingEventQueue.java
+diff -rq legacy/src work/my-req1-A/src
+diff -u scenarios/req1/ai-A/src/main/java/com/dxlab/homehub/queue/RingEventQueue.java work/my-req1-A/src/main/java/com/dxlab/homehub/queue/RingEventQueue.java
 ```
 
 빌드와 테스트는 방법 1과 같이 다음 3단계에서 합니다.
@@ -905,7 +839,7 @@ git diff --no-index scenarios/req1/ai-A/src/main/java/com/dxlab/homehub/queue/Ri
 
 모범 답안과 비교(방법 1이면 주석만 다름):
 ```
-git diff --no-index scenarios/req1/ai-A/src/main/java/com/dxlab/homehub/queue/RingEventQueue.java work/my-req1-A/src/main/java/com/dxlab/homehub/queue/RingEventQueue.java
+diff -u scenarios/req1/ai-A/src/main/java/com/dxlab/homehub/queue/RingEventQueue.java work/my-req1-A/src/main/java/com/dxlab/homehub/queue/RingEventQueue.java
 ```
 
 **[실행] 3단계: 빌드·테스트.** 고친 소스를 빌드하고 테스트합니다.
@@ -918,39 +852,24 @@ javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -cp $P/build/classes -
 java -cp $P/build/classes:$P/build/test-classes com.dxlab.homehub.testkit.TestRunner
 ```
 
-<details><summary>Windows cmd</summary>
-
-```
-set P=work\my-req1-A
-if exist %P%\build rmdir /s /q %P%\build
-mkdir %P%\build\classes %P%\build\test-classes
-dir /s /b %P%\src\main\java\*.java > %P%\build\main-src.txt
-dir /s /b %P%\src\test\java\*.java > %P%\build\test-src.txt
-javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -d %P%\build\classes @%P%\build\main-src.txt
-javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -cp %P%\build\classes -d %P%\build\test-classes @%P%\build\test-src.txt
-java -cp %P%\build\classes;%P%\build\test-classes com.dxlab.homehub.testkit.TestRunner
-```
-
-</details>
-
 예상: `tests: 38, passed: 33, failed: 5`. 실패하는 5개는 `RingEventQueueTest.testFullAtCapacity`와 `DispatcherTest`의 `testAutoDrain`, `testCriticalDrainsWhenAllCritical`, `testCriticalEvictsOldestNonCritical`, `testRejectNonCriticalWhenFull`입니다. 모두 "작은 대기열이 가득 찼을 때"를 확인하는 테스트인데, 패치 A에서는 대기열이 가득 차지 않고 늘어나서 `FULL`·`REJECTED_FULL` 대신 `OK`·`ACCEPTED`가 나옵니다.
 
 `38/38`(실패 없음)이 나오면 무엇이 바뀌었는지부터 봅니다.
 
 ```
-git diff --no-index --stat legacy/src work/my-req1-A/src
+diff -rq legacy/src work/my-req1-A/src
 ```
 
 | 보이는 것 | 뜻 | 할 일 |
 |---|---|---|
 | 아무것도 안 나옴 | 고친 것이 빌드에 안 들어감 | 편집기에서 저장했는지, `legacy/`가 아니라 `work/my-req1-A/` 아래의 파일을 고쳤는지 확인하고 위 명령을 다시 실행 |
-| `src/test/...`가 보임 | Codex가 테스트까지 고쳐서 실패를 없앰 | 테스트를 레거시로 되돌리고 다시 빌드: `rm -rf work/my-req1-A/src/test && cp -r legacy/src/test work/my-req1-A/src/` (cmd: `rmdir /s /q work\my-req1-A\src\test` 후 `xcopy /e /i /q legacy\src\test work\my-req1-A\src\test`) |
+| `src/test/...`가 보임 | Codex가 테스트까지 고쳐서 실패를 없앰 | 테스트를 레거시로 되돌리고 다시 빌드: `rm -rf work/my-req1-A/src/test && cp -r legacy/src/test work/my-req1-A/src/` |
 | `RingEventQueue.java` 하나만 보임 (방법 2) | Codex가 패치 A와 다르게 설계함. 예: `new RingEventQueue(2)`처럼 크기를 정해 만든 대기열은 그대로 두고, 기본 대기열만 늘림 | 잘못이 아닙니다. 모범 답안과 diff로 비교해 어디가 다른지 보고, 그 차이 때문에 레거시 테스트가 통과한다는 점을 확인합니다. 4단계의 결과도 이 문서와 다를 수 있습니다 |
 
 **5개 실패가 맞습니다.** 레거시 테스트는 "2칸짜리 대기열은 3번째에 FULL" 같은 고정 크기를 확인합니다. 모범 답안 `scenarios/req1/ai-A/`에는 AI가 고친 테스트(`src/test/...`의 `RingEventQueueTest.java`, `DispatcherTest.java`)가 함께 있어 40/40을 통과합니다. **[직접 확인]** AI가 테스트를 어떻게 고쳤는지 봅니다:
 
 ```
-git diff --no-index legacy/src/test/java/com/dxlab/homehub/RingEventQueueTest.java scenarios/req1/ai-A/src/test/java/com/dxlab/homehub/RingEventQueueTest.java
+diff -u legacy/src/test/java/com/dxlab/homehub/RingEventQueueTest.java scenarios/req1/ai-A/src/test/java/com/dxlab/homehub/RingEventQueueTest.java
 ```
 
 AI는 `new RingEventQueue(2)`를 `new RingEventQueue(2, 2)`로 바꿔 실패하던 테스트를 "고쳤고", 늘리기 테스트 2개를 더했습니다. 둘 다 빈 대기열에서 늘립니다. 실습 C에서 다시 봅니다.
@@ -1043,8 +962,8 @@ src/main/java/com/dxlab/homehub/device/DeviceRegistry.java 의 기기 정렬 비
 확인:
 
 ```
-git diff --no-index --stat legacy/src work/my-a3-sort/src
-git diff --no-index scenarios/a3-sort/src/main/java/com/dxlab/homehub/device/DeviceRegistry.java work/my-a3-sort/src/main/java/com/dxlab/homehub/device/DeviceRegistry.java
+diff -rq legacy/src work/my-a3-sort/src
+diff -u scenarios/a3-sort/src/main/java/com/dxlab/homehub/device/DeviceRegistry.java work/my-a3-sort/src/main/java/com/dxlab/homehub/device/DeviceRegistry.java
 ```
 
 빌드와 테스트는 방법 1과 같이 다음 2단계에서 합니다.
@@ -1061,24 +980,11 @@ javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -cp $P/build/classes -
 java -cp $P/build/classes:$P/build/test-classes com.dxlab.homehub.testkit.TestRunner
 ```
 
-<details><summary>Windows cmd</summary>
-
-```
-set P=work\my-a3-sort
-if exist %P%\build rmdir /s /q %P%\build
-mkdir %P%\build\classes %P%\build\test-classes
-dir /s /b %P%\src\main\java\*.java > %P%\build\main-src.txt
-dir /s /b %P%\src\test\java\*.java > %P%\build\test-src.txt
-javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -d %P%\build\classes @%P%\build\main-src.txt
-javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -cp %P%\build\classes -d %P%\build\test-classes @%P%\build\test-src.txt
-java -cp %P%\build\classes;%P%\build\test-classes com.dxlab.homehub.testkit.TestRunner
-```
-
-</details>
-
 예상: `tests: 38, passed: 38, failed: 0`. 테스트는 모두 통과합니다. 기기 순서를 확인하는 테스트가 없기 때문입니다.
 
 **[실행] 3단계: 영향 분석.** 예상: `메서드 2, 데이터 0, 테스트 0/38`. **도구는 못 찾습니다.** 출력이 달라질 수 있는 메서드는 비교 함수 `compare` 2개뿐이고, 다시 돌릴 테스트는 0개입니다.
+
+**명령:** 아래 "HTML 보고서로 보기"와 "도구 없이 검토하기" 중 하나를 펼쳐, 그 안의 명령을 그대로 실행합니다.
 
 `compare`가 2개인 이유: 우리가 고친 `compare(Device, Device)` 말고, 컴파일러가 자동으로 만든 `compare(Object, Object)`가 하나 더 있습니다. `Comparator<Device>`를 구현하면 javac가 `return compare((Device) a, (Device) b);` 한 줄짜리 메서드(다리 메서드)를 만들어 줍니다. `Collections.sort`가 실제로 부르는 것은 이 메서드입니다. 즉 바뀐 값은 JDK가 부르는 입구까지 오고, 거기서 끊깁니다.
 
@@ -1103,11 +1009,13 @@ grep -rn "compare(" work/my-a3-sort/src/main/java
 javap -p -cp work/my-a3-sort/build/classes 'com.dxlab.homehub.device.DeviceRegistry$1'
 ```
 
-둘째 줄의 출력에 `compare(Device, Device)`와 `compare(Object, Object)` 두 메서드가 보입니다. 뒤의 것이 컴파일러가 만든 다리 메서드입니다(cmd: 작은따옴표 대신 큰따옴표).
+둘째 줄의 출력에 `compare(Device, Device)`와 `compare(Object, Object)` 두 메서드가 보입니다. 뒤의 것이 컴파일러가 만든 다리 메서드입니다.
 
 </details>
 
 **[실행] 4단계: 동작 기록 비교.** 남은 방법은 1-3에서 본 동작 기록 비교입니다. `golden/`의 기록에는 메시지 한 줄마다 기기 목록(`dev=`)이 들어 있으므로, 순서가 바뀌면 드러납니다.
+
+**명령:** 아래 "HTML 보고서로 보기"와 "도구 없이 검토하기" 중 하나를 펼쳐, 그 안의 명령을 그대로 실행합니다.
 
 예상: `normal_day 다름 (29줄)`, `burst 다름 (22줄)`, `fridge_firmware 다름 (19줄)`.
 
@@ -1205,8 +1113,6 @@ Dafny 모델을 손으로 쓰는 것은 이 실습의 범위가 아니므로, �
 cp scenarios/b1-ai-sample/RingEventQueue.dfy scenarios/b1-ai-sample/MyQueueAdapter.java mine/
 ```
 
-cmd: `copy scenarios\b1-ai-sample\RingEventQueue.dfy mine\` 와 `copy scenarios\b1-ai-sample\MyQueueAdapter.java mine\` 두 줄.
-
 </details>
 
 <details><summary><b>방법 2: Codex에게 시키기</b></summary>
@@ -1264,7 +1170,7 @@ RingEventQueue.dfy 가 검증에 실패한다. dafny verify RingEventQueue.dfy �
 확인: 검증과 차분 테스트는 3단계에서 합니다. 그 전에 계약(`requires`/`ensures`) 줄을 모범 답안과 비교합니다.
 
 ```
-git diff --no-index scenarios/b1-ai-sample/RingEventQueue.dfy mine/RingEventQueue.dfy
+diff -u scenarios/b1-ai-sample/RingEventQueue.dfy mine/RingEventQueue.dfy
 ```
 
 4·5단계는 `mine/RingEventQueue.dfy`의 줄 번호(45줄, 47~49줄)를 보고 고치므로 모범 답안이 있어야 합니다. Codex의 모델을 확인한 뒤, 4단계 전에 방법 1의 복사로 모범 답안을 넣습니다.
@@ -1540,21 +1446,6 @@ javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -cp $P/build/classes -
 java -cp $P/build/classes:$P/build/test-classes com.dxlab.homehub.testkit.TestRunner
 ```
 
-<details><summary>Windows cmd</summary>
-
-```
-set P=legacy
-if exist %P%\build rmdir /s /q %P%\build
-mkdir %P%\build\classes %P%\build\test-classes
-dir /s /b %P%\src\main\java\*.java > %P%\build\main-src.txt
-dir /s /b %P%\src\test\java\*.java > %P%\build\test-src.txt
-javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -d %P%\build\classes @%P%\build\main-src.txt
-javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -cp %P%\build\classes -d %P%\build\test-classes @%P%\build\test-src.txt
-java -cp %P%\build\classes;%P%\build\test-classes com.dxlab.homehub.testkit.TestRunner
-```
-
-</details>
-
 그다음 차분 테스트만 다시 돌립니다(`build/mine/`이 모범 답안으로 빌드되어 있어야 함. B-1 5단계 끝 참고). 예상:
 
 ```
@@ -1589,7 +1480,7 @@ java -Dqueue.adapter=difftest.MyQueueAdapter -cp build/mine/mymodel.jar:build/mi
 
 두 개를 넣고 하나를 꺼내면 Java는 `head`를 옮기지 않아 빈 칸(`null`)을 가리키고, 모델은 [2]가 남습니다. 차분 테스트는 불일치를 찾으면 연산을 하나씩 빼 보며 가장 짧은 연산열로 줄여 보여 줍니다. 이 3단계짜리 연산열을 그대로 회귀 테스트로 옮길 수 있습니다.
 
-**[실행] 3단계: 반드시 되돌리기.** `legacy/src/main/java/com/dxlab/homehub/queue/RingEventQueue.java`의 `poll`에 지웠던 줄을 같은 자리(42줄)에 다시 넣고 저장합니다(git이 있으면 `git checkout -- legacy/src/main/java/com/dxlab/homehub/queue/RingEventQueue.java`, 0-0에서 백업했으면 `cp _backup/legacy/src/main/java/com/dxlab/homehub/queue/RingEventQueue.java legacy/src/main/java/com/dxlab/homehub/queue/RingEventQueue.java`로도 됩니다. cmd는 `copy`에 `\` 경로).
+**[실행] 3단계: 반드시 되돌리기.** `legacy/src/main/java/com/dxlab/homehub/queue/RingEventQueue.java`의 `poll`에 지웠던 줄을 같은 자리(42줄)에 다시 넣고 저장합니다(0-0에서 백업했으면 `cp _backup/legacy/src/main/java/com/dxlab/homehub/queue/RingEventQueue.java legacy/src/main/java/com/dxlab/homehub/queue/RingEventQueue.java`로도 됩니다.).
 
 ```java
         head = (head + 1) % buf.length;
@@ -1604,21 +1495,6 @@ javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -d $P/build/classes $(
 javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -cp $P/build/classes -d $P/build/test-classes $(find $P/src/test/java -name '*.java')
 java -cp $P/build/classes:$P/build/test-classes com.dxlab.homehub.testkit.TestRunner
 ```
-
-<details><summary>Windows cmd</summary>
-
-```
-set P=legacy
-if exist %P%\build rmdir /s /q %P%\build
-mkdir %P%\build\classes %P%\build\test-classes
-dir /s /b %P%\src\main\java\*.java > %P%\build\main-src.txt
-dir /s /b %P%\src\test\java\*.java > %P%\build\test-src.txt
-javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -d %P%\build\classes @%P%\build\main-src.txt
-javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -cp %P%\build\classes -d %P%\build\test-classes @%P%\build\test-src.txt
-java -cp %P%\build\classes;%P%\build\test-classes com.dxlab.homehub.testkit.TestRunner
-```
-
-</details>
 
 되돌리지 않으면 뒤의 모든 비교가 틀어집니다.
 
@@ -1648,7 +1524,7 @@ java -cp %P%\build\classes;%P%\build\test-classes com.dxlab.homehub.testkit.Test
 
 <details><summary>준비 명령 (펼쳐서 복사)</summary>
 
-작업 폴더(cmd: `mkdir work out`):
+작업 폴더:
 
 ```
 mkdir -p work out
@@ -1663,21 +1539,6 @@ javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -d $P/build/classes $(
 javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -cp $P/build/classes -d $P/build/test-classes $(find $P/src/test/java -name '*.java')
 java -cp $P/build/classes:$P/build/test-classes com.dxlab.homehub.testkit.TestRunner
 ```
-
-<details><summary>Windows cmd</summary>
-
-```
-set P=legacy
-if exist %P%\build rmdir /s /q %P%\build
-mkdir %P%\build\classes %P%\build\test-classes
-dir /s /b %P%\src\main\java\*.java > %P%\build\main-src.txt
-dir /s /b %P%\src\test\java\*.java > %P%\build\test-src.txt
-javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -d %P%\build\classes @%P%\build\main-src.txt
-javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -cp %P%\build\classes -d %P%\build\test-classes @%P%\build\test-src.txt
-java -cp %P%\build\classes;%P%\build\test-classes com.dxlab.homehub.testkit.TestRunner
-```
-
-</details>
 
 차분 테스트 도구:
 
@@ -1742,29 +1603,6 @@ javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -cp $P/build/classes -
 java -cp $P/build/classes:$P/build/test-classes com.dxlab.homehub.testkit.TestRunner
 ```
 
-<details><summary>Windows cmd</summary>
-
-```
-set P=work\req1-ai-A
-if exist %P%\build rmdir /s /q %P%\build
-mkdir %P%\build\classes %P%\build\test-classes
-dir /s /b %P%\src\main\java\*.java > %P%\build\main-src.txt
-dir /s /b %P%\src\test\java\*.java > %P%\build\test-src.txt
-javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -d %P%\build\classes @%P%\build\main-src.txt
-javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -cp %P%\build\classes -d %P%\build\test-classes @%P%\build\test-src.txt
-java -cp %P%\build\classes;%P%\build\test-classes com.dxlab.homehub.testkit.TestRunner
-set P=work\req1-ai-B
-if exist %P%\build rmdir /s /q %P%\build
-mkdir %P%\build\classes %P%\build\test-classes
-dir /s /b %P%\src\main\java\*.java > %P%\build\main-src.txt
-dir /s /b %P%\src\test\java\*.java > %P%\build\test-src.txt
-javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -d %P%\build\classes @%P%\build\main-src.txt
-javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -cp %P%\build\classes -d %P%\build\test-classes @%P%\build\test-src.txt
-java -cp %P%\build\classes;%P%\build\test-classes com.dxlab.homehub.testkit.TestRunner
-```
-
-</details>
-
 **[직접 확인]** 두 패치가 무엇을 바꿨는지 봅니다.
 
 <details><summary>HTML 보고서로 보기</summary>
@@ -1787,8 +1625,8 @@ python3 tools/report.py --out req1-tests --title "변경 요청 1: 테스트" --
 레거시와 나란히 비교합니다.
 
 ```
-git diff --no-index legacy/src work/req1-ai-A/src
-git diff --no-index legacy/src work/req1-ai-B/src
+diff -ru legacy/src work/req1-ai-A/src
+diff -ru legacy/src work/req1-ai-B/src
 ```
 
 </details>
@@ -1845,7 +1683,7 @@ dafny verify formal/Types.dfy mine/RingQueue_A.dfy
 Java를 그대로 옮겼다면 모범 답안처럼 `Grow`에서 **실패해야** 맞습니다. 통과했다면 Codex가 계약을 약하게 바꿨거나 `grow()`를 Java와 다르게 옮긴 것입니다(버그를 "고쳐서" 옮김). 모범 답안과 비교해 어느 쪽인지 봅니다.
 
 ```
-git diff --no-index scenarios/req1/model/RingQueue_A.dfy mine/RingQueue_A.dfy
+diff -u scenarios/req1/model/RingQueue_A.dfy mine/RingQueue_A.dfy
 ```
 
 C-3의 차분 테스트는 검증을 통과한 패치 B의 모델(모범 답안)을 기준으로 씁니다.
@@ -1855,6 +1693,8 @@ C-3의 차분 테스트는 검증을 통과한 패치 B의 모델(모범 답안)
 두 패치의 모델(`scenarios/req1/model/`)의 계약은 레거시 대기열 모델(`formal/RingQueue.dfy`)과 같고, 상한만 8 → 32입니다. 계약에는 "배열을 `head`부터 읽으면 대기열 내용과 같다"(`Valid`)가 들어 있습니다. Dafny는 이것을 모든 상태에서 지키는지 증명합니다.
 
 **[실행]** 두 모델을 검증합니다. 예상:
+
+**명령:** 아래 "HTML 보고서로 보기"와 "도구 없이 검토하기" 중 하나를 펼쳐, 그 안의 명령을 그대로 실행합니다.
 
 ```
 scenarios/req1/model/RingQueue_A.dfy(112,4): Error: a postcondition could not be proved on this return path
@@ -1962,7 +1802,9 @@ Dafny program verifier finished with 24 verified, 1 error
 dafny build -t java formal/Types.dfy scenarios/req1/model/RingQueue.dfy scenarios/req1/model/Dispatcher.dfy formal/PowerBudget.dfy -o build/model-req1/homehub_model
 ```
 
-그다음 패치 A의 Java, 패치 B의 Java, 레거시 Java를 각각 이 모델과 비교합니다.
+**[실행]** 그다음 패치 A의 Java, 패치 B의 Java, 레거시 Java를 각각 이 모델과 비교합니다.
+
+**명령:** 아래 "HTML 보고서로 보기"와 "도구 없이 검토하기" 중 하나를 펼쳐, 그 안의 명령을 그대로 실행합니다.
 
 <details><summary>HTML 보고서로 보기</summary>
 
@@ -2076,29 +1918,6 @@ javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -cp $P/build/classes -
 java -cp $P/build/classes:$P/build/test-classes com.dxlab.homehub.testkit.TestRunner
 ```
 
-<details><summary>Windows cmd</summary>
-
-```
-set P=work\req1-ai-A
-if exist %P%\build rmdir /s /q %P%\build
-mkdir %P%\build\classes %P%\build\test-classes
-dir /s /b %P%\src\main\java\*.java > %P%\build\main-src.txt
-dir /s /b %P%\src\test\java\*.java > %P%\build\test-src.txt
-javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -d %P%\build\classes @%P%\build\main-src.txt
-javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -cp %P%\build\classes -d %P%\build\test-classes @%P%\build\test-src.txt
-java -cp %P%\build\classes;%P%\build\test-classes com.dxlab.homehub.testkit.TestRunner
-set P=work\req1-ai-B
-if exist %P%\build rmdir /s /q %P%\build
-mkdir %P%\build\classes %P%\build\test-classes
-dir /s /b %P%\src\main\java\*.java > %P%\build\main-src.txt
-dir /s /b %P%\src\test\java\*.java > %P%\build\test-src.txt
-javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -d %P%\build\classes @%P%\build\main-src.txt
-javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -cp %P%\build\classes -d %P%\build\test-classes @%P%\build\test-src.txt
-java -cp %P%\build\classes;%P%\build\test-classes com.dxlab.homehub.testkit.TestRunner
-```
-
-</details>
-
 예상:
 
 ```
@@ -2164,21 +1983,6 @@ javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -cp $P/build/classes -
 java -cp $P/build/classes:$P/build/test-classes com.dxlab.homehub.testkit.TestRunner
 ```
 
-<details><summary>Windows cmd</summary>
-
-```
-set P=work\req2-ai
-if exist %P%\build rmdir /s /q %P%\build
-mkdir %P%\build\classes %P%\build\test-classes
-dir /s /b %P%\src\main\java\*.java > %P%\build\main-src.txt
-dir /s /b %P%\src\test\java\*.java > %P%\build\test-src.txt
-javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -d %P%\build\classes @%P%\build\main-src.txt
-javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -cp %P%\build\classes -d %P%\build\test-classes @%P%\build\test-src.txt
-java -cp %P%\build\classes;%P%\build\test-classes com.dxlab.homehub.testkit.TestRunner
-```
-
-</details>
-
 그다음 Java 영향 분석을 돌립니다.
 
 **이 명령이 하는 일.** A-1 5단계와 같은 도구(`tools/impact.py`)로, 레거시 빌드와 패치 빌드를 비교해 바뀐 메서드와 그 영향이 닿는 곳을 찾습니다. A-1에서는 내가 고친 `work/my-req2`를 분석했고, 여기서는 모범 답안 패치 `work/req2-ai`를 분석합니다. 옵션은 이렇습니다.
@@ -2209,28 +2013,13 @@ javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -cp $P/build/classes -
 java -cp $P/build/classes:$P/build/test-classes com.dxlab.homehub.testkit.TestRunner
 ```
 
-<details><summary>Windows cmd</summary>
-
-```
-set P=work\req1-ai-B
-if exist %P%\build rmdir /s /q %P%\build
-mkdir %P%\build\classes %P%\build\test-classes
-dir /s /b %P%\src\main\java\*.java > %P%\build\main-src.txt
-dir /s /b %P%\src\test\java\*.java > %P%\build\test-src.txt
-javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -d %P%\build\classes @%P%\build\main-src.txt
-javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -cp %P%\build\classes -d %P%\build\test-classes @%P%\build\test-src.txt
-java -cp %P%\build\classes;%P%\build\test-classes com.dxlab.homehub.testkit.TestRunner
-```
-
-</details>
-
 같은 영향 분석을 패치 B에 대해 돌립니다(대상 폴더와 결과 파일 이름만 다름).
 
 ```
 python3 tools/impact.py --base legacy/build/classes legacy/build/test-classes --base-src legacy/src/main/java legacy/src/test/java --changed work/req1-ai-B/build/classes work/req1-ai-B/build/test-classes --changed-src work/req1-ai-B/src/main/java work/req1-ai-B/src/test/java --mapping formal/mapping.tsv --json out/impact-req1-ai-B.json > out/impact-req1-ai-B.md
 ```
 
-**확인.** 영향 분석은 화면에 아무것도 출력하지 않습니다(결과를 파일로 보냈으므로). 글 보고서의 제목 줄을 보면 숫자를 확인할 수 있습니다(cmd: `findstr /b "##" out\impact-req2-ai.md`).
+**확인.** 영향 분석은 화면에 아무것도 출력하지 않습니다(결과를 파일로 보냈으므로). 글 보고서의 제목 줄을 보면 숫자를 확인할 수 있습니다.
 
 ```
 grep "^## " out/impact-req2-ai.md out/impact-req1-ai-B.md
@@ -2323,7 +2112,7 @@ Codex를 나온 뒤 이 모델(`mine/RingQueue-req2.dfy`)로 확인합니다.
 ① **계약 줄 확인.** 요청 2는 "동작은 바꾸지 않는다"이므로 `requires`/`ensures` 줄이 바뀌면 안 됩니다. 바뀌었다면 재검증 범위도 4개보다 넓어집니다.
 
 ```
-git diff --no-index formal/RingQueue.dfy mine/RingQueue-req2.dfy
+diff -u formal/RingQueue.dfy mine/RingQueue-req2.dfy
 ```
 
 ② **재검증.** 아래 본문의 재검증과 같은 일을 이 모델로 합니다.
@@ -2349,7 +2138,7 @@ python3 tools/reverify.py --old formal/Types.dfy formal/RingQueue.dfy formal/Dis
 **[직접 확인]** Dafny 모델에서 무엇이 바뀌었는지 봅니다.
 
 ```
-git diff --no-index formal/RingQueue.dfy scenarios/req2/model/RingQueue.dfy
+diff -u formal/RingQueue.dfy scenarios/req2/model/RingQueue.dfy
 ```
 
 `REQ-2` 주석이 붙은 네 메서드(`Offer`, `Poll`, `Snapshot`, `Clear`)의 **본문만** 바뀌고, 계약(`requires`/`ensures`)은 한 줄도 바뀌지 않았습니다. `Wrap(k)`는 이 모델 안에서 정의한 함수로 Java의 `k % buf.length`를 나타냅니다.
@@ -2392,7 +2181,7 @@ python3 tools/reverify.py --old formal/Types.dfy formal/RingQueue.dfy formal/Dis
 
 도구가 하는 일을 손으로 합니다.
 
-1. 모델의 차이(위 `git diff`)에서 바뀐 줄이 각 메서드의 `requires`/`ensures` 줄인지, `{ }` 안(본문)인지 봅니다. 요청 2는 네 메서드 모두 본문만 바뀌었으므로 그 넷만 증명하면 됩니다.
+1. 모델의 차이(위 `diff`)에서 바뀐 줄이 각 메서드의 `requires`/`ensures` 줄인지, `{ }` 안(본문)인지 봅니다. 요청 2는 네 메서드 모두 본문만 바뀌었으므로 그 넷만 증명하면 됩니다.
 2. `--filter-symbol`로 메서드 하나만 증명합니다. 이름에 그 글자가 들어간 기호만 증명하며, 한 번에 하나만 줄 수 있어 메서드마다 한 번씩 실행합니다(`Poll`, `Clear`, `Snapshot`도 같은 방법).
    ```
    dafny verify formal/Types.dfy scenarios/req2/model/RingQueue.dfy formal/Dispatcher.dfy formal/PowerBudget.dfy --filter-symbol=RingQueue.Offer
@@ -2437,7 +2226,7 @@ codex -C mine
 예시 프롬프트(`docs/PROMPTS.md`의 P-3을 파일 위치로 바꾼 것):
 
 ```
-Java 코드가 패치 B처럼 바뀌었다. 바뀐 내용: git diff --no-index ../legacy/src ../work/req1-ai-B/src 의 결과
+Java 코드가 패치 B처럼 바뀌었다. 바뀐 내용: diff -ru ../legacy/src ../work/req1-ai-B/src 의 결과
 기존 Dafny 모델 ../formal/RingQueue.dfy 와 ../formal/Dispatcher.dfy 를 이 폴더에 RingQueue-req1.dfy, Dispatcher-req1.dfy 로 복사하고, 바뀐 Java 메서드에 대응하는 Dafny 메서드를 새 Java 코드대로 고쳐라. 새로 생긴 메서드도 옮겨라.
 - 대응표: ../formal/mapping.tsv
 - 계약(requires/ensures)은 바꾸지 마라. 변경 요청서(../scenarios/req1/README.md)가 승인한 변화(대기 이벤트의 상한 8 → 32)가 있으면 그것만 바꾸고, 바꾼 줄을 따로 보고하라.
@@ -2450,8 +2239,8 @@ Codex를 나온 뒤 이 모델(`mine/RingQueue-req1.dfy`, `mine/Dispatcher-req1.
 ① **계약 줄 확인.** 이번에는 승인된 변화 때문에 계약 줄이 바뀌는 것이 맞습니다. 승인된 것(상한) 말고 다른 계약이 바뀌지 않았는지 봅니다.
 
 ```
-git diff --no-index formal/RingQueue.dfy mine/RingQueue-req1.dfy
-git diff --no-index formal/Dispatcher.dfy mine/Dispatcher-req1.dfy
+diff -u formal/RingQueue.dfy mine/RingQueue-req1.dfy
+diff -u formal/Dispatcher.dfy mine/Dispatcher-req1.dfy
 ```
 
 ② **재검증.** 아래 본문의 재검증과 같은 일을 이 모델로 합니다.
@@ -2477,7 +2266,7 @@ python3 tools/reverify.py --old formal/Types.dfy formal/RingQueue.dfy formal/Dis
 **[직접 확인]** 대기열 모델에서 무엇이 바뀌었는지 봅니다.
 
 ```
-git diff --no-index formal/RingQueue.dfy scenarios/req1/model/RingQueue.dfy
+diff -u formal/RingQueue.dfy scenarios/req1/model/RingQueue.dfy
 ```
 
 이번에는 `ensures` 줄이 바뀝니다. 예를 들어 `Offer`의 `Capacity()`(지금 배열 크기)가 `MaxCapacity()`(상한)로 바뀌고, `buf == old(buf)`(배열 그대로)가 `fresh(Repr - old(Repr))`(새로 생긴 배열은 이 메서드가 새로 만든 것. `Repr`은 대기열 객체와 그 배열을 모은 집합)로 바뀝니다. 상한을 나타내는 함수 `MaxCapacity`와 늘리는 메서드 `Grow`가 새로 생겼습니다. Dispatcher 모델(`scenarios/req1/model/Dispatcher.dfy`)도 함께 바뀌었습니다.
@@ -2576,7 +2365,6 @@ Dafny 쪽이 좁을 수 있는 것은 계약이 있고, 그 계약을 대기열�
 
 **생각해 볼 것.** Java 영향 분석의 범위와 Dafny 재검증 범위가 다른 이유를 한 문장으로 설명해 보세요.
 
-
 ---
 
 ## E. 정리 규칙을 코드 전체에 적용하기
@@ -2650,21 +2438,6 @@ javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -cp $P/build/classes -
 java -cp $P/build/classes:$P/build/test-classes com.dxlab.homehub.testkit.TestRunner
 ```
 
-<details><summary>Windows cmd</summary>
-
-```
-set P=work\rw-InlineVariable
-if exist %P%\build rmdir /s /q %P%\build
-mkdir %P%\build\classes %P%\build\test-classes
-dir /s /b %P%\src\main\java\*.java > %P%\build\main-src.txt
-dir /s /b %P%\src\test\java\*.java > %P%\build\test-src.txt
-javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -d %P%\build\classes @%P%\build\main-src.txt
-javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -cp %P%\build\classes -d %P%\build\test-classes @%P%\build\test-src.txt
-java -cp %P%\build\classes;%P%\build\test-classes com.dxlab.homehub.testkit.TestRunner
-```
-
-</details>
-
 `IsEmpty`, `ForEach`도 같은 방법으로 해 볼 수 있습니다(이 단계의 명령에서 `InlineVariable`을 그 이름으로 바꿈).
 
 **[실행] 2단계: 동작 기록과 무작위 입력 비교.**
@@ -2723,7 +2496,7 @@ java -cp legacy/build/classes com.dxlab.homehub.app.HubMain out/hubdiff-InlineVa
 **[직접 확인] 3단계: 어디가 문제인지 찾기.**
 
 ```
-git diff --no-index legacy/src/main/java/com/dxlab/homehub/dispatch/Dispatcher.java scenarios/rw/InlineVariable/src/main/java/com/dxlab/homehub/dispatch/Dispatcher.java
+diff -u legacy/src/main/java/com/dxlab/homehub/dispatch/Dispatcher.java scenarios/rw/InlineVariable/src/main/java/com/dxlab/homehub/dispatch/Dispatcher.java
 ```
 
 `evictOldestNonCritical`의 `int n = queue.size();`가 반복 조건 `i < queue.size()` 안으로 들어갔습니다.
@@ -2757,21 +2530,6 @@ javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -d $P/build/classes $(
 javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -cp $P/build/classes -d $P/build/test-classes $(find $P/src/test/java -name '*.java')
 java -cp $P/build/classes:$P/build/test-classes com.dxlab.homehub.testkit.TestRunner
 ```
-
-<details><summary>Windows cmd</summary>
-
-```
-set P=work\my-inline
-if exist %P%\build rmdir /s /q %P%\build
-mkdir %P%\build\classes %P%\build\test-classes
-dir /s /b %P%\src\main\java\*.java > %P%\build\main-src.txt
-dir /s /b %P%\src\test\java\*.java > %P%\build\test-src.txt
-javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -d %P%\build\classes @%P%\build\main-src.txt
-javac -nowarn -Xlint:-options -encoding UTF-8 --release 8 -cp %P%\build\classes -d %P%\build\test-classes @%P%\build\test-src.txt
-java -cp %P%\build\classes;%P%\build\test-classes com.dxlab.homehub.testkit.TestRunner
-```
-
-</details>
 
 그다음 2단계의 두 가지 비교를 `work/my-inline`으로 실행합니다.
 
@@ -2863,7 +2621,9 @@ codex -s read-only
 
 `Fixed`는 바꾸기 전 코드(`n`을 반복 전에 한 번 잼), `Inlined`는 바꾼 뒤 코드(반복할 때마다 `queue.size()`를 다시 잼)를 나타내는 함수입니다. `requires` 줄이 규칙의 조건(반복 본문이 크기를 바꾸지 않음)입니다.
 
-먼저 세 규칙의 증명을 검증합니다. 예상: `15 verified, 0 errors`.
+**[실행]** 먼저 세 규칙의 증명을 검증합니다. 예상: `15 verified, 0 errors`.
+
+**명령:** 아래 "HTML 보고서로 보기"와 "도구 없이 검토하기" 중 하나를 펼쳐, 그 안의 명령을 그대로 실행합니다.
 
 <details><summary>HTML 보고서로 보기</summary>
 
@@ -2897,7 +2657,7 @@ Dafny program verifier finished with 14 verified, 1 error
 
 조건 없이는 "같다"를 증명할 수 없습니다(103줄에서 도우미 `Loops`의 사전조건을 보일 수 없음). 조건이 없을 때 실제로 다르다는 것은 같은 파일의 반례 보조정리(`InlineVariable_Counterexample`)가 증명해 둡니다.
 
-**[실행] 반드시 되돌리기.** 100줄 맨 앞의 `//`를 지우고 저장한 뒤 다시 검증합니다(git이 있으면 `git checkout -- rewrite/RewriteRules.dfy`, 0-0에서 백업했으면 `cp _backup/rewrite/RewriteRules.dfy rewrite/`로도 됩니다. cmd: `copy _backup\rewrite\RewriteRules.dfy rewrite\`). 예상: `15 verified, 0 errors`.
+**[실행] 반드시 되돌리기.** 100줄 맨 앞의 `//`를 지우고 저장한 뒤 다시 검증합니다(0-0에서 백업했으면 `cp _backup/rewrite/RewriteRules.dfy rewrite/`로도 됩니다.). 예상: `15 verified, 0 errors`.
 
 ```
 dafny verify rewrite/RewriteRules.dfy
@@ -2924,27 +2684,13 @@ dafny verify rewrite/RewriteRules.dfy
 
 ## 끝나고 정리하기
 
-`work/`, `build/`, `out/`, `legacy/build/`, `mine/`에는 저장소에 들어 있던 모범 답안 결과도 함께 있습니다. 그래서 `rm -rf`로 폴더째 지우지 않고, git으로 실습 전 상태로 되돌립니다. 명령은 macOS와 Windows cmd에서 같습니다.
-
-1. 무엇이 바뀌었는지 봅니다: `git status --short work build out legacy mine rewrite`
-2. 바뀐 파일을 저장소 상태로 되돌립니다(실습 중 고친 `legacy/`, `rewrite/`도 함께 되돌아감): `git checkout -- work build out legacy mine rewrite`
-3. 실습 중 새로 생긴 파일을 확인합니다(아직 지우지 않음): `git clean -n work build out legacy mine rewrite`. 보통 `work/my-*` 폴더와 `out/` 아래의 보고서입니다. 남겨 두고 싶은 파일이 있으면 이 폴더들 밖으로 옮겨 둡니다.
-4. 확인한 것을 지웁니다: `git clean -fd work build out legacy mine rewrite`
-5. `git status --short work build out legacy mine rewrite`가 아무것도 출력하지 않으면 끝입니다.
-
-**git이 없거나 위 명령이 안 될 때: 0-0의 백업으로 되돌리기.** 여섯 폴더를 지우고 백업을 다시 복사합니다. 실습 중 새로 만든 파일(`work/my-*` 등)도 함께 지워지므로, 남길 것은 먼저 이 폴더들 밖으로 옮겨 둡니다.
+0-0에서 만든 백업으로 실습 전 상태로 되돌립니다. 실습이 고친 여섯 폴더를 지우고 백업을 다시 복사합니다. `work/`, `build/`, `out/`, `mine/`에는 모범 답안 결과도 함께 들어 있으므로, 백업 없이 폴더째 지우지 않습니다. 실습 중 새로 만든 파일(`work/my-*` 등)도 함께 지워지므로, 남길 것은 먼저 이 폴더들 밖으로 옮겨 둡니다.
 
 ```
 rm -rf work build out legacy mine rewrite && cp -R _backup/. .
 ```
 
-cmd (두 줄):
-```
-for %d in (work build out legacy mine rewrite) do if exist %d rmdir /s /q %d
-for %d in (work build out legacy mine rewrite) do xcopy /e /i /q _backup\%d %d
-```
-
-되돌린 뒤에도 `_backup/`은 남아 있으므로, 실습을 다시 할 때 또 쓸 수 있습니다. 필요 없으면 `_backup/`을 지웁니다. 백업을 하지 않았고 git도 없다면 실습 폴더를 다시 받습니다.
+되돌린 뒤에도 `_backup/`은 남아 있으므로, 실습을 다시 할 때 또 쓸 수 있습니다. 필요 없으면 `_backup/`을 지웁니다. 백업을 하지 않았다면 받은 zip을 다른 곳에 풀어 그 안의 여섯 폴더로 바꿉니다.
 
 ## 한 장 요약
 

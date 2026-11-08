@@ -62,7 +62,7 @@ def check_tools():
         if not ok:
             bad.append(name)
     if bad:
-        print("\n%s 이(가) 실습 폴더를 가리키지 않습니다. 실습 결과가 달라질 수 있으니 보조강사를 불러 주세요."
+        print("\n%s 이(가) 실습 폴더를 가리키지 않습니다. 실습 결과가 달라질 수 있으니 강사에게 알려 주세요."
               % ", ".join(bad))
     return not bad
 
