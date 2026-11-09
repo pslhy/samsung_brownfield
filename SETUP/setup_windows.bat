@@ -181,7 +181,7 @@ if exist "%HH_F%" goto :fetch_check
 echo       downloading %~2 (%~3)
 where curl.exe >nul 2>nul
 if errorlevel 1 goto :fetch_ps
-curl.exe -L --fail --retry 3 --progress-bar -o "%HH_F%" "%HH_U%"
+curl.exe -L --fail --retry 3 --progress-bar --ssl-no-revoke -o "%HH_F%" "%HH_U%"
 if not errorlevel 1 goto :fetch_check
 echo       curl failed, trying PowerShell...
 :fetch_ps
