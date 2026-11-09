@@ -583,10 +583,10 @@ def dafny_errors(path):
     return (p.stdout + p.stderr).strip()
 
 
-# every lab.codex call uses this model and reasoning effort (the lowest this model takes), to keep calls short.
-# Change them here if the model is not available to you.
+# Defaults for lab.codex calls. Luna with effort "none" crashed on Windows with
+# Codex CLI 0.167.0; "low" worked in the same environment.
 CODEX_MODEL = "gpt-5.6-luna"
-CODEX_EFFORT = "none"
+CODEX_EFFORT = "low"
 
 
 def codex_models():
@@ -607,7 +607,6 @@ def codex_models():
     print("이 컴퓨터의 Codex에서 쓸 수 있는 모델 (실습 기본값: %s, 추론 %s)" % (CODEX_MODEL, CODEX_EFFORT))
     for slug, levels in rows:
         print("  %-16s 추론: %s%s" % (slug, levels or "-", "   <- 기본값" if slug == CODEX_MODEL else ""))
-    print("추론 none(생각하지 않고 바로 답)은 목록에 없지만 %s에서 쓸 수 있는 것을 확인했습니다." % CODEX_MODEL)
 
 
 def _dafny():

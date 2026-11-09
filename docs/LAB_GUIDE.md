@@ -168,7 +168,7 @@ make impact V=scenarios/req2/ai WHY=power.PowerBudget#tryStart
 make impact V=scenarios/req2/ai WHY=EventParserTest#testBasicLine    # 도구가 따라간 경로
 ```
 
-이런 테스트를 AI에게 걸러 달라고 합니다(`docs/PROMPTS.md`의 P-4). 도구가 고른 목록, diff, 테스트 코드를 주고, 테스트마다 바뀐 메서드가 실행 중에 한 번이라도 불리는지 묻습니다(노트북에서는 `lab.codex("P-4", diff=..., 테스트_목록=lab.impact_tests("scenarios/req2/ai"), 테스트_코드=lab.source_text("legacy/src/test"))`. 바로 위 셀에서 쓸 모델과 추론 수준을 고를 수 있습니다. 기본값은 `gpt-5.6-luna`, 추론 `none`). 이 환경에서는 `EventParserTest`, `HandlersTest`, `PowerBudgetTest`와, 대기열에 닿기 전에 끝나는 테스트 2개, 모두 17개를 빼서 16개가 남았습니다.
+이런 테스트를 AI에게 걸러 달라고 합니다(`docs/PROMPTS.md`의 P-4). 도구가 고른 목록, diff, 테스트 코드를 주고, 테스트마다 바뀐 메서드가 실행 중에 한 번이라도 불리는지 묻습니다(노트북에서는 `lab.codex("P-4", diff=..., 테스트_목록=lab.impact_tests("scenarios/req2/ai"), 테스트_코드=lab.source_text("legacy/src/test"))`. 바로 위 셀에서 쓸 모델과 추론 수준을 고를 수 있습니다. 기본값은 `gpt-5.6-luna`, 추론 `low`). 이 환경에서는 `EventParserTest`, `HandlersTest`, `PowerBudgetTest`와, 대기열에 닿기 전에 끝나는 테스트 2개, 모두 17개를 빼서 16개가 남았습니다.
 
 **정리.** 영향 범위를 빠짐없이 찾는 일은 도구가 합니다(대신 넓게 잡음). 넓게 잡힌 것 중 괜히 들어간 것을 걸러 내는 일은 AI가 도울 수 있습니다. AI가 뺀 것이 정말 빼도 되는지는 사람이 테스트 코드를 보고 확인합니다.
 
@@ -328,7 +328,7 @@ make difftest-sample
 
 **2단계: 계약 읽기.**
 
-**(선택) 직접 AI에게 시켜 보기.** 시간이 남으면 노트북 B-1 끝의 선택 셀로 직접 해 봅니다. 첫 셀에서 쓸 모델과 추론 수준을 고를 수 있습니다(`lab.codex_models()`가 이 컴퓨터의 Codex에서 쓸 수 있는 모델을 보여 주고, `모델 = ...`, `추론 = ...`을 바꾸면 아래 셀들이 그 값으로 Codex를 부름. 기본값은 `gpt-5.6-luna`, 추론 `none`). 그다음 셀은: `lab.codex("P-1", save="mine/RingEventQueue.dfy")`(모델), `lab.codex("P-1b", save="mine/MyQueueAdapter.java")`(연결 코드), `make difftest-mine DFY=mine/RingEventQueue.dfy ADAPTER=mine/MyQueueAdapter.java`(검증과 차분 테스트). 검증이 실패하면 오류를 P-2("계약 줄은 한 글자도 바꾸지 마라")에 넣어 고치게 하고, requires / ensures 줄이 바뀌지 않았는지 확인합니다. 검증 결과에 `Warning: Could not find a trigger for this quantifier`가 나와도 검증 실패는 아닙니다(오류 0개면 통과). `forall` 식의 트리거(언제 꺼내 쓸지 알려 주는 표식)를 못 찾았다는 뜻이라 지금은 증명되지만 Dafny 버전이 바뀌면 깨질 수 있으니 고치는 것이 좋습니다. `difftest-mine`은 이 경고가 있어도 Java 컴파일과 차분 테스트까지 진행합니다. Codex를 쓸 수 없으면 `lab.prompt("P-1")`로 프롬프트를 출력해 사내 AI 도구에 주고, 답을 `mine/` 아래 같은 이름으로 저장합니다.
+**(선택) 직접 AI에게 시켜 보기.** 시간이 남으면 노트북 B-1 끝의 선택 셀로 직접 해 봅니다. 첫 셀에서 쓸 모델과 추론 수준을 고를 수 있습니다(`lab.codex_models()`가 이 컴퓨터의 Codex에서 쓸 수 있는 모델을 보여 주고, `모델 = ...`, `추론 = ...`을 바꾸면 아래 셀들이 그 값으로 Codex를 부름. 기본값은 `gpt-5.6-luna`, 추론 `low`). 그다음 셀은: `lab.codex("P-1", save="mine/RingEventQueue.dfy")`(모델), `lab.codex("P-1b", save="mine/MyQueueAdapter.java")`(연결 코드), `make difftest-mine DFY=mine/RingEventQueue.dfy ADAPTER=mine/MyQueueAdapter.java`(검증과 차분 테스트). 검증이 실패하면 오류를 P-2("계약 줄은 한 글자도 바꾸지 마라")에 넣어 고치게 하고, requires / ensures 줄이 바뀌지 않았는지 확인합니다. 검증 결과에 `Warning: Could not find a trigger for this quantifier`가 나와도 검증 실패는 아닙니다(오류 0개면 통과). `forall` 식의 트리거(언제 꺼내 쓸지 알려 주는 표식)를 못 찾았다는 뜻이라 지금은 증명되지만 Dafny 버전이 바뀌면 깨질 수 있으니 고치는 것이 좋습니다. `difftest-mine`은 이 경고가 있어도 Java 컴파일과 차분 테스트까지 진행합니다. Codex를 쓸 수 없으면 `lab.prompt("P-1")`로 프롬프트를 출력해 사내 AI 도구에 주고, 답을 `mine/` 아래 같은 이름으로 저장합니다.
 
 **AI가 만든 Dafny 모델 읽는 법.** 예시 결과 `scenarios/b1-ai-sample/RingEventQueue.dfy`를 처음부터 읽어 봅니다(노트북에서는 줄마다 색으로 묶고 오른쪽에 뜻을 붙여 보여 줍니다: `lab.annotate`). 줄은 다섯 종류로 나뉩니다.
 
@@ -703,7 +703,7 @@ for (int i = 0; i < queue.size(); i++) {    // 돌 때마다 queue.size()를 다
 
 for-each 규칙에도 조건("반복 중에 목록을 바꾸지 않는다")이 있지만, 이 코드에서는 적용한 8곳 모두 조건이 맞아서 동작이 그대로입니다.
 
-**AI에게 직접 시켜 보기.** 노트북의 `lab.codex("P-5", 규칙=..., 코드=".../Dispatcher.java")`는 변수 인라인 규칙을 `Dispatcher.java`에 적용하라고 Codex에게 시킵니다(`docs/PROMPTS.md` P-5). AI가 조건을 확인했는지, `evictOldestNonCritical`의 `n`을 인라인했는지 봅니다. 바로 위 셀에서 쓸 모델과 추론 수준을 고를 수 있습니다(기본값 `gpt-5.6-luna`, 추론 `none`).
+**AI에게 직접 시켜 보기.** 노트북의 `lab.codex("P-5", 규칙=..., 코드=".../Dispatcher.java")`는 변수 인라인 규칙을 `Dispatcher.java`에 적용하라고 Codex에게 시킵니다(`docs/PROMPTS.md` P-5). AI가 조건을 확인했는지, `evictOldestNonCritical`의 `n`을 인라인했는지 봅니다. 바로 위 셀에서 쓸 모델과 추론 수준을 고를 수 있습니다(기본값 `gpt-5.6-luna`, 추론 `low`).
 
 ### E-3. 규칙이 같은 뜻이라는 것을 Dafny로 증명하기 (10분)
 
